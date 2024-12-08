@@ -1,12 +1,8 @@
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Calendar } from "lucide-react";
+import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
+import { Download } from "lucide-react";
+import { SEOTableHeader } from "./SEOTableHeader";
+import { downloadTableAsCSV } from "@/services/seoService";
 
 interface SEOData {
   id: string;
@@ -61,68 +57,12 @@ const mockData: SEOData[] = [
         suggestedText: "Suggestion de texte pour H2 2"
       }
     ],
-    h3s: [
-      {
-        current: "H3 actuel 1",
-        suggested: "Suggestion H3 1",
-        contextText: "Texte contextuel du H3 1",
-        suggestedText: "Suggestion de texte pour H3 1"
-      },
-      {
-        current: "H3 actuel 2",
-        suggested: "Suggestion H3 2",
-        contextText: "Texte contextuel du H3 2",
-        suggestedText: "Suggestion de texte pour H3 2"
-      },
-      {
-        current: "H3 actuel 3",
-        suggested: "Suggestion H3 3",
-        contextText: "Texte contextuel du H3 3",
-        suggestedText: "Suggestion de texte pour H3 3"
-      },
-      {
-        current: "H3 actuel 4",
-        suggested: "Suggestion H3 4",
-        contextText: "Texte contextuel du H3 4",
-        suggestedText: "Suggestion de texte pour H3 4"
-      },
-      {
-        current: "H3 actuel 5",
-        suggested: "Suggestion H3 5",
-        contextText: "Texte contextuel du H3 5",
-        suggestedText: "Suggestion de texte pour H3 5"
-      },
-      {
-        current: "H3 actuel 6",
-        suggested: "Suggestion H3 6",
-        contextText: "Texte contextuel du H3 6",
-        suggestedText: "Suggestion de texte pour H3 6"
-      },
-      {
-        current: "H3 actuel 7",
-        suggested: "Suggestion H3 7",
-        contextText: "Texte contextuel du H3 7",
-        suggestedText: "Suggestion de texte pour H3 7"
-      },
-      {
-        current: "H3 actuel 8",
-        suggested: "Suggestion H3 8",
-        contextText: "Texte contextuel du H3 8",
-        suggestedText: "Suggestion de texte pour H3 8"
-      },
-      {
-        current: "H3 actuel 9",
-        suggested: "Suggestion H3 9",
-        contextText: "Texte contextuel du H3 9",
-        suggestedText: "Suggestion de texte pour H3 9"
-      },
-      {
-        current: "H3 actuel 10",
-        suggested: "Suggestion H3 10",
-        contextText: "Texte contextuel du H3 10",
-        suggestedText: "Suggestion de texte pour H3 10"
-      }
-    ]
+    h3s: Array.from({ length: 10 }, (_, i) => ({
+      current: `H3 actuel ${i + 1}`,
+      suggested: `Suggestion H3 ${i + 1}`,
+      contextText: `Texte contextuel du H3 ${i + 1}`,
+      suggestedText: `Suggestion de texte pour H3 ${i + 1}`
+    }))
   }
 ];
 
@@ -131,65 +71,59 @@ export function SEOTable() {
     <span className="font-bold text-primary">{text}</span>
   );
 
+  const handleDownload = () => {
+    downloadTableAsCSV(mockData);
+  };
+
   return (
-    <div className="rounded-md border bg-white/80 backdrop-blur-sm shadow-lg">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead className="w-[200px]">URL</TableHead>
-            <TableHead>Titre Actuel</TableHead>
-            <TableHead>Titre Suggéré</TableHead>
-            <TableHead>Description Actuelle</TableHead>
-            <TableHead>Description Suggérée</TableHead>
-            <TableHead>H1 Actuel</TableHead>
-            <TableHead>H1 Suggéré</TableHead>
-            <TableHead>Statut</TableHead>
-            <TableHead>Commentaires IA</TableHead>
-            <TableHead className="text-right">
-              <div className="flex items-center justify-end gap-2">
-                <Calendar className="h-4 w-4" />
-                Date
-              </div>
-            </TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {mockData.map((item) => (
-            <>
-              <TableRow key={item.id} className="hover:bg-muted/30">
-                <TableCell className="font-medium">{item.url}</TableCell>
-                <TableCell>{item.currentTitle}</TableCell>
-                <TableCell>{renderSuggestion(item.suggestedTitle)}</TableCell>
-                <TableCell>{item.currentDescription}</TableCell>
-                <TableCell>{renderSuggestion(item.suggestedDescription)}</TableCell>
-                <TableCell>{item.currentH1}</TableCell>
-                <TableCell>{renderSuggestion(item.suggestedH1)}</TableCell>
-                <TableCell>{item.optimizationStatus}</TableCell>
-                <TableCell>{renderSuggestion(item.aiComments)}</TableCell>
-                <TableCell className="text-right">{item.date}</TableCell>
-              </TableRow>
-              {item.h2s.map((h2, index) => (
-                <TableRow key={`h2-${index}`} className="bg-muted/5">
-                  <TableCell colSpan={2} className="font-medium">H2 {index + 1}</TableCell>
-                  <TableCell>{h2.current}</TableCell>
-                  <TableCell>{renderSuggestion(h2.suggested)}</TableCell>
-                  <TableCell>{h2.contextText}</TableCell>
-                  <TableCell colSpan={5}>{renderSuggestion(h2.suggestedText)}</TableCell>
+    <div className="space-y-4">
+      <div className="flex justify-end">
+        <Button onClick={handleDownload} className="mb-4">
+          <Download className="mr-2 h-4 w-4" />
+          Télécharger CSV
+        </Button>
+      </div>
+      <div className="rounded-md border bg-white/80 backdrop-blur-sm shadow-lg">
+        <Table>
+          <SEOTableHeader />
+          <TableBody>
+            {mockData.map((item) => (
+              <>
+                <TableRow key={`h1-${item.id}`} className="hover:bg-muted/30">
+                  <TableCell className="font-medium">{item.url}</TableCell>
+                  <TableCell>{item.currentTitle}</TableCell>
+                  <TableCell>{renderSuggestion(item.suggestedTitle)}</TableCell>
+                  <TableCell>{item.currentDescription}</TableCell>
+                  <TableCell>{renderSuggestion(item.suggestedDescription)}</TableCell>
+                  <TableCell>{item.currentH1}</TableCell>
+                  <TableCell>{renderSuggestion(item.suggestedH1)}</TableCell>
+                  <TableCell>{item.optimizationStatus}</TableCell>
+                  <TableCell>{renderSuggestion(item.aiComments)}</TableCell>
+                  <TableCell className="text-right">{item.date}</TableCell>
                 </TableRow>
-              ))}
-              {item.h3s.map((h3, index) => (
-                <TableRow key={`h3-${index}`} className="bg-muted/10">
-                  <TableCell colSpan={2} className="font-medium">H3 {index + 1}</TableCell>
-                  <TableCell>{h3.current}</TableCell>
-                  <TableCell>{renderSuggestion(h3.suggested)}</TableCell>
-                  <TableCell>{h3.contextText}</TableCell>
-                  <TableCell colSpan={5}>{renderSuggestion(h3.suggestedText)}</TableCell>
-                </TableRow>
-              ))}
-            </>
-          ))}
-        </TableBody>
-      </Table>
+                {item.h2s.map((h2, index) => (
+                  <TableRow key={`h2-${index}`} className="bg-muted/5">
+                    <TableCell colSpan={2} className="font-medium">H2 {index + 1}</TableCell>
+                    <TableCell>{h2.current}</TableCell>
+                    <TableCell>{renderSuggestion(h2.suggested)}</TableCell>
+                    <TableCell>{h2.contextText}</TableCell>
+                    <TableCell colSpan={5}>{renderSuggestion(h2.suggestedText)}</TableCell>
+                  </TableRow>
+                ))}
+                {item.h3s.map((h3, index) => (
+                  <TableRow key={`h3-${index}`} className="bg-muted/10">
+                    <TableCell colSpan={2} className="font-medium">H3 {index + 1}</TableCell>
+                    <TableCell>{h3.current}</TableCell>
+                    <TableCell>{renderSuggestion(h3.suggested)}</TableCell>
+                    <TableCell>{h3.contextText}</TableCell>
+                    <TableCell colSpan={5}>{renderSuggestion(h3.suggestedText)}</TableCell>
+                  </TableRow>
+                ))}
+              </>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
     </div>
   );
 }
