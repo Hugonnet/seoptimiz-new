@@ -53,6 +53,12 @@ const mockData: SEOData[] = [
         suggested: "Suggestion H2 1",
         contextText: "Texte contextuel du H2 1",
         suggestedText: "Suggestion de texte pour H2 1"
+      },
+      {
+        current: "H2 actuel 2",
+        suggested: "Suggestion H2 2",
+        contextText: "Texte contextuel du H2 2",
+        suggestedText: "Suggestion de texte pour H2 2"
       }
     ],
     h3s: [
@@ -61,6 +67,60 @@ const mockData: SEOData[] = [
         suggested: "Suggestion H3 1",
         contextText: "Texte contextuel du H3 1",
         suggestedText: "Suggestion de texte pour H3 1"
+      },
+      {
+        current: "H3 actuel 2",
+        suggested: "Suggestion H3 2",
+        contextText: "Texte contextuel du H3 2",
+        suggestedText: "Suggestion de texte pour H3 2"
+      },
+      {
+        current: "H3 actuel 3",
+        suggested: "Suggestion H3 3",
+        contextText: "Texte contextuel du H3 3",
+        suggestedText: "Suggestion de texte pour H3 3"
+      },
+      {
+        current: "H3 actuel 4",
+        suggested: "Suggestion H3 4",
+        contextText: "Texte contextuel du H3 4",
+        suggestedText: "Suggestion de texte pour H3 4"
+      },
+      {
+        current: "H3 actuel 5",
+        suggested: "Suggestion H3 5",
+        contextText: "Texte contextuel du H3 5",
+        suggestedText: "Suggestion de texte pour H3 5"
+      },
+      {
+        current: "H3 actuel 6",
+        suggested: "Suggestion H3 6",
+        contextText: "Texte contextuel du H3 6",
+        suggestedText: "Suggestion de texte pour H3 6"
+      },
+      {
+        current: "H3 actuel 7",
+        suggested: "Suggestion H3 7",
+        contextText: "Texte contextuel du H3 7",
+        suggestedText: "Suggestion de texte pour H3 7"
+      },
+      {
+        current: "H3 actuel 8",
+        suggested: "Suggestion H3 8",
+        contextText: "Texte contextuel du H3 8",
+        suggestedText: "Suggestion de texte pour H3 8"
+      },
+      {
+        current: "H3 actuel 9",
+        suggested: "Suggestion H3 9",
+        contextText: "Texte contextuel du H3 9",
+        suggestedText: "Suggestion de texte pour H3 9"
+      },
+      {
+        current: "H3 actuel 10",
+        suggested: "Suggestion H3 10",
+        contextText: "Texte contextuel du H3 10",
+        suggestedText: "Suggestion de texte pour H3 10"
       }
     ]
   }
@@ -68,11 +128,11 @@ const mockData: SEOData[] = [
 
 export function SEOTable() {
   const renderSuggestion = (text: string) => (
-    <span className="font-bold">{text}</span>
+    <span className="font-bold text-primary">{text}</span>
   );
 
   return (
-    <div className="rounded-md border">
+    <div className="rounded-md border bg-white/80 backdrop-blur-sm shadow-lg">
       <Table>
         <TableHeader>
           <TableRow>
@@ -96,7 +156,7 @@ export function SEOTable() {
         <TableBody>
           {mockData.map((item) => (
             <>
-              <TableRow key={item.id}>
+              <TableRow key={item.id} className="hover:bg-muted/30">
                 <TableCell className="font-medium">{item.url}</TableCell>
                 <TableCell>{item.currentTitle}</TableCell>
                 <TableCell>{renderSuggestion(item.suggestedTitle)}</TableCell>
@@ -109,7 +169,7 @@ export function SEOTable() {
                 <TableCell className="text-right">{item.date}</TableCell>
               </TableRow>
               {item.h2s.map((h2, index) => (
-                <TableRow key={`h2-${index}`}>
+                <TableRow key={`h2-${index}`} className="bg-muted/5">
                   <TableCell colSpan={2} className="font-medium">H2 {index + 1}</TableCell>
                   <TableCell>{h2.current}</TableCell>
                   <TableCell>{renderSuggestion(h2.suggested)}</TableCell>
@@ -118,7 +178,7 @@ export function SEOTable() {
                 </TableRow>
               ))}
               {item.h3s.map((h3, index) => (
-                <TableRow key={`h3-${index}`}>
+                <TableRow key={`h3-${index}`} className="bg-muted/10">
                   <TableCell colSpan={2} className="font-medium">H3 {index + 1}</TableCell>
                   <TableCell>{h3.current}</TableCell>
                   <TableCell>{renderSuggestion(h3.suggested)}</TableCell>
