@@ -1,3 +1,10 @@
+import { createClient } from '@supabase/supabase-js';
+
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+
+const supabase = createClient(supabaseUrl, supabaseAnonKey);
+
 export interface SEOMetadata {
   title: string;
   description: string;
@@ -8,10 +15,11 @@ export interface SEOMetadata {
 
 export const extractSEOMetadata = async (url: string): Promise<SEOMetadata> => {
   try {
-    // Note: Cette fonction nécessite une API backend pour fonctionner
-    // car le CORS empêche le scraping direct depuis le navigateur
-    const response = await fetch(`/api/extract-metadata?url=${encodeURIComponent(url)}`);
-    const data = await response.json();
+    const { data, error } = await supabase.functions.invoke('extract-seo', {
+      body: { url }
+    });
+
+    if (error) throw error;
     return data;
   } catch (error) {
     console.error('Erreur lors de l\'extraction des métadonnées:', error);
