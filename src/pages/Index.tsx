@@ -1,5 +1,6 @@
 import { Navigation } from "@/components/Navigation";
 import { SEOTable } from "@/components/SEOTable";
+import { URLForm } from "@/components/URLForm";
 import { motion } from "framer-motion";
 
 const Index = () => {
@@ -24,6 +25,7 @@ const Index = () => {
           transition={{ duration: 0.5, delay: 0.2 }}
         >
           <Navigation />
+          <URLForm />
           <SEOTable />
         </motion.div>
       </div>
