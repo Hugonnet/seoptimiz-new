@@ -101,6 +101,12 @@ export function SEOTable() {
                   <TableCell>{renderSuggestion(item.aiComments)}</TableCell>
                   <TableCell className="text-right">{item.date}</TableCell>
                 </TableRow>
+                <TableRow key={`h1-details-${item.id}`} className="bg-muted/5">
+                  <TableCell colSpan={2} className="font-medium">H1 Détails</TableCell>
+                  <TableCell>{item.currentH1}</TableCell>
+                  <TableCell>{renderSuggestion(item.suggestedH1)}</TableCell>
+                  <TableCell colSpan={6}>{renderSuggestion("Suggestions pour améliorer le H1")}</TableCell>
+                </TableRow>
                 {item.h2s.map((h2, index) => (
                   <TableRow key={`h2-${index}`} className="bg-muted/5">
                     <TableCell colSpan={2} className="font-medium">H2 {index + 1}</TableCell>
