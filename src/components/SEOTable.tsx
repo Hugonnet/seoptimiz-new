@@ -67,6 +67,10 @@ const mockData: SEOData[] = [
 ];
 
 export function SEOTable() {
+  const renderSuggestion = (text: string) => (
+    <span className="font-bold">{text}</span>
+  );
+
   return (
     <div className="rounded-md border">
       <Table>
@@ -91,18 +95,38 @@ export function SEOTable() {
         </TableHeader>
         <TableBody>
           {mockData.map((item) => (
-            <TableRow key={item.id}>
-              <TableCell className="font-medium">{item.url}</TableCell>
-              <TableCell>{item.currentTitle}</TableCell>
-              <TableCell>{item.suggestedTitle}</TableCell>
-              <TableCell>{item.currentDescription}</TableCell>
-              <TableCell>{item.suggestedDescription}</TableCell>
-              <TableCell>{item.currentH1}</TableCell>
-              <TableCell>{item.suggestedH1}</TableCell>
-              <TableCell>{item.optimizationStatus}</TableCell>
-              <TableCell>{item.aiComments}</TableCell>
-              <TableCell className="text-right">{item.date}</TableCell>
-            </TableRow>
+            <>
+              <TableRow key={item.id}>
+                <TableCell className="font-medium">{item.url}</TableCell>
+                <TableCell>{item.currentTitle}</TableCell>
+                <TableCell>{renderSuggestion(item.suggestedTitle)}</TableCell>
+                <TableCell>{item.currentDescription}</TableCell>
+                <TableCell>{renderSuggestion(item.suggestedDescription)}</TableCell>
+                <TableCell>{item.currentH1}</TableCell>
+                <TableCell>{renderSuggestion(item.suggestedH1)}</TableCell>
+                <TableCell>{item.optimizationStatus}</TableCell>
+                <TableCell>{renderSuggestion(item.aiComments)}</TableCell>
+                <TableCell className="text-right">{item.date}</TableCell>
+              </TableRow>
+              {item.h2s.map((h2, index) => (
+                <TableRow key={`h2-${index}`}>
+                  <TableCell colSpan={2} className="font-medium">H2 {index + 1}</TableCell>
+                  <TableCell>{h2.current}</TableCell>
+                  <TableCell>{renderSuggestion(h2.suggested)}</TableCell>
+                  <TableCell>{h2.contextText}</TableCell>
+                  <TableCell colSpan={5}>{renderSuggestion(h2.suggestedText)}</TableCell>
+                </TableRow>
+              ))}
+              {item.h3s.map((h3, index) => (
+                <TableRow key={`h3-${index}`}>
+                  <TableCell colSpan={2} className="font-medium">H3 {index + 1}</TableCell>
+                  <TableCell>{h3.current}</TableCell>
+                  <TableCell>{renderSuggestion(h3.suggested)}</TableCell>
+                  <TableCell>{h3.contextText}</TableCell>
+                  <TableCell colSpan={5}>{renderSuggestion(h3.suggestedText)}</TableCell>
+                </TableRow>
+              ))}
+            </>
           ))}
         </TableBody>
       </Table>
