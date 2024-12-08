@@ -3,6 +3,9 @@ import { createClient } from '@supabase/supabase-js';
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
+console.log('Supabase URL:', supabaseUrl);
+console.log('Initializing Supabase client...');
+
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 export interface SEOMetadata {
@@ -14,15 +17,30 @@ export interface SEOMetadata {
 }
 
 export const extractSEOMetadata = async (url: string): Promise<SEOMetadata> => {
+  console.log('Calling Edge function with URL:', url);
+  
   try {
     const { data, error } = await supabase.functions.invoke('extract-seo', {
-      body: { url }
+      body: { url },
+      headers: {
+        'Content-Type': 'application/json',
+      }
     });
 
-    if (error) throw error;
+    if (error) {
+      console.error('Edge function error:', error);
+      throw error;
+    }
+
+    console.log('Edge function response:', data);
     return data;
   } catch (error) {
-    console.error('Erreur lors de l\'extraction des métadonnées:', error);
+    console.error('Error details:', {
+      message: error.message,
+      name: error.name,
+      stack: error.stack,
+      context: error.context
+    });
     throw error;
   }
 };

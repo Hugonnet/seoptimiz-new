@@ -14,18 +14,25 @@ export function URLForm() {
     setIsLoading(true);
 
     try {
+      console.log('Starting SEO analysis for URL:', url);
       const seoData = await extractSEOMetadata(url);
-      console.log('Données SEO extraites:', seoData);
+      console.log('SEO data extracted:', seoData);
       
       toast({
         title: "Analyse SEO terminée",
         description: "Les données ont été extraites avec succès.",
       });
     } catch (error) {
-      console.error('Erreur:', error);
+      console.error('Detailed error:', error);
+      
+      let errorMessage = "Impossible d'analyser l'URL. ";
+      if (error.message.includes('Failed to fetch')) {
+        errorMessage += "La fonction Edge n'est pas accessible. Veuillez vérifier que la fonction est déployée et activée dans votre projet Supabase.";
+      }
+      
       toast({
         title: "Erreur",
-        description: "Impossible d'analyser l'URL. Veuillez réessayer.",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
