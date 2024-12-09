@@ -5,7 +5,7 @@ import {
   NavigationMenuList,
   navigationMenuTriggerStyle,
 } from "@/components/ui/navigation-menu";
-import { ArrowLeft, BarChart2, History, Search } from "lucide-react";
+import { ArrowLeft, BarChart2, History, Search, Sparkles } from "lucide-react";
 import { Link } from "react-router-dom";
 
 export function Navigation() {
@@ -19,9 +19,15 @@ export function Navigation() {
           </Link>
         </NavigationMenuItem>
         <NavigationMenuItem>
-          <Link to="/analyse" className={navigationMenuTriggerStyle()}>
+          <Link to="/analyse-approfondie" className={navigationMenuTriggerStyle()}>
             <Search className="mr-2 h-4 w-4" />
-            Analyse SEO
+            Analyse Approfondie
+          </Link>
+        </NavigationMenuItem>
+        <NavigationMenuItem>
+          <Link to="/recommandations-ia" className={navigationMenuTriggerStyle()}>
+            <Sparkles className="mr-2 h-4 w-4" />
+            Recommandations IA
           </Link>
         </NavigationMenuItem>
         <NavigationMenuItem>
