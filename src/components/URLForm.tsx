@@ -64,7 +64,7 @@ export function URLForm() {
         <Button 
           type="submit" 
           disabled={isLoading}
-          className="absolute right-2 top-2 rounded-full bg-[#6366F1] hover:bg-[#5558E3] h-10 px-6"
+          className="absolute right-2 top-2 rounded-full gradient-button h-10 px-6"
         >
           <Search className="mr-2 h-4 w-4" />
           {isLoading ? "Analyse en cours..." : "Analyser"}

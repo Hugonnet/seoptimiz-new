@@ -34,8 +34,8 @@
     @apply bg-background text-foreground antialiased;
   }
 
-  .glass-card {
-    @apply bg-white/80 backdrop-blur-sm border border-gray-200/20 shadow-lg;
+  .gradient-button {
+    @apply bg-gradient-to-r from-[#6366F1] to-[#EC4899] hover:opacity-90 text-white transition-all duration-200;
   }
 
   .animate-in {
