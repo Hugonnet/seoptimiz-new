@@ -35,6 +35,7 @@ export function URLForm() {
           currentH2s: seoData.h2s,
           currentH3s: seoData.h3s,
           currentH4s: seoData.h4s,
+          visibleText: seoData.visible_text // Ajout des textes visibles
         },
       });
 
@@ -57,7 +58,8 @@ export function URLForm() {
         current_h3s: seoData.h3s || [],
         suggested_h3s: suggestions.suggested_h3s,
         current_h4s: seoData.h4s || [],
-        suggested_h4s: suggestions.suggested_h4s
+        suggested_h4s: suggestions.suggested_h4s,
+        visible_text: seoData.visible_text || [] // Ajout des textes visibles
       };
 
       // Sauvegarder dans Supabase

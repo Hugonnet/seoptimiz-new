@@ -21,7 +21,6 @@ export const extractSEOMetadata = async (url: string): Promise<SEOMetadata> => {
   }
 
   console.log('Démarrage de l\'analyse SEO pour:', url);
-  console.log('Envoi de la requête avec URL:', url);
   
   try {
     new URL(url);
@@ -29,15 +28,13 @@ export const extractSEOMetadata = async (url: string): Promise<SEOMetadata> => {
     throw new Error("Format d'URL invalide");
   }
 
-  console.log('Appel de la fonction extract-seo avec:', { url });
-
   const { data, error } = await supabase.functions.invoke('extract-seo', {
     body: { url },
   });
 
   if (error) {
     console.error('Erreur lors de l\'analyse SEO:', error);
-    throw new Error(error.message || "Impossible d'analyser cette URL pour le moment. Veuillez réessayer plus tard.");
+    throw new Error(error.message || "Impossible d'analyser cette URL pour le moment");
   }
 
   if (!data) {
@@ -45,7 +42,6 @@ export const extractSEOMetadata = async (url: string): Promise<SEOMetadata> => {
   }
 
   console.log('Données SEO extraites:', data);
-
   return data as SEOMetadata;
 };
 
