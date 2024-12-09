@@ -4,74 +4,69 @@ import { Download } from "lucide-react";
 import { SEOTableHeader } from "./SEOTableHeader";
 import { downloadTableAsCSV } from "@/services/seoService";
 import { useSEOStore } from "@/store/seoStore";
+import { SEOContentSection } from "./SEOContentSection";
 
 export function SEOTable() {
   const seoData = useSEOStore((state) => state.seoData);
 
   const renderCurrentContent = (item: any) => (
     <div className="space-y-4">
-      <div className="text-gray-700">
-        <div className="font-semibold mb-1">Titre :</div>
-        <div>{item.current_title}</div>
-      </div>
-      <div className="text-gray-700">
-        <div className="font-semibold mb-1">Description :</div>
-        <div>{item.current_description}</div>
-      </div>
-      <div className="text-gray-700">
-        <div className="font-semibold mb-1">H1 :</div>
-        <div>{item.current_h1}</div>
-        {item.visible_text?.filter((text: string) => 
-          text && !item.current_h2s?.includes(text) && 
-          !item.current_h3s?.includes(text) && 
-          !item.current_h4s?.includes(text)
-        ).map((text: string, index: number) => (
-          <div key={`h1-text-${index}`} className="mt-2 p-2 bg-gray-50 rounded-md">
-            {text}
-          </div>
-        ))}
-      </div>
+      <SEOContentSection 
+        title="Titre"
+        content={item.current_title}
+      />
+      
+      <SEOContentSection 
+        title="Description"
+        content={item.current_description}
+      />
+      
+      <SEOContentSection 
+        title="H1"
+        content={item.current_h1}
+        visibleTexts={item.visible_text}
+        excludeTexts={[
+          ...(item.current_h2s || []),
+          ...(item.current_h3s || []),
+          ...(item.current_h4s || [])
+        ]}
+      />
+      
       {item.current_h2s?.map((h2: string, index: number) => (
-        <div key={index} className="text-gray-700">
-          <div className="font-semibold mb-1">H2 :</div>
-          <div>{h2}</div>
-          {item.visible_text?.filter((text: string) => 
-            text && text !== h2 &&
-            !item.current_h3s?.includes(text) && 
-            !item.current_h4s?.includes(text)
-          ).map((text: string, textIndex: number) => (
-            <div key={`h2-text-${index}-${textIndex}`} className="mt-2 p-2 bg-gray-50 rounded-md">
-              {text}
-            </div>
-          ))}
-        </div>
+        <SEOContentSection 
+          key={index}
+          title="H2"
+          content={h2}
+          visibleTexts={item.visible_text}
+          excludeTexts={[
+            h2,
+            ...(item.current_h3s || []),
+            ...(item.current_h4s || [])
+          ]}
+        />
       ))}
+      
       {item.current_h3s?.map((h3: string, index: number) => (
-        <div key={index} className="text-gray-700">
-          <div className="font-semibold mb-1">H3 :</div>
-          <div>{h3}</div>
-          {item.visible_text?.filter((text: string) => 
-            text && text !== h3 && 
-            !item.current_h4s?.includes(text)
-          ).map((text: string, textIndex: number) => (
-            <div key={`h3-text-${index}-${textIndex}`} className="mt-2 p-2 bg-gray-50 rounded-md">
-              {text}
-            </div>
-          ))}
-        </div>
+        <SEOContentSection 
+          key={index}
+          title="H3"
+          content={h3}
+          visibleTexts={item.visible_text}
+          excludeTexts={[
+            h3,
+            ...(item.current_h4s || [])
+          ]}
+        />
       ))}
+      
       {item.current_h4s?.map((h4: string, index: number) => (
-        <div key={index} className="text-gray-700">
-          <div className="font-semibold mb-1">H4 :</div>
-          <div>{h4}</div>
-          {item.visible_text?.filter((text: string) => 
-            text && text !== h4
-          ).map((text: string, textIndex: number) => (
-            <div key={`h4-text-${index}-${textIndex}`} className="mt-2 p-2 bg-gray-50 rounded-md">
-              {text}
-            </div>
-          ))}
-        </div>
+        <SEOContentSection 
+          key={index}
+          title="H4"
+          content={h4}
+          visibleTexts={item.visible_text}
+          excludeTexts={[h4]}
+        />
       ))}
     </div>
   );
