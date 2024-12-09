@@ -18,7 +18,7 @@ export const extractSEOMetadata = async (url: string): Promise<SEOMetadata> => {
   
   try {
     const { data, error } = await supabase.functions.invoke('extract-seo', {
-      body: { url },
+      body: JSON.stringify({ url }), // Properly stringify the body
       headers: {
         'Content-Type': 'application/json',
       }
