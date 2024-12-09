@@ -60,7 +60,8 @@ export function URLForm() {
         current_h3s: seoData.h3s || [],
         suggested_h3s: suggestions?.suggested_h3s || [],
         current_h4s: seoData.h4s || [],
-        suggested_h4s: suggestions?.suggested_h4s || []
+        suggested_h4s: suggestions?.suggested_h4s || [],
+        visible_text: seoData.visible_text || []
       };
 
       console.log('Données à sauvegarder:', seoAnalysis);
