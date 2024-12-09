@@ -12,7 +12,7 @@ const RecommandationsIA = () => {
           <div className="text-center space-y-4">
             <h1 className="text-4xl font-bold text-[#6366F1]">Recommandations IA</h1>
             <p className="text-gray-600 max-w-2xl mx-auto">
-              Obtenez des suggestions d'optimisation SEO personnalisées générées par notre intelligence artificielle experte.
+              Obtenez des suggestions d'optimisation SEO générées par notre intelligence artificielle pour améliorer votre référencement.
             </p>
           </div>
 
