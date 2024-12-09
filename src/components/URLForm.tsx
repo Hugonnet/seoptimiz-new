@@ -6,6 +6,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Search } from "lucide-react";
 import { useSEOStore } from "@/store/seoStore";
 import { supabase } from "@/integrations/supabase/client";
+import { generateSEOSuggestions } from "@/services/seoSuggestionService";
 
 export function URLForm() {
   const [url, setUrl] = useState("");
@@ -27,22 +28,15 @@ export function URLForm() {
       }
 
       // Obtenir les suggestions d'OpenAI
-      const { data: suggestions, error: aiError } = await supabase.functions.invoke('generate-seo-suggestions', {
-        body: {
-          currentTitle: seoData.title,
-          currentDescription: seoData.description,
-          currentH1: seoData.h1,
-          currentH2s: seoData.h2s,
-          currentH3s: seoData.h3s,
-          currentH4s: seoData.h4s,
-          visibleText: seoData.visible_text
-        },
+      const suggestions = await generateSEOSuggestions({
+        currentTitle: seoData.title || "",
+        currentDescription: seoData.description || "",
+        currentH1: seoData.h1 || "",
+        currentH2s: seoData.h2s || [],
+        currentH3s: seoData.h3s || [],
+        currentH4s: seoData.h4s || [],
+        visibleText: seoData.visible_text || []
       });
-
-      if (aiError) {
-        console.error('Erreur IA:', aiError);
-        throw new Error("Erreur lors de la génération des suggestions");
-      }
 
       console.log('Suggestions reçues:', suggestions);
 
