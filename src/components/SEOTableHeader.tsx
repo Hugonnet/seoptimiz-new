@@ -5,9 +5,6 @@ export function SEOTableHeader() {
   return (
     <TableHeader>
       <TableRow>
-        <TableHead className="w-[200px]">URL</TableHead>
-        <TableHead>Titre Actuel</TableHead>
-        <TableHead>Titre Suggéré</TableHead>
         <TableHead>Description Actuelle</TableHead>
         <TableHead>Description Suggérée</TableHead>
         <TableHead className="text-right">

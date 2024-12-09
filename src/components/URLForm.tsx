@@ -3,6 +3,7 @@ import { Input } from "@/components/ui/input";
 import { useState } from "react";
 import { extractSEOMetadata } from "@/services/seoService";
 import { useToast } from "@/hooks/use-toast";
+import { Search } from "lucide-react";
 
 export function URLForm() {
   const [url, setUrl] = useState("");
@@ -41,18 +42,25 @@ export function URLForm() {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="flex gap-4 mb-8">
-      <Input
-        type="url"
-        placeholder="Entrez l'URL à analyser"
-        value={url}
-        onChange={(e) => setUrl(e.target.value)}
-        className="flex-1"
-        required
-      />
-      <Button type="submit" disabled={isLoading}>
-        {isLoading ? "Analyse en cours..." : "Analyser"}
-      </Button>
+    <form onSubmit={handleSubmit} className="max-w-3xl mx-auto">
+      <div className="relative">
+        <Input
+          type="url"
+          placeholder="Entrez l'URL du site (ex: https://example.com)"
+          value={url}
+          onChange={(e) => setUrl(e.target.value)}
+          className="h-14 pl-6 pr-36 text-lg rounded-full border-purple-100 focus-visible:ring-purple-600"
+          required
+        />
+        <Button 
+          type="submit" 
+          disabled={isLoading}
+          className="absolute right-2 top-2 rounded-full bg-purple-600 hover:bg-purple-700 h-10 px-6"
+        >
+          <Search className="mr-2 h-4 w-4" />
+          {isLoading ? "Analyse..." : "Analyser"}
+        </Button>
+      </div>
     </form>
   );
 }
