@@ -14,19 +14,30 @@ serve(async (req) => {
 
   try {
     console.log('Démarrage de l\'analyse SEO');
+    console.log('Méthode HTTP:', req.method);
     
     if (req.method !== 'POST') {
       throw new Error('Méthode non autorisée. Utilisez POST.');
     }
 
+    // Log headers for debugging
+    console.log('Headers reçus:', Object.fromEntries(req.headers.entries()));
+
     // Parse request body
     let body;
     try {
-      body = await req.json(); // Use .json() directly instead of .text() + JSON.parse()
-      console.log('Body reçu:', JSON.stringify(body));
+      const bodyText = await req.text();
+      console.log('Body brut reçu:', bodyText);
+      
+      if (!bodyText) {
+        throw new Error('Le corps de la requête est vide');
+      }
+      
+      body = JSON.parse(bodyText);
+      console.log('Body parsé:', body);
     } catch (e) {
-      console.error('Erreur de parsing JSON:', e);
-      throw new Error('Format de requête invalide');
+      console.error('Erreur lors du parsing du body:', e);
+      throw new Error(`Erreur de format de requête: ${e.message}`);
     }
 
     const { url } = body;

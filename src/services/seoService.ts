@@ -28,7 +28,7 @@ export const extractSEOMetadata = async (url: string): Promise<SEOMetadata> => {
   }
 
   const { data, error } = await supabase.functions.invoke('extract-seo', {
-    body: { url }, // Supabase will handle JSON stringification
+    body: { url },
     headers: {
       'Content-Type': 'application/json',
     }
@@ -36,7 +36,7 @@ export const extractSEOMetadata = async (url: string): Promise<SEOMetadata> => {
 
   if (error) {
     console.error('Erreur lors de l\'analyse SEO:', error);
-    throw new Error("Impossible d'analyser cette URL pour le moment. Veuillez réessayer plus tard.");
+    throw new Error(error.message || "Impossible d'analyser cette URL pour le moment. Veuillez réessayer plus tard.");
   }
 
   if (!data) {
