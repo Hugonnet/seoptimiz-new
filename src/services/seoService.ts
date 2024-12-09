@@ -49,63 +49,71 @@ export const extractSEOMetadata = async (url: string): Promise<SEOMetadata> => {
 };
 
 export const downloadTableAsCSV = (data: any[]) => {
-  // Préparer les en-têtes
-  const headers = [
-    'URL',
-    'Date d\'analyse',
-    'Titre actuel',
-    'Titre suggéré',
-    'Description actuelle',
-    'Description suggérée',
-    'H1 actuel',
-    'H1 suggéré',
-    'H2s actuels',
-    'H2s suggérés',
-    'H3s actuels',
-    'H3s suggérés',
-    'H4s actuels',
-    'H4s suggérés'
-  ];
+  // Pour chaque URL analysée
+  const csvRows: string[] = [];
 
-  // Préparer les lignes de données
-  const rows = data.map(item => {
-    const formatArray = (arr: string[] | null) => arr ? arr.join(' | ') : '';
-    
-    return [
-      item.url,
-      new Date(item.created_at).toLocaleDateString('fr-FR'),
-      item.current_title || '',
-      item.suggested_title || '',
-      item.current_description || '',
-      item.suggested_description || '',
-      item.current_h1 || '',
-      item.suggested_h1 || '',
-      formatArray(item.current_h2s),
-      formatArray(item.suggested_h2s),
-      formatArray(item.current_h3s),
-      formatArray(item.suggested_h3s),
-      formatArray(item.current_h4s),
-      formatArray(item.suggested_h4s)
-    ];
+  data.forEach((item) => {
+    // Ajouter l'URL et la date comme en-tête de section
+    csvRows.push(`"Analyse SEO pour : ${item.url}"`);
+    csvRows.push(`"Date d'analyse : ${new Date(item.created_at).toLocaleDateString('fr-FR')}"`);
+    csvRows.push(''); // Ligne vide pour la lisibilité
+
+    // En-têtes des colonnes
+    csvRows.push('"Élément","Contenu actuel","Suggestion d\'amélioration","Contexte"');
+
+    // Titre
+    csvRows.push(`"Titre","${escapeCSV(item.current_title)}","${escapeCSV(item.suggested_title)}","${escapeCSV(item.title_context || '')}"`);
+
+    // Description
+    csvRows.push(`"Description","${escapeCSV(item.current_description)}","${escapeCSV(item.suggested_description)}","${escapeCSV(item.description_context || '')}"`);
+
+    // H1
+    csvRows.push(`"H1","${escapeCSV(item.current_h1)}","${escapeCSV(item.suggested_h1)}","${escapeCSV(item.h1_context || '')}"`);
+
+    // H2s
+    const h2sCount = Math.max(
+      (item.current_h2s || []).length,
+      (item.suggested_h2s || []).length
+    );
+    for (let i = 0; i < h2sCount; i++) {
+      csvRows.push(`"H2 ${i + 1}","${escapeCSV(item.current_h2s?.[i] || '')}","${escapeCSV(item.suggested_h2s?.[i] || '')}","${escapeCSV(item.h2s_context?.[i] || '')}"`);
+    }
+
+    // H3s
+    const h3sCount = Math.max(
+      (item.current_h3s || []).length,
+      (item.suggested_h3s || []).length
+    );
+    for (let i = 0; i < h3sCount; i++) {
+      csvRows.push(`"H3 ${i + 1}","${escapeCSV(item.current_h3s?.[i] || '')}","${escapeCSV(item.suggested_h3s?.[i] || '')}","${escapeCSV(item.h3s_context?.[i] || '')}"`);
+    }
+
+    // H4s
+    const h4sCount = Math.max(
+      (item.current_h4s || []).length,
+      (item.suggested_h4s || []).length
+    );
+    for (let i = 0; i < h4sCount; i++) {
+      csvRows.push(`"H4 ${i + 1}","${escapeCSV(item.current_h4s?.[i] || '')}","${escapeCSV(item.suggested_h4s?.[i] || '')}","${escapeCSV(item.h4s_context?.[i] || '')}"`);
+    }
+
+    // Ajouter une ligne vide entre chaque analyse d'URL
+    csvRows.push('');
+    csvRows.push(''); // Double ligne vide pour plus de lisibilité
   });
 
-  // Convertir en format CSV
-  const csvContent = [
-    headers.join(','),
-    ...rows.map(row => 
-      row.map(cell => {
-        // Échapper les virgules et les guillemets dans les cellules
-        const escaped = cell.toString().replace(/"/g, '""');
-        return `"${escaped}"`;
-      }).join(',')
-    )
-  ].join('\n');
-
-  // Créer et télécharger le fichier
+  // Créer et télécharger le fichier CSV
+  const csvContent = csvRows.join('\n');
   const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
   const link = document.createElement('a');
   const date = new Date().toLocaleDateString('fr-FR').replace(/\//g, '-');
   link.href = URL.createObjectURL(blob);
   link.download = `analyse-seo-${date}.csv`;
   link.click();
+};
+
+// Fonction utilitaire pour échapper les caractères spéciaux dans le CSV
+const escapeCSV = (str: string | null | undefined): string => {
+  if (!str) return '';
+  return str.replace(/"/g, '""');
 };
