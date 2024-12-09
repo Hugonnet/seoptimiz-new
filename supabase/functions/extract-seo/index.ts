@@ -63,12 +63,22 @@ serve(async (req) => {
       return texts;
     };
 
+    // Extraire le texte visible
+    const getVisibleText = () => {
+      const textNodes = Array.from(doc.querySelectorAll('p, li, span, div'))
+        .map(el => el.textContent?.trim())
+        .filter(text => text && text.length > 20); // Filtrer les textes courts
+      return textNodes;
+    };
+
     const seoData = {
       title: getData('title'),
       description: getMetaContent('description'),
       h1: getData('h1'),
       h2s: getAllData('h2'),
       h3s: getAllData('h3'),
+      h4s: getAllData('h4'),
+      visible_text: getVisibleText(),
       keywords: getMetaContent('keywords'),
       canonical: doc.querySelector('link[rel="canonical"]')?.getAttribute('href') || '',
       ogTitle: doc.querySelector('meta[property="og:title"]')?.getAttribute('content') || '',

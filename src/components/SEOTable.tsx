@@ -10,58 +10,96 @@ export function SEOTable() {
 
   const renderCurrentContent = (item: any) => (
     <div className="space-y-4">
-      <div className="text-gray-700">Titre : {item.current_title}</div>
-      <div className="text-gray-700">Description : {item.current_description}</div>
-      <div className="text-gray-700">H1 : {item.current_h1}</div>
+      <div className="text-gray-700">
+        <div className="font-semibold mb-1">Titre :</div>
+        <div>{item.current_title}</div>
+      </div>
+      <div className="text-gray-700">
+        <div className="font-semibold mb-1">Description :</div>
+        <div>{item.current_description}</div>
+      </div>
+      <div className="text-gray-700">
+        <div className="font-semibold mb-1">H1 :</div>
+        <div>{item.current_h1}</div>
+      </div>
       {item.current_h2s?.map((h2: string, index: number) => (
-        <div key={index} className="text-gray-700">H2 : {h2}</div>
+        <div key={index} className="text-gray-700">
+          <div className="font-semibold mb-1">H2 :</div>
+          <div>{h2}</div>
+        </div>
       ))}
       {item.current_h3s?.map((h3: string, index: number) => (
-        <div key={index} className="text-gray-700">H3 : {h3}</div>
+        <div key={index} className="text-gray-700">
+          <div className="font-semibold mb-1">H3 :</div>
+          <div>{h3}</div>
+        </div>
       ))}
       {item.current_h4s?.map((h4: string, index: number) => (
-        <div key={index} className="text-gray-700">H4 : {h4}</div>
+        <div key={index} className="text-gray-700">
+          <div className="font-semibold mb-1">H4 :</div>
+          <div>{h4}</div>
+        </div>
       ))}
+      {item.visible_text && (
+        <div className="text-gray-700">
+          <div className="font-semibold mb-1">Contenu visible :</div>
+          <div>{item.visible_text}</div>
+        </div>
+      )}
     </div>
   );
 
   const renderSuggestedContent = (item: any) => (
     <div className="space-y-4">
       <div className="space-y-2">
-        <div className="font-bold text-purple-600">Titre : {item.suggested_title}</div>
+        <div className="font-bold text-purple-600">Titre optimisé :</div>
+        <div>{item.suggested_title}</div>
         <div className="text-sm text-gray-600 italic">{item.title_context}</div>
       </div>
       
       <div className="space-y-2">
-        <div className="font-bold text-purple-600">Description : {item.suggested_description}</div>
+        <div className="font-bold text-purple-600">Description optimisée :</div>
+        <div>{item.suggested_description}</div>
         <div className="text-sm text-gray-600 italic">{item.description_context}</div>
       </div>
       
       <div className="space-y-2">
-        <div className="font-bold text-purple-600">H1 : {item.suggested_h1}</div>
+        <div className="font-bold text-purple-600">H1 optimisé :</div>
+        <div>{item.suggested_h1}</div>
         <div className="text-sm text-gray-600 italic">{item.h1_context}</div>
       </div>
       
       {item.suggested_h2s?.map((h2: string, index: number) => (
         <div key={index} className="space-y-2">
-          <div className="font-bold text-purple-600">H2 : {h2}</div>
+          <div className="font-bold text-purple-600">H2 optimisé :</div>
+          <div>{h2}</div>
           <div className="text-sm text-gray-600 italic">{item.h2s_context?.[index]}</div>
         </div>
       ))}
       
       {item.suggested_h3s?.map((h3: string, index: number) => (
         <div key={index} className="space-y-2">
-          <div className="font-bold text-purple-600">H3 : {h3}</div>
+          <div className="font-bold text-purple-600">H3 optimisé :</div>
+          <div>{h3}</div>
           <div className="text-sm text-gray-600 italic">{item.h3s_context?.[index]}</div>
         </div>
       ))}
       
       {item.suggested_h4s?.map((h4: string, index: number) => (
         <div key={index} className="space-y-2">
-          <div className="font-bold text-purple-600">H4 : {h4}</div>
+          <div className="font-bold text-purple-600">H4 optimisé :</div>
+          <div>{h4}</div>
           <div className="text-sm text-gray-600 italic">{item.h4s_context?.[index]}</div>
         </div>
       ))}
+      
+      {item.suggested_visible_text && (
+        <div className="space-y-2">
+          <div className="font-bold text-purple-600">Contenu visible optimisé :</div>
+          <div>{item.suggested_visible_text}</div>
+          <div className="text-sm text-gray-600 italic">{item.visible_text_context}</div>
+        </div>
+      )}
     </div>
   );
 

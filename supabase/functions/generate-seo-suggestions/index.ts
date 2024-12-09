@@ -14,9 +14,9 @@ serve(async (req) => {
   }
 
   try {
-    const { currentTitle, currentDescription, currentH1, currentH2s, currentH3s, currentH4s } = await req.json();
+    const { currentTitle, currentDescription, currentH1, currentH2s, currentH3s, currentH4s, visibleText } = await req.json();
 
-    console.log('Données reçues pour analyse:', { currentTitle, currentDescription, currentH1, currentH2s, currentH3s, currentH4s });
+    console.log('Données reçues pour analyse:', { currentTitle, currentDescription, currentH1, currentH2s, currentH3s, currentH4s, visibleText });
 
     const prompt = `Tu es un expert SEO de renommée internationale avec plus de 15 ans d'expérience dans l'optimisation des sites web pour les moteurs de recherche. Analyse en profondeur le contenu suivant et fournis des recommandations détaillées pour améliorer le référencement.
 
@@ -27,6 +27,7 @@ Contenu actuel à analyser :
 - H2s: "${currentH2s?.join(', ')}"
 - H3s: "${currentH3s?.join(', ')}"
 - H4s: "${currentH4s?.join(', ')}"
+- Texte visible: "${visibleText?.join(' ')}"
 
 Pour CHAQUE élément, tu dois :
 1. Analyser sa pertinence SEO
@@ -48,7 +49,9 @@ Fournis UNIQUEMENT un objet JSON avec cette structure exacte, sans texte avant o
   "suggested_h3s": ["nouveau H3 1", "nouveau H3 2"],
   "h3s_context": ["explication pour H3 1", "explication pour H3 2"],
   "suggested_h4s": ["nouveau H4 1", "nouveau H4 2"],
-  "h4s_context": ["explication pour H4 1", "explication pour H4 2"]
+  "h4s_context": ["explication pour H4 1", "explication pour H4 2"],
+  "suggested_visible_text": ["texte optimisé 1", "texte optimisé 2"],
+  "visible_text_context": ["explication pour texte 1", "explication pour texte 2"]
 }
 
 Les suggestions doivent :
