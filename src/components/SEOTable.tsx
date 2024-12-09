@@ -10,51 +10,54 @@ export function SEOTable() {
   const seoData = useSEOStore((state) => state.seoData);
   console.log("SEO Data in Table:", seoData); // Debug log
 
-  const renderCurrentContent = (item: any) => (
-    <div className="space-y-4">
-      <SEOContentSection 
-        title="Titre"
-        content={item.current_title || ''}
-      />
-      
-      <SEOContentSection 
-        title="Description"
-        content={item.current_description || ''}
-      />
-      
-      <SEOContentSection 
-        title="H1"
-        content={item.current_h1 || ''}
-      />
-      
-      {(item.current_h2s || []).map((h2: string, index: number) => (
+  const renderCurrentContent = (item: any) => {
+    console.log("Rendering current content for item:", item);
+    return (
+      <div className="space-y-4">
         <SEOContentSection 
-          key={index}
-          title="H2"
-          content={h2}
+          title="Titre"
+          content={item.current_title || ''}
         />
-      ))}
-      
-      {(item.current_h3s || []).map((h3: string, index: number) => (
+        
         <SEOContentSection 
-          key={index}
-          title="H3"
-          content={h3}
+          title="Description"
+          content={item.current_description || ''}
         />
-      ))}
-      
-      {(item.current_h4s || []).map((h4: string, index: number) => (
+        
         <SEOContentSection 
-          key={index}
-          title="H4"
-          content={h4}
+          title="H1"
+          content={item.current_h1 || ''}
         />
-      ))}
-    </div>
-  );
+        
+        {(item.current_h2s || []).map((h2: string, index: number) => (
+          <SEOContentSection 
+            key={index}
+            title="H2"
+            content={h2}
+          />
+        ))}
+        
+        {(item.current_h3s || []).map((h3: string, index: number) => (
+          <SEOContentSection 
+            key={index}
+            title="H3"
+            content={h3}
+          />
+        ))}
+        
+        {(item.current_h4s || []).map((h4: string, index: number) => (
+          <SEOContentSection 
+            key={index}
+            title="H4"
+            content={h4}
+          />
+        ))}
+      </div>
+    );
+  };
 
   const renderSuggestedContent = (item: any) => {
-    console.log("Rendering suggestions for item:", item); // Debug log
+    console.log("Rendering suggestions for item:", item);
     return (
       <div className="space-y-4">
         <SEOContentSection 

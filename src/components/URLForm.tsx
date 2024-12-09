@@ -53,10 +53,11 @@ export function URLForm() {
         current_h3s: seoData.h3s || [],
         suggested_h3s: suggestions?.suggested_h3s || [],
         current_h4s: seoData.h4s || [],
-        suggested_h4s: suggestions?.suggested_h4s || []
+        suggested_h4s: suggestions?.suggested_h4s || [],
+        id: crypto.randomUUID() // Ajout d'un ID unique
       };
 
-      console.log('Données à sauvegarder:', seoAnalysis);
+      console.log('Données à sauvegarder dans le store:', seoAnalysis);
 
       // Sauvegarder dans Supabase
       const { error: supabaseError } = await supabase

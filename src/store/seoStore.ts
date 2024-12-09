@@ -26,19 +26,23 @@ export interface SEOData {
 
 interface SEOStore {
   seoData: SEOData[];
-  addSEOData: (data: Omit<SEOData, "id" | "date">) => void;
+  addSEOData: (data: Omit<SEOData, "date">) => void;
+  clearSEOData: () => void;
 }
 
 export const useSEOStore = create<SEOStore>()((set) => ({
   seoData: [],
-  addSEOData: (data) => set((state) => ({
-    seoData: [
-      ...state.seoData,
-      {
-        ...data,
-        id: crypto.randomUUID(),
-        date: new Date().toISOString().split('T')[0],
-      },
-    ],
-  })),
+  addSEOData: (data) => {
+    console.log('Adding data to store:', data);
+    set((state) => ({
+      seoData: [
+        ...state.seoData,
+        {
+          ...data,
+          date: new Date().toISOString().split('T')[0],
+        },
+      ],
+    }));
+  },
+  clearSEOData: () => set({ seoData: [] }),
 }));
