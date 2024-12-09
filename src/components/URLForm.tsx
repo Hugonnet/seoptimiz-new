@@ -26,21 +26,38 @@ export function URLForm() {
         throw new Error("Aucune donnée SEO n'a pu être extraite de cette URL");
       }
 
+      // Obtenir les suggestions d'OpenAI
+      const { data: suggestions, error: aiError } = await supabase.functions.invoke('generate-seo-suggestions', {
+        body: {
+          currentTitle: seoData.title,
+          currentDescription: seoData.description,
+          currentH1: seoData.h1,
+          currentH2s: seoData.h2s,
+          currentH3s: seoData.h3s,
+          currentH4s: seoData.h4s,
+        },
+      });
+
+      if (aiError) {
+        console.error('Erreur IA:', aiError);
+        throw new Error("Erreur lors de la génération des suggestions");
+      }
+
       // Préparer les données pour le stockage et l'affichage
       const seoAnalysis = {
         url,
         current_title: seoData.title || "",
-        suggested_title: `${seoData.title || ""} - Version Optimisée`,
+        suggested_title: suggestions.suggested_title,
         current_description: seoData.description || "",
-        suggested_description: `${seoData.description || ""} (Optimisé pour le SEO)`,
+        suggested_description: suggestions.suggested_description,
         current_h1: seoData.h1 || "",
-        suggested_h1: "Un titre H1 optimisé pour le SEO",
+        suggested_h1: suggestions.suggested_h1,
         current_h2s: seoData.h2s || [],
-        suggested_h2s: (seoData.h2s || []).map(h2 => `${h2} (Optimisé)`),
+        suggested_h2s: suggestions.suggested_h2s,
         current_h3s: seoData.h3s || [],
-        suggested_h3s: (seoData.h3s || []).map(h3 => `${h3} (Optimisé)`),
+        suggested_h3s: suggestions.suggested_h3s,
         current_h4s: seoData.h4s || [],
-        suggested_h4s: (seoData.h4s || []).map(h4 => `${h4} (Optimisé)`)
+        suggested_h4s: suggestions.suggested_h4s
       };
 
       // Sauvegarder dans Supabase
@@ -58,7 +75,7 @@ export function URLForm() {
       
       toast({
         title: "Analyse terminée",
-        description: "Les données SEO ont été extraites et sauvegardées avec succès.",
+        description: "Les données SEO ont été extraites et optimisées avec succès.",
       });
     } catch (error) {
       console.error('Erreur détaillée:', error);
