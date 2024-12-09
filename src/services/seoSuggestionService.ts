@@ -7,7 +7,6 @@ export interface SEOSuggestionRequest {
   currentH2s: string[];
   currentH3s: string[];
   currentH4s: string[];
-  visibleText: string[];
 }
 
 export const generateSEOSuggestions = async (data: SEOSuggestionRequest) => {

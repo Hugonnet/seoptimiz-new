@@ -34,8 +34,7 @@ export function URLForm() {
         currentH1: seoData.h1 || "",
         currentH2s: seoData.h2s || [],
         currentH3s: seoData.h3s || [],
-        currentH4s: seoData.h4s || [],
-        visibleText: seoData.visible_text || []
+        currentH4s: seoData.h4s || []
       });
 
       console.log('Suggestions reçues:', suggestions);
@@ -54,8 +53,7 @@ export function URLForm() {
         current_h3s: seoData.h3s || [],
         suggested_h3s: suggestions?.suggested_h3s || [],
         current_h4s: seoData.h4s || [],
-        suggested_h4s: suggestions?.suggested_h4s || [],
-        visible_text: seoData.visible_text || []
+        suggested_h4s: suggestions?.suggested_h4s || []
       };
 
       console.log('Données à sauvegarder:', seoAnalysis);
