@@ -20,16 +20,23 @@ serve(async (req) => {
       throw new Error('Méthode non autorisée. Utilisez POST.');
     }
 
-    // Log request details for debugging
-    console.log('Headers reçus:', Object.fromEntries(req.headers.entries()));
-    
-    // Parse the request body directly
-    const body = await req.json().catch(error => {
-      console.error('Erreur lors du parsing du body:', error);
-      throw new Error('Format de requête JSON invalide');
-    });
+    // Get the raw body text first
+    const bodyText = await req.text();
+    console.log('Body text reçu:', bodyText);
 
-    console.log('Body reçu:', body);
+    if (!bodyText) {
+      throw new Error('Le corps de la requête est vide');
+    }
+
+    // Parse the body text
+    let body;
+    try {
+      body = JSON.parse(bodyText);
+      console.log('Body parsé:', body);
+    } catch (error) {
+      console.error('Erreur de parsing JSON:', error);
+      throw new Error('Format de requête JSON invalide');
+    }
 
     if (!body || !body.url) {
       throw new Error('URL manquante dans la requête');
