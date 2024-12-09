@@ -8,25 +8,26 @@ import { SEOContentSection } from "./SEOContentSection";
 
 export function SEOTable() {
   const seoData = useSEOStore((state) => state.seoData);
+  console.log("SEO Data in Table:", seoData); // Debug log
 
   const renderCurrentContent = (item: any) => (
     <div className="space-y-4">
       <SEOContentSection 
         title="Titre"
-        content={item.current_title}
+        content={item.current_title || ''}
       />
       
       <SEOContentSection 
         title="Description"
-        content={item.current_description}
+        content={item.current_description || ''}
       />
       
       <SEOContentSection 
         title="H1"
-        content={item.current_h1}
+        content={item.current_h1 || ''}
       />
       
-      {item.current_h2s?.map((h2: string, index: number) => (
+      {(item.current_h2s || []).map((h2: string, index: number) => (
         <SEOContentSection 
           key={index}
           title="H2"
@@ -34,7 +35,7 @@ export function SEOTable() {
         />
       ))}
       
-      {item.current_h3s?.map((h3: string, index: number) => (
+      {(item.current_h3s || []).map((h3: string, index: number) => (
         <SEOContentSection 
           key={index}
           title="H3"
@@ -42,7 +43,7 @@ export function SEOTable() {
         />
       ))}
       
-      {item.current_h4s?.map((h4: string, index: number) => (
+      {(item.current_h4s || []).map((h4: string, index: number) => (
         <SEOContentSection 
           key={index}
           title="H4"
@@ -52,50 +53,53 @@ export function SEOTable() {
     </div>
   );
 
-  const renderSuggestedContent = (item: any) => (
-    <div className="space-y-4">
-      <SEOContentSection 
-        title="Titre optimisé"
-        content={item.suggested_title}
-      />
-      
-      <SEOContentSection 
-        title="Description optimisée"
-        content={item.suggested_description}
-      />
-      
-      <SEOContentSection 
-        title="H1 optimisé"
-        content={item.suggested_h1}
-      />
-      
-      {item.suggested_h2s?.map((h2: string, index: number) => (
+  const renderSuggestedContent = (item: any) => {
+    console.log("Rendering suggestions for item:", item); // Debug log
+    return (
+      <div className="space-y-4">
         <SEOContentSection 
-          key={index}
-          title="H2 optimisé"
-          content={h2}
+          title="Titre optimisé"
+          content={item.suggested_title || ''}
         />
-      ))}
-      
-      {item.suggested_h3s?.map((h3: string, index: number) => (
+        
         <SEOContentSection 
-          key={index}
-          title="H3 optimisé"
-          content={h3}
+          title="Description optimisée"
+          content={item.suggested_description || ''}
         />
-      ))}
-      
-      {item.suggested_h4s?.map((h4: string, index: number) => (
+        
         <SEOContentSection 
-          key={index}
-          title="H4 optimisé"
-          content={h4}
+          title="H1 optimisé"
+          content={item.suggested_h1 || ''}
         />
-      ))}
-    </div>
-  );
+        
+        {(item.suggested_h2s || []).map((h2: string, index: number) => (
+          <SEOContentSection 
+            key={index}
+            title="H2 optimisé"
+            content={h2}
+          />
+        ))}
+        
+        {(item.suggested_h3s || []).map((h3: string, index: number) => (
+          <SEOContentSection 
+            key={index}
+            title="H3 optimisé"
+            content={h3}
+          />
+        ))}
+        
+        {(item.suggested_h4s || []).map((h4: string, index: number) => (
+          <SEOContentSection 
+            key={index}
+            title="H4 optimisé"
+            content={h4}
+          />
+        ))}
+      </div>
+    );
+  };
 
-  if (seoData.length === 0) {
+  if (!seoData || seoData.length === 0) {
     return (
       <div className="text-center py-8 text-gray-600 bg-white rounded-xl shadow-sm border border-gray-100">
         Aucune donnée SEO disponible. Analysez une URL pour commencer.
