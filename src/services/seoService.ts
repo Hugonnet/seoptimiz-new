@@ -49,38 +49,63 @@ export const extractSEOMetadata = async (url: string): Promise<SEOMetadata> => {
 };
 
 export const downloadTableAsCSV = (data: any[]) => {
+  // Préparer les en-têtes
   const headers = [
     'URL',
-    'Titre Actuel',
-    'Titre Suggéré',
-    'Description Actuelle',
-    'Description Suggérée',
-    'H1 Actuel',
-    'H1 Suggéré',
-    'Statut',
-    'Commentaires IA',
-    'Date'
+    'Date d\'analyse',
+    'Titre actuel',
+    'Titre suggéré',
+    'Description actuelle',
+    'Description suggérée',
+    'H1 actuel',
+    'H1 suggéré',
+    'H2s actuels',
+    'H2s suggérés',
+    'H3s actuels',
+    'H3s suggérés',
+    'H4s actuels',
+    'H4s suggérés'
   ];
 
+  // Préparer les lignes de données
+  const rows = data.map(item => {
+    const formatArray = (arr: string[] | null) => arr ? arr.join(' | ') : '';
+    
+    return [
+      item.url,
+      new Date(item.created_at).toLocaleDateString('fr-FR'),
+      item.current_title || '',
+      item.suggested_title || '',
+      item.current_description || '',
+      item.suggested_description || '',
+      item.current_h1 || '',
+      item.suggested_h1 || '',
+      formatArray(item.current_h2s),
+      formatArray(item.suggested_h2s),
+      formatArray(item.current_h3s),
+      formatArray(item.suggested_h3s),
+      formatArray(item.current_h4s),
+      formatArray(item.suggested_h4s)
+    ];
+  });
+
+  // Convertir en format CSV
   const csvContent = [
     headers.join(','),
-    ...data.map(row => [
-      row.url,
-      row.currentTitle,
-      row.suggestedTitle,
-      row.currentDescription,
-      row.suggestedDescription,
-      row.currentH1,
-      row.suggestedH1,
-      row.optimizationStatus,
-      row.aiComments,
-      row.date
-    ].join(','))
+    ...rows.map(row => 
+      row.map(cell => {
+        // Échapper les virgules et les guillemets dans les cellules
+        const escaped = cell.toString().replace(/"/g, '""');
+        return `"${escaped}"`;
+      }).join(',')
+    )
   ].join('\n');
 
+  // Créer et télécharger le fichier
   const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
   const link = document.createElement('a');
+  const date = new Date().toLocaleDateString('fr-FR').replace(/\//g, '-');
   link.href = URL.createObjectURL(blob);
-  link.download = 'seo_analysis.csv';
+  link.download = `analyse-seo-${date}.csv`;
   link.click();
 };
