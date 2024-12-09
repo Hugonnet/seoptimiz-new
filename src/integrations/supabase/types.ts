@@ -24,6 +24,60 @@ export type Database = {
         }
         Relationships: []
       }
+      seo_analyses: {
+        Row: {
+          created_at: string | null
+          current_description: string | null
+          current_h1: string | null
+          current_h2s: string[] | null
+          current_h3s: string[] | null
+          current_h4s: string[] | null
+          current_title: string | null
+          id: number
+          suggested_description: string | null
+          suggested_h1: string | null
+          suggested_h2s: string[] | null
+          suggested_h3s: string[] | null
+          suggested_h4s: string[] | null
+          suggested_title: string | null
+          url: string
+        }
+        Insert: {
+          created_at?: string | null
+          current_description?: string | null
+          current_h1?: string | null
+          current_h2s?: string[] | null
+          current_h3s?: string[] | null
+          current_h4s?: string[] | null
+          current_title?: string | null
+          id?: number
+          suggested_description?: string | null
+          suggested_h1?: string | null
+          suggested_h2s?: string[] | null
+          suggested_h3s?: string[] | null
+          suggested_h4s?: string[] | null
+          suggested_title?: string | null
+          url: string
+        }
+        Update: {
+          created_at?: string | null
+          current_description?: string | null
+          current_h1?: string | null
+          current_h2s?: string[] | null
+          current_h3s?: string[] | null
+          current_h4s?: string[] | null
+          current_title?: string | null
+          id?: number
+          suggested_description?: string | null
+          suggested_h1?: string | null
+          suggested_h2s?: string[] | null
+          suggested_h3s?: string[] | null
+          suggested_h4s?: string[] | null
+          suggested_title?: string | null
+          url?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

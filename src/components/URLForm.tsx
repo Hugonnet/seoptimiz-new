@@ -5,6 +5,7 @@ import { extractSEOMetadata } from "@/services/seoService";
 import { useToast } from "@/hooks/use-toast";
 import { Search } from "lucide-react";
 import { useSEOStore } from "@/store/seoStore";
+import { supabase } from "@/integrations/supabase/client";
 
 export function URLForm() {
   const [url, setUrl] = useState("");
@@ -25,23 +26,39 @@ export function URLForm() {
         throw new Error("Aucune donnée SEO n'a pu être extraite de cette URL");
       }
 
-      addSEOData({
+      // Préparer les données pour le stockage et l'affichage
+      const seoAnalysis = {
         url,
-        currentTitle: seoData.title,
-        suggestedTitle: `${seoData.title} - Version Optimisée`,
-        currentDescription: seoData.description,
-        suggestedDescription: `${seoData.description} (Optimisé pour le SEO)`,
-        currentH1: seoData.h1 || "",
-        suggestedH1: "Un titre H1 optimisé pour le SEO",
-        currentH2: seoData.h2s?.[0] || "",
-        suggestedH2: "Un titre H2 optimisé pour le référencement",
-        currentH3: seoData.h3s?.[0] || "",
-        suggestedH3: "Un sous-titre H3 optimisé pour le SEO",
-      });
+        current_title: seoData.title || "",
+        suggested_title: `${seoData.title || ""} - Version Optimisée`,
+        current_description: seoData.description || "",
+        suggested_description: `${seoData.description || ""} (Optimisé pour le SEO)`,
+        current_h1: seoData.h1 || "",
+        suggested_h1: "Un titre H1 optimisé pour le SEO",
+        current_h2s: seoData.h2s || [],
+        suggested_h2s: (seoData.h2s || []).map(h2 => `${h2} (Optimisé)`),
+        current_h3s: seoData.h3s || [],
+        suggested_h3s: (seoData.h3s || []).map(h3 => `${h3} (Optimisé)`),
+        current_h4s: seoData.h4s || [],
+        suggested_h4s: (seoData.h4s || []).map(h4 => `${h4} (Optimisé)`)
+      };
+
+      // Sauvegarder dans Supabase
+      const { error: supabaseError } = await supabase
+        .from('seo_analyses')
+        .insert([seoAnalysis]);
+
+      if (supabaseError) {
+        console.error('Erreur Supabase:', supabaseError);
+        throw new Error("Erreur lors de la sauvegarde des données");
+      }
+
+      // Mettre à jour le store local
+      addSEOData(seoAnalysis);
       
       toast({
         title: "Analyse terminée",
-        description: "Les données SEO ont été extraites avec succès.",
+        description: "Les données SEO ont été extraites et sauvegardées avec succès.",
       });
     } catch (error) {
       console.error('Erreur détaillée:', error);
