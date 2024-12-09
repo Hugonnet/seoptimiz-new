@@ -8,124 +8,66 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
-  console.log('Function called with method:', req.method);
-  
   // Gestion des requêtes CORS preflight
   if (req.method === 'OPTIONS') {
-    console.log('Handling OPTIONS request');
-    return new Response('ok', { 
-      headers: corsHeaders,
-      status: 200
-    });
+    return new Response('ok', { headers: corsHeaders });
   }
 
   try {
-    if (req.method !== 'POST') {
-      throw new Error(`Method ${req.method} not allowed`);
-    }
-
-    // Log the request body for debugging
-    const requestText = await req.text();
-    console.log('Raw request body:', requestText);
-
-    // Try to parse the JSON
-    let body;
-    try {
-      body = JSON.parse(requestText);
-    } catch (e) {
-      console.error('JSON parse error:', e);
-      throw new Error(`Invalid JSON in request body: ${e.message}`);
-    }
-
-    const { url } = body;
-    console.log('Analyzing URL:', url);
+    const { url } = await req.json();
     
     if (!url) {
-      throw new Error('URL parameter is required');
+      throw new Error("URL manquante");
     }
 
-    if (!url.startsWith('http')) {
-      throw new Error('Invalid URL format. URL must start with http:// or https://');
-    }
-
-    console.log('Fetching URL content...');
-    const response = await fetch(url);
+    console.log('Analyse de l\'URL:', url);
     
+    const response = await fetch(url);
     if (!response.ok) {
-      throw new Error(`Failed to fetch URL: ${response.status} ${response.statusText}`);
+      throw new Error(`Impossible d'accéder à l'URL (${response.status})`);
     }
 
     const html = await response.text();
-    console.log('HTML content received, length:', html.length);
-    
     const parser = new DOMParser();
     const doc = parser.parseFromString(html, 'text/html');
 
     if (!doc) {
-      throw new Error('Failed to parse HTML content');
+      throw new Error("Impossible de parser le contenu HTML");
     }
 
-    const extractText = (selector: string) => {
-      const element = doc?.querySelector(selector);
-      return element?.textContent?.trim() || '';
-    };
+    const getData = (selector: string) => doc.querySelector(selector)?.textContent?.trim() || '';
+    const getMetaContent = (name: string) => doc.querySelector(`meta[name="${name}"]`)?.getAttribute('content')?.trim() || '';
+    const getAllData = (selector: string) => Array.from(doc.querySelectorAll(selector)).map(el => el.textContent?.trim() || '');
 
-    const extractMetaContent = (name: string) => {
-      const element = doc?.querySelector(`meta[name="${name}"]`);
-      return element?.getAttribute('content')?.trim() || '';
-    };
-
-    const extractAll = (selector: string) => {
-      const elements = doc?.querySelectorAll(selector);
-      return Array.from(elements || []).map(el => el.textContent?.trim() || '');
-    };
-
-    console.log('Extracting SEO data...');
-    
     const seoData = {
-      title: extractText('title'),
-      description: extractMetaContent('description'),
-      h1: extractText('h1'),
-      h2s: extractAll('h2'),
-      h3s: extractAll('h3'),
-      keywords: extractMetaContent('keywords'),
-      canonical: doc?.querySelector('link[rel="canonical"]')?.getAttribute('href') || '',
-      ogTitle: doc?.querySelector('meta[property="og:title"]')?.getAttribute('content') || '',
-      ogDescription: doc?.querySelector('meta[property="og:description"]')?.getAttribute('content') || '',
-      ogImage: doc?.querySelector('meta[property="og:image"]')?.getAttribute('content') || '',
+      title: getData('title'),
+      description: getMetaContent('description'),
+      h1: getData('h1'),
+      h2s: getAllData('h2'),
+      h3s: getAllData('h3'),
+      keywords: getMetaContent('keywords'),
+      canonical: doc.querySelector('link[rel="canonical"]')?.getAttribute('href') || '',
+      ogTitle: doc.querySelector('meta[property="og:title"]')?.getAttribute('content') || '',
+      ogDescription: doc.querySelector('meta[property="og:description"]')?.getAttribute('content') || '',
+      ogImage: doc.querySelector('meta[property="og:image"]')?.getAttribute('content') || '',
     };
 
-    console.log('SEO data extracted successfully:', seoData);
+    console.log('Données SEO extraites avec succès');
     
-    return new Response(
-      JSON.stringify(seoData),
-      { 
-        headers: { 
-          ...corsHeaders, 
-          'Content-Type': 'application/json' 
-        } 
-      }
-    );
+    return new Response(JSON.stringify(seoData), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+    });
 
   } catch (error) {
-    console.error('Error in extract-seo function:', {
-      message: error.message,
-      stack: error.stack,
-      name: error.name
-    });
+    console.error('Erreur:', error.message);
     
     return new Response(
       JSON.stringify({ 
-        error: error.message,
-        stack: error.stack,
-        name: error.name 
-      }),
+        error: `Erreur lors de l'analyse: ${error.message}` 
+      }), 
       { 
-        headers: { 
-          ...corsHeaders, 
-          'Content-Type': 'application/json' 
-        }, 
-        status: 500 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 400
       }
     );
   }

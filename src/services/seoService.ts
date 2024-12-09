@@ -14,35 +14,27 @@ export interface SEOMetadata {
 }
 
 export const extractSEOMetadata = async (url: string): Promise<SEOMetadata> => {
-  console.log('Starting SEO analysis for URL:', url);
-  
-  try {
-    const { data, error } = await supabase.functions.invoke('extract-seo', {
-      body: JSON.stringify({ url }), // Properly stringify the body
-      headers: {
-        'Content-Type': 'application/json',
-      }
-    });
-
-    if (error) {
-      console.error('Edge function error:', error);
-      throw new Error(`Erreur lors de l'appel à la fonction Edge: ${error.message}`);
-    }
-
-    if (!data) {
-      throw new Error('Aucune donnée reçue de la fonction Edge');
-    }
-
-    console.log('Edge function response:', data);
-    return data as SEOMetadata;
-  } catch (error) {
-    console.error('Error in extractSEOMetadata:', {
-      message: error.message,
-      name: error.name,
-      stack: error.stack
-    });
-    throw error;
+  if (!url) {
+    throw new Error("Veuillez entrer une URL valide");
   }
+
+  const { data, error } = await supabase.functions.invoke('extract-seo', {
+    body: { url },
+    headers: {
+      'Content-Type': 'application/json',
+    }
+  });
+
+  if (error) {
+    console.error('Erreur lors de l\'analyse SEO:', error);
+    throw new Error("Impossible d'analyser cette URL pour le moment. Veuillez réessayer plus tard.");
+  }
+
+  if (!data) {
+    throw new Error("Aucune donnée n'a été récupérée");
+  }
+
+  return data as SEOMetadata;
 };
 
 export const downloadTableAsCSV = (data: any[]) => {
