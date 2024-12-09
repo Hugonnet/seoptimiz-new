@@ -5,9 +5,10 @@ export function SEOTableHeader() {
   return (
     <TableHeader>
       <TableRow>
-        <TableHead>Description Actuelle</TableHead>
-        <TableHead>Description Suggérée</TableHead>
-        <TableHead className="text-right">
+        <TableHead className="text-white/80">Balises Principales</TableHead>
+        <TableHead className="text-white/80">Balises Meta</TableHead>
+        <TableHead className="text-white/80">Structure</TableHead>
+        <TableHead className="text-right text-white/80">
           <div className="flex items-center justify-end gap-2">
             <Calendar className="h-4 w-4" />
             Date
