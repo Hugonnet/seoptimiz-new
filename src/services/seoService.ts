@@ -20,21 +20,16 @@ export const extractSEOMetadata = async (url: string): Promise<SEOMetadata> => {
 
   console.log('Envoi de la requête avec URL:', url);
   
-  // Ensure the URL is properly formatted
   try {
-    new URL(url); // This will throw if URL is invalid
+    new URL(url);
   } catch (e) {
     throw new Error("Format d'URL invalide");
   }
 
-  const requestBody = { url: url };
-  console.log('Corps de la requête:', requestBody);
+  console.log('Appel de la fonction extract-seo avec:', { url });
 
   const { data, error } = await supabase.functions.invoke('extract-seo', {
-    body: requestBody,
-    headers: {
-      'Content-Type': 'application/json',
-    }
+    body: { url },
   });
 
   if (error) {

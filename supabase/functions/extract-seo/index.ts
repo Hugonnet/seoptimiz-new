@@ -13,32 +13,14 @@ serve(async (req) => {
   }
 
   try {
-    console.log('Démarrage de l\'analyse SEO');
-    console.log('Méthode HTTP:', req.method);
-    
     if (req.method !== 'POST') {
       throw new Error('Méthode non autorisée. Utilisez POST.');
     }
 
-    // Get the raw body text first
-    const bodyText = await req.text();
-    console.log('Body text reçu:', bodyText);
+    const body = await req.json();
+    console.log('Body reçu:', body);
 
-    if (!bodyText) {
-      throw new Error('Le corps de la requête est vide');
-    }
-
-    // Parse the body text
-    let body;
-    try {
-      body = JSON.parse(bodyText);
-      console.log('Body parsé:', body);
-    } catch (error) {
-      console.error('Erreur de parsing JSON:', error);
-      throw new Error('Format de requête JSON invalide');
-    }
-
-    if (!body || !body.url) {
+    if (!body?.url) {
       throw new Error('URL manquante dans la requête');
     }
 
