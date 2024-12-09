@@ -4,37 +4,52 @@ import { DOMParser } from "https://deno.land/x/deno_dom@v0.1.38/deno-dom-wasm.ts
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
 };
 
 serve(async (req) => {
-  console.log('Received request:', req.method);
+  console.log('Function called with method:', req.method);
   
   // Gestion des requêtes CORS preflight
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders });
+    console.log('Handling OPTIONS request');
+    return new Response('ok', { 
+      headers: corsHeaders,
+      status: 200
+    });
   }
 
   try {
-    const { url } = await req.json();
-    console.log('Analyse de l\'URL:', url);
-    
-    if (!url) {
-      return new Response(
-        JSON.stringify({ error: 'URL requise' }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
-      );
+    if (req.method !== 'POST') {
+      throw new Error(`Method ${req.method} not allowed`);
     }
 
-    console.log('Fetching URL:', url);
+    const { url } = await req.json();
+    console.log('Analyzing URL:', url);
+    
+    if (!url) {
+      throw new Error('URL parameter is required');
+    }
+
+    if (!url.startsWith('http')) {
+      throw new Error('Invalid URL format. URL must start with http:// or https://');
+    }
+
+    console.log('Fetching URL content...');
     const response = await fetch(url);
+    
+    if (!response.ok) {
+      throw new Error(`Failed to fetch URL: ${response.status} ${response.statusText}`);
+    }
+
     const html = await response.text();
-    console.log('HTML content length:', html.length);
+    console.log('HTML content received, length:', html.length);
     
     const parser = new DOMParser();
     const doc = parser.parseFromString(html, 'text/html');
 
     if (!doc) {
-      throw new Error('Impossible de parser le HTML');
+      throw new Error('Failed to parse HTML content');
     }
 
     const extractText = (selector: string) => {
@@ -52,7 +67,7 @@ serve(async (req) => {
       return Array.from(elements || []).map(el => el.textContent?.trim() || '');
     };
 
-    console.log('Extraction des données SEO...');
+    console.log('Extracting SEO data...');
     
     const seoData = {
       title: extractText('title'),
@@ -67,15 +82,24 @@ serve(async (req) => {
       ogImage: doc?.querySelector('meta[property="og:image"]')?.getAttribute('content') || '',
     };
 
-    console.log('Données SEO extraites avec succès:', seoData);
+    console.log('SEO data extracted successfully:', seoData);
     
     return new Response(
       JSON.stringify(seoData),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      { 
+        headers: { 
+          ...corsHeaders, 
+          'Content-Type': 'application/json' 
+        } 
+      }
     );
 
   } catch (error) {
-    console.error('Erreur lors de l\'extraction:', error);
+    console.error('Error in extract-seo function:', {
+      message: error.message,
+      stack: error.stack,
+      name: error.name
+    });
     
     return new Response(
       JSON.stringify({ 
@@ -83,7 +107,13 @@ serve(async (req) => {
         stack: error.stack,
         name: error.name 
       }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+      { 
+        headers: { 
+          ...corsHeaders, 
+          'Content-Type': 'application/json' 
+        }, 
+        status: 500 
+      }
     );
   }
 });

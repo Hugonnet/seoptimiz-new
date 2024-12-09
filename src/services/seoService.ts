@@ -14,7 +14,7 @@ export interface SEOMetadata {
 }
 
 export const extractSEOMetadata = async (url: string): Promise<SEOMetadata> => {
-  console.log('Calling Edge function with URL:', url);
+  console.log('Starting SEO analysis for URL:', url);
   
   try {
     const { data, error } = await supabase.functions.invoke('extract-seo', {
@@ -36,11 +36,10 @@ export const extractSEOMetadata = async (url: string): Promise<SEOMetadata> => {
     console.log('Edge function response:', data);
     return data as SEOMetadata;
   } catch (error) {
-    console.error('Error details:', {
+    console.error('Error in extractSEOMetadata:', {
       message: error.message,
       name: error.name,
-      stack: error.stack,
-      context: error.context
+      stack: error.stack
     });
     throw error;
   }
