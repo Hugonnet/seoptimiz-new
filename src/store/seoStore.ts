@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 
 export interface SEOData {
-  id: string;
+  id: number;
   url: string;
   current_title: string;
   suggested_title: string;
