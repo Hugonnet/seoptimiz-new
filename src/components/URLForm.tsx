@@ -27,7 +27,6 @@ export function URLForm() {
         throw new Error("Aucune donnée SEO n'a pu être extraite de cette URL");
       }
 
-      // Obtenir les suggestions d'OpenAI
       const suggestions = await generateSEOSuggestions({
         currentTitle: seoData.title || "",
         currentDescription: seoData.description || "",
@@ -39,29 +38,28 @@ export function URLForm() {
 
       console.log('Suggestions reçues:', suggestions);
 
-      // Préparer les données pour le stockage
       const seoAnalysis = {
         url,
         current_title: seoData.title || "",
-        suggested_title: suggestions?.suggested_title || "",
         current_description: seoData.description || "",
-        suggested_description: suggestions?.suggested_description || "",
         current_h1: seoData.h1 || "",
-        suggested_h1: suggestions?.suggested_h1 || "",
         current_h2s: seoData.h2s || [],
-        suggested_h2s: suggestions?.suggested_h2s || [],
         current_h3s: seoData.h3s || [],
-        suggested_h3s: suggestions?.suggested_h3s || [],
         current_h4s: seoData.h4s || [],
-        suggested_h4s: suggestions?.suggested_h4s || []
+        suggested_title: suggestions?.suggested_title || "",
+        suggested_description: suggestions?.suggested_description || "",
+        suggested_h1: suggestions?.suggested_h1 || "",
+        suggested_h2s: suggestions?.suggested_h2s || [],
+        suggested_h3s: suggestions?.suggested_h3s || [],
+        suggested_h4s: suggestions?.suggested_h4s || [],
+        visible_text: seoData.visible_text || []
       };
 
-      console.log('Données à sauvegarder dans le store:', seoAnalysis);
+      console.log('Données à sauvegarder dans Supabase:', seoAnalysis);
 
-      // Sauvegarder dans Supabase
       const { data: insertedData, error: supabaseError } = await supabase
         .from('seo_analyses')
-        .insert([seoAnalysis])
+        .insert(seoAnalysis)
         .select()
         .single();
 
@@ -70,7 +68,7 @@ export function URLForm() {
         throw new Error(`Erreur lors de la sauvegarde des données: ${supabaseError.message}`);
       }
 
-      // Mettre à jour le store local avec les données insérées (qui incluent l'ID généré)
+      console.log('Données insérées dans Supabase:', insertedData);
       addSEOData(insertedData);
       
       toast({
