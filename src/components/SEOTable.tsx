@@ -3,41 +3,30 @@ import { Button } from "@/components/ui/button";
 import { Download } from "lucide-react";
 import { SEOTableHeader } from "./SEOTableHeader";
 import { downloadTableAsCSV } from "@/services/seoService";
-
-interface SEOData {
-  id: string;
-  url: string;
-  currentTitle: string;
-  suggestedTitle: string;
-  currentDescription: string;
-  suggestedDescription: string;
-  date: string;
-}
-
-const mockData: SEOData[] = [
-  {
-    id: "1",
-    url: "exemple.com",
-    currentTitle: "Titre actuel de la page",
-    suggestedTitle: "Suggestion de titre optimisé",
-    currentDescription: "Description actuelle de la page",
-    suggestedDescription: "Suggestion de description optimisée",
-    date: "2024-03-10"
-  }
-];
+import { useSEOStore } from "@/store/seoStore";
 
 export function SEOTable() {
+  const seoData = useSEOStore((state) => state.seoData);
+
   const renderSuggestion = (text: string) => (
     <span className="font-bold text-purple-600">{text}</span>
   );
 
   const handleDownload = () => {
-    downloadTableAsCSV(mockData);
+    downloadTableAsCSV(seoData);
   };
+
+  if (seoData.length === 0) {
+    return (
+      <div className="text-center py-8 text-gray-500">
+        Aucune donnée SEO disponible. Analysez une URL pour commencer.
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">
-      {mockData.map((item) => (
+      {seoData.map((item) => (
         <div key={item.id} className="space-y-4">
           <div className="text-left space-y-2">
             <h2 className="text-xl font-semibold text-gray-900">{item.url}</h2>

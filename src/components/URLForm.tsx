@@ -4,11 +4,13 @@ import { useState } from "react";
 import { extractSEOMetadata } from "@/services/seoService";
 import { useToast } from "@/hooks/use-toast";
 import { Search } from "lucide-react";
+import { useSEOStore } from "@/store/seoStore";
 
 export function URLForm() {
   const [url, setUrl] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  const addSEOData = useSEOStore((state) => state.addSEOData);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -22,6 +24,15 @@ export function URLForm() {
       if (!seoData.title && !seoData.description) {
         throw new Error("Aucune donnée SEO n'a pu être extraite de cette URL");
       }
+
+      // Ajouter les données au store
+      addSEOData({
+        url,
+        currentTitle: seoData.title,
+        suggestedTitle: `${seoData.title} - Version Optimisée`,
+        currentDescription: seoData.description,
+        suggestedDescription: `${seoData.description} (Optimisé pour le SEO)`,
+      });
       
       toast({
         title: "Analyse terminée",
