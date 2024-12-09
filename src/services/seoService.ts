@@ -18,8 +18,10 @@ export const extractSEOMetadata = async (url: string): Promise<SEOMetadata> => {
     throw new Error("Veuillez entrer une URL valide");
   }
 
+  console.log('Envoi de la requête avec URL:', url);
+
   const { data, error } = await supabase.functions.invoke('extract-seo', {
-    body: { url },
+    body: JSON.stringify({ url }),
     headers: {
       'Content-Type': 'application/json',
     }

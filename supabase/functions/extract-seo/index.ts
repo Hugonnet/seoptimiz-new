@@ -8,16 +8,37 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
-  // Gestion des requêtes CORS preflight
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
   }
 
   try {
-    const { url } = await req.json();
+    console.log('Démarrage de l\'analyse SEO');
     
+    // Vérification de la méthode HTTP
+    if (req.method !== 'POST') {
+      throw new Error('Méthode non autorisée. Utilisez POST.');
+    }
+
+    // Vérification et parsing du body
+    const contentType = req.headers.get('content-type');
+    if (!contentType?.includes('application/json')) {
+      throw new Error('Content-Type doit être application/json');
+    }
+
+    let body;
+    try {
+      const text = await req.text();
+      console.log('Body reçu:', text);
+      body = JSON.parse(text);
+    } catch (e) {
+      throw new Error(`Erreur de parsing JSON: ${e.message}`);
+    }
+
+    const { url } = body;
     if (!url) {
-      throw new Error("URL manquante");
+      throw new Error('URL manquante dans la requête');
     }
 
     console.log('Analyse de l\'URL:', url);
@@ -55,7 +76,10 @@ serve(async (req) => {
     console.log('Données SEO extraites avec succès');
     
     return new Response(JSON.stringify(seoData), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      headers: { 
+        ...corsHeaders,
+        'Content-Type': 'application/json'
+      }
     });
 
   } catch (error) {
@@ -66,7 +90,10 @@ serve(async (req) => {
         error: `Erreur lors de l'analyse: ${error.message}` 
       }), 
       { 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        headers: { 
+          ...corsHeaders,
+          'Content-Type': 'application/json'
+        },
         status: 400
       }
     );
