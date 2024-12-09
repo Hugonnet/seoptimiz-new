@@ -1,12 +1,4 @@
-import { createClient } from '@supabase/supabase-js';
-
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-
-console.log('Supabase URL:', supabaseUrl);
-console.log('Initializing Supabase client...');
-
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
+import { supabase } from '@/integrations/supabase/client';
 
 export interface SEOMetadata {
   title: string;
@@ -14,6 +6,11 @@ export interface SEOMetadata {
   h1: string;
   h2s: string[];
   h3s: string[];
+  keywords?: string;
+  canonical?: string;
+  ogTitle?: string;
+  ogDescription?: string;
+  ogImage?: string;
 }
 
 export const extractSEOMetadata = async (url: string): Promise<SEOMetadata> => {
@@ -29,11 +26,15 @@ export const extractSEOMetadata = async (url: string): Promise<SEOMetadata> => {
 
     if (error) {
       console.error('Edge function error:', error);
-      throw error;
+      throw new Error(`Erreur lors de l'appel à la fonction Edge: ${error.message}`);
+    }
+
+    if (!data) {
+      throw new Error('Aucune donnée reçue de la fonction Edge');
     }
 
     console.log('Edge function response:', data);
-    return data;
+    return data as SEOMetadata;
   } catch (error) {
     console.error('Error details:', {
       message: error.message,

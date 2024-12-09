@@ -7,6 +7,8 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
+  console.log('Received request:', req.method);
+  
   // Gestion des requêtes CORS preflight
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
@@ -23,8 +25,11 @@ serve(async (req) => {
       );
     }
 
+    console.log('Fetching URL:', url);
     const response = await fetch(url);
     const html = await response.text();
+    console.log('HTML content length:', html.length);
+    
     const parser = new DOMParser();
     const doc = parser.parseFromString(html, 'text/html');
 
@@ -62,7 +67,7 @@ serve(async (req) => {
       ogImage: doc?.querySelector('meta[property="og:image"]')?.getAttribute('content') || '',
     };
 
-    console.log('Données SEO extraites avec succès');
+    console.log('Données SEO extraites avec succès:', seoData);
     
     return new Response(
       JSON.stringify(seoData),
@@ -73,7 +78,11 @@ serve(async (req) => {
     console.error('Erreur lors de l\'extraction:', error);
     
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ 
+        error: error.message,
+        stack: error.stack,
+        name: error.name 
+      }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
     );
   }
