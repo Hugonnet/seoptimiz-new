@@ -24,12 +24,6 @@ export function SEOTable() {
       <SEOContentSection 
         title="H1"
         content={item.current_h1}
-        visibleTexts={item.visible_text}
-        excludeTexts={[
-          ...(item.current_h2s || []),
-          ...(item.current_h3s || []),
-          ...(item.current_h4s || [])
-        ]}
       />
       
       {item.current_h2s?.map((h2: string, index: number) => (
@@ -37,12 +31,6 @@ export function SEOTable() {
           key={index}
           title="H2"
           content={h2}
-          visibleTexts={item.visible_text}
-          excludeTexts={[
-            h2,
-            ...(item.current_h3s || []),
-            ...(item.current_h4s || [])
-          ]}
         />
       ))}
       
@@ -51,11 +39,6 @@ export function SEOTable() {
           key={index}
           title="H3"
           content={h3}
-          visibleTexts={item.visible_text}
-          excludeTexts={[
-            h3,
-            ...(item.current_h4s || [])
-          ]}
         />
       ))}
       
@@ -64,8 +47,6 @@ export function SEOTable() {
           key={index}
           title="H4"
           content={h4}
-          visibleTexts={item.visible_text}
-          excludeTexts={[h4]}
         />
       ))}
     </div>
@@ -73,69 +54,44 @@ export function SEOTable() {
 
   const renderSuggestedContent = (item: any) => (
     <div className="space-y-4">
-      <div className="space-y-2">
-        <div className="font-bold text-purple-600">Titre optimisé :</div>
-        <div>{item.suggested_title}</div>
-        <div className="text-sm text-gray-600 italic">{item.title_context}</div>
-      </div>
+      <SEOContentSection 
+        title="Titre optimisé"
+        content={item.suggested_title}
+      />
       
-      <div className="space-y-2">
-        <div className="font-bold text-purple-600">Description optimisée :</div>
-        <div>{item.suggested_description}</div>
-        <div className="text-sm text-gray-600 italic">{item.description_context}</div>
-      </div>
+      <SEOContentSection 
+        title="Description optimisée"
+        content={item.suggested_description}
+      />
       
-      <div className="space-y-2">
-        <div className="font-bold text-purple-600">H1 optimisé :</div>
-        <div>{item.suggested_h1}</div>
-        <div className="text-sm text-gray-600 italic">{item.h1_context}</div>
-      </div>
+      <SEOContentSection 
+        title="H1 optimisé"
+        content={item.suggested_h1}
+      />
       
       {item.suggested_h2s?.map((h2: string, index: number) => (
-        <div key={index} className="space-y-2">
-          <div className="font-bold text-purple-600">H2 optimisé :</div>
-          <div>{h2}</div>
-          <div className="text-sm text-gray-600 italic">{item.h2s_context?.[index]}</div>
-        </div>
+        <SEOContentSection 
+          key={index}
+          title="H2 optimisé"
+          content={h2}
+        />
       ))}
       
       {item.suggested_h3s?.map((h3: string, index: number) => (
-        <div key={index} className="space-y-2">
-          <div className="font-bold text-purple-600">H3 optimisé :</div>
-          <div>{h3}</div>
-          <div className="text-sm text-gray-600 italic">{item.h3s_context?.[index]}</div>
-        </div>
+        <SEOContentSection 
+          key={index}
+          title="H3 optimisé"
+          content={h3}
+        />
       ))}
       
       {item.suggested_h4s?.map((h4: string, index: number) => (
-        <div key={index} className="space-y-2">
-          <div className="font-bold text-purple-600">H4 optimisé :</div>
-          <div>{h4}</div>
-          <div className="text-sm text-gray-600 italic">{item.h4s_context?.[index]}</div>
-        </div>
+        <SEOContentSection 
+          key={index}
+          title="H4 optimisé"
+          content={h4}
+        />
       ))}
-      
-      {item.visible_text && (
-        <div className="space-y-2">
-          <div className="font-bold text-purple-600">Contenu textuel optimisé :</div>
-          <div className="space-y-2">
-            {Array.isArray(item.suggested_visible_text) ? (
-              item.suggested_visible_text.map((text: string, index: number) => (
-                <div key={index} className="p-2 bg-purple-50 rounded-md">
-                  {text}
-                  {item.visible_text_context?.[index] && (
-                    <div className="text-sm text-gray-600 italic mt-1">
-                      {item.visible_text_context[index]}
-                    </div>
-                  )}
-                </div>
-              ))
-            ) : (
-              <div className="italic text-gray-500">Aucune suggestion disponible</div>
-            )}
-          </div>
-        </div>
-      )}
     </div>
   );
 
