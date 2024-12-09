@@ -8,7 +8,6 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
   }
@@ -16,24 +15,18 @@ serve(async (req) => {
   try {
     console.log('Démarrage de l\'analyse SEO');
     
-    // Vérification de la méthode HTTP
     if (req.method !== 'POST') {
       throw new Error('Méthode non autorisée. Utilisez POST.');
     }
 
-    // Vérification et parsing du body
-    const contentType = req.headers.get('content-type');
-    if (!contentType?.includes('application/json')) {
-      throw new Error('Content-Type doit être application/json');
-    }
-
+    // Parse request body
     let body;
     try {
-      const text = await req.text();
-      console.log('Body reçu:', text);
-      body = JSON.parse(text);
+      body = await req.json(); // Use .json() directly instead of .text() + JSON.parse()
+      console.log('Body reçu:', JSON.stringify(body));
     } catch (e) {
-      throw new Error(`Erreur de parsing JSON: ${e.message}`);
+      console.error('Erreur de parsing JSON:', e);
+      throw new Error('Format de requête invalide');
     }
 
     const { url } = body;
