@@ -31,6 +31,12 @@ export function URLForm() {
         suggestedTitle: `${seoData.title} - Version Optimisée`,
         currentDescription: seoData.description,
         suggestedDescription: `${seoData.description} (Optimisé pour le SEO)`,
+        currentH1: seoData.h1 || "",
+        suggestedH1: "Un titre H1 optimisé pour le SEO",
+        currentH2: seoData.h2s?.[0] || "",
+        suggestedH2: "Un titre H2 optimisé pour le référencement",
+        currentH3: seoData.h3s?.[0] || "",
+        suggestedH3: "Un sous-titre H3 optimisé pour le SEO",
       });
       
       toast({
