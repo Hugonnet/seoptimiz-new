@@ -71,7 +71,7 @@ Les suggestions doivent :
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
+        model: 'gpt-4',  // Correction du nom du modèle
         messages: [
           { 
             role: 'system', 
