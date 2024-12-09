@@ -8,10 +8,11 @@ import { useSEOStore } from "@/store/seoStore";
 export function SEOTable() {
   const seoData = useSEOStore((state) => state.seoData);
 
-  const renderTagContent = (current: string, suggested: string) => (
-    <div className="space-y-2">
-      <div className="text-gray-700">{current}</div>
-      <div className="font-bold text-purple-600">{suggested}</div>
+  const renderTagContent = (label: string, current: string, suggested: string) => (
+    <div className="space-y-1">
+      <div className="text-sm text-white/60">{label}</div>
+      <div className="text-white/80">{current}</div>
+      <div className="font-bold text-purple-400">{suggested}</div>
     </div>
   );
 
@@ -41,25 +42,25 @@ export function SEOTable() {
               <TableBody>
                 <TableRow className="hover:bg-white/5">
                   <TableCell>
-                    {renderTagContent("Title", item.currentTitle)}
+                    {renderTagContent("Title", item.currentTitle, "Titre suggéré optimisé pour le SEO")}
                   </TableCell>
                   <TableCell>
-                    {renderTagContent("Meta Description", item.currentDescription)}
+                    {renderTagContent("Meta Description", item.currentDescription, "Description suggérée optimisée")}
                   </TableCell>
                   <TableCell>
-                    {renderTagContent("H1", "Titre principal actuel")}
+                    {renderTagContent("H1", "Titre principal actuel", "Titre H1 suggéré")}
                   </TableCell>
                   <TableCell className="text-right text-white/80">{item.date}</TableCell>
                 </TableRow>
                 <TableRow className="hover:bg-white/5">
                   <TableCell>
-                    {renderTagContent("H2", "Sous-titre actuel")}
+                    {renderTagContent("H2", "Sous-titre actuel", "Sous-titre H2 suggéré")}
                   </TableCell>
                   <TableCell>
-                    {renderTagContent("H3", "Sous-section actuelle")}
+                    {renderTagContent("H3", "Sous-section actuelle", "Sous-section H3 suggérée")}
                   </TableCell>
                   <TableCell>
-                    {renderTagContent("H4", "Sous-partie actuelle")}
+                    {renderTagContent("H4", "Sous-partie actuelle", "Sous-partie H4 suggérée")}
                   </TableCell>
                   <TableCell className="text-right">
                     <Button onClick={handleDownload} variant="outline" className="gap-2 bg-white/10 text-white hover:bg-white/20">
