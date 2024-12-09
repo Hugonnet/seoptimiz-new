@@ -3,7 +3,6 @@ import { SEOTable } from "@/components/SEOTable";
 import { URLForm } from "@/components/URLForm";
 import { motion } from "framer-motion";
 import { Search, Sparkles, BarChart3 } from "lucide-react";
-import { Link } from "react-router-dom";
 
 const Index = () => {
   return (
@@ -44,12 +43,10 @@ const Index = () => {
               </div>
               <h3 className="text-xl font-semibold mb-2 text-gray-900">Analyse Approfondie</h3>
               <p className="text-gray-600">Scan complet des balises meta, titres et structure du contenu</p>
-              <Link to="/analyse-approfondie" className="block">
-                <button className="w-full mt-4 flex items-center justify-center gap-2 gradient-button rounded-lg py-3 px-4">
-                  <Search className="w-5 h-5" />
-                  Lancer l'analyse
-                </button>
-              </Link>
+              <button className="w-full mt-4 flex items-center justify-center gap-2 gradient-button rounded-lg py-3 px-4">
+                <Search className="w-5 h-5" />
+                Lancer l'analyse
+              </button>
             </div>
             
             <div className="p-6 rounded-xl bg-white shadow-sm border border-gray-100">
@@ -58,12 +55,10 @@ const Index = () => {
               </div>
               <h3 className="text-xl font-semibold mb-2 text-gray-900">Recommandations IA</h3>
               <p className="text-gray-600">Suggestions intelligentes alimentées par des algorithmes avancés</p>
-              <Link to="/recommandations-ia" className="block">
-                <button className="w-full mt-4 flex items-center justify-center gap-2 gradient-button rounded-lg py-3 px-4">
-                  <Sparkles className="w-5 h-5" />
-                  Obtenir les recommandations
-                </button>
-              </Link>
+              <button className="w-full mt-4 flex items-center justify-center gap-2 gradient-button rounded-lg py-3 px-4">
+                <Sparkles className="w-5 h-5" />
+                Obtenir les recommandations
+              </button>
             </div>
             
             <div className="p-6 rounded-xl bg-white shadow-sm border border-gray-100">

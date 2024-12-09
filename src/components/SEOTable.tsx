@@ -4,105 +4,68 @@ import { Download } from "lucide-react";
 import { SEOTableHeader } from "./SEOTableHeader";
 import { downloadTableAsCSV } from "@/services/seoService";
 import { useSEOStore } from "@/store/seoStore";
-import { SEOContentSection } from "./SEOContentSection";
 
 export function SEOTable() {
   const seoData = useSEOStore((state) => state.seoData);
-  console.log("SEO Data in Table:", seoData); // Debug log
 
-  const renderCurrentContent = (item: any) => {
-    console.log("Rendering current content for item:", item);
-    return (
-      <div className="space-y-4">
-        <SEOContentSection 
-          title="Titre"
-          content={item.current_title || ''}
-        />
-        
-        <SEOContentSection 
-          title="Description"
-          content={item.current_description || ''}
-        />
-        
-        <SEOContentSection 
-          title="H1"
-          content={item.current_h1 || ''}
-        />
-        
-        {(item.current_h2s || []).map((h2: string, index: number) => (
-          <SEOContentSection 
-            key={index}
-            title="H2"
-            content={h2}
-          />
-        ))}
-        
-        {(item.current_h3s || []).map((h3: string, index: number) => (
-          <SEOContentSection 
-            key={index}
-            title="H3"
-            content={h3}
-          />
-        ))}
-        
-        {(item.current_h4s || []).map((h4: string, index: number) => (
-          <SEOContentSection 
-            key={index}
-            title="H4"
-            content={h4}
-          />
-        ))}
+  const renderCurrentContent = (item: any) => (
+    <div className="space-y-4">
+      <div className="text-gray-700">Titre : {item.current_title}</div>
+      <div className="text-gray-700">Description : {item.current_description}</div>
+      <div className="text-gray-700">H1 : {item.current_h1}</div>
+      {item.current_h2s?.map((h2: string, index: number) => (
+        <div key={index} className="text-gray-700">H2 : {h2}</div>
+      ))}
+      {item.current_h3s?.map((h3: string, index: number) => (
+        <div key={index} className="text-gray-700">H3 : {h3}</div>
+      ))}
+      {item.current_h4s?.map((h4: string, index: number) => (
+        <div key={index} className="text-gray-700">H4 : {h4}</div>
+      ))}
+    </div>
+  );
+
+  const renderSuggestedContent = (item: any) => (
+    <div className="space-y-4">
+      <div className="space-y-2">
+        <div className="font-bold text-purple-600">Titre : {item.suggested_title}</div>
+        <div className="text-sm text-gray-600 italic">{item.title_context}</div>
       </div>
-    );
-  };
-
-  const renderSuggestedContent = (item: any) => {
-    console.log("Rendering suggestions for item:", item);
-    return (
-      <div className="space-y-4">
-        <SEOContentSection 
-          title="Titre optimisé"
-          content={item.suggested_title || ''}
-        />
-        
-        <SEOContentSection 
-          title="Description optimisée"
-          content={item.suggested_description || ''}
-        />
-        
-        <SEOContentSection 
-          title="H1 optimisé"
-          content={item.suggested_h1 || ''}
-        />
-        
-        {(item.suggested_h2s || []).map((h2: string, index: number) => (
-          <SEOContentSection 
-            key={index}
-            title="H2 optimisé"
-            content={h2}
-          />
-        ))}
-        
-        {(item.suggested_h3s || []).map((h3: string, index: number) => (
-          <SEOContentSection 
-            key={index}
-            title="H3 optimisé"
-            content={h3}
-          />
-        ))}
-        
-        {(item.suggested_h4s || []).map((h4: string, index: number) => (
-          <SEOContentSection 
-            key={index}
-            title="H4 optimisé"
-            content={h4}
-          />
-        ))}
+      
+      <div className="space-y-2">
+        <div className="font-bold text-purple-600">Description : {item.suggested_description}</div>
+        <div className="text-sm text-gray-600 italic">{item.description_context}</div>
       </div>
-    );
-  };
+      
+      <div className="space-y-2">
+        <div className="font-bold text-purple-600">H1 : {item.suggested_h1}</div>
+        <div className="text-sm text-gray-600 italic">{item.h1_context}</div>
+      </div>
+      
+      {item.suggested_h2s?.map((h2: string, index: number) => (
+        <div key={index} className="space-y-2">
+          <div className="font-bold text-purple-600">H2 : {h2}</div>
+          <div className="text-sm text-gray-600 italic">{item.h2s_context?.[index]}</div>
+        </div>
+      ))}
+      
+      {item.suggested_h3s?.map((h3: string, index: number) => (
+        <div key={index} className="space-y-2">
+          <div className="font-bold text-purple-600">H3 : {h3}</div>
+          <div className="text-sm text-gray-600 italic">{item.h3s_context?.[index]}</div>
+        </div>
+      ))}
+      
+      {item.suggested_h4s?.map((h4: string, index: number) => (
+        <div key={index} className="space-y-2">
+          <div className="font-bold text-purple-600">H4 : {h4}</div>
+          <div className="text-sm text-gray-600 italic">{item.h4s_context?.[index]}</div>
+        </div>
+      ))}
+    </div>
+  );
 
-  if (!seoData || seoData.length === 0) {
+  if (seoData.length === 0) {
     return (
       <div className="text-center py-8 text-gray-600 bg-white rounded-xl shadow-sm border border-gray-100">
         Aucune donnée SEO disponible. Analysez une URL pour commencer.

@@ -6,7 +6,6 @@ import { useToast } from "@/hooks/use-toast";
 import { Search } from "lucide-react";
 import { useSEOStore } from "@/store/seoStore";
 import { supabase } from "@/integrations/supabase/client";
-import { generateSEOSuggestions } from "@/services/seoSuggestionService";
 
 export function URLForm() {
   const [url, setUrl] = useState("");
@@ -27,49 +26,52 @@ export function URLForm() {
         throw new Error("Aucune donnée SEO n'a pu être extraite de cette URL");
       }
 
-      const suggestions = await generateSEOSuggestions({
-        currentTitle: seoData.title || "",
-        currentDescription: seoData.description || "",
-        currentH1: seoData.h1 || "",
-        currentH2s: seoData.h2s || [],
-        currentH3s: seoData.h3s || [],
-        currentH4s: seoData.h4s || []
+      // Obtenir les suggestions d'OpenAI
+      const { data: suggestions, error: aiError } = await supabase.functions.invoke('generate-seo-suggestions', {
+        body: {
+          currentTitle: seoData.title,
+          currentDescription: seoData.description,
+          currentH1: seoData.h1,
+          currentH2s: seoData.h2s,
+          currentH3s: seoData.h3s,
+          currentH4s: seoData.h4s,
+        },
       });
 
-      console.log('Suggestions reçues:', suggestions);
+      if (aiError) {
+        console.error('Erreur IA:', aiError);
+        throw new Error("Erreur lors de la génération des suggestions");
+      }
 
+      // Préparer les données pour le stockage et l'affichage
       const seoAnalysis = {
         url,
         current_title: seoData.title || "",
-        suggested_title: suggestions?.suggested_title || "",
+        suggested_title: suggestions.suggested_title,
         current_description: seoData.description || "",
-        suggested_description: suggestions?.suggested_description || "",
+        suggested_description: suggestions.suggested_description,
         current_h1: seoData.h1 || "",
-        suggested_h1: suggestions?.suggested_h1 || "",
+        suggested_h1: suggestions.suggested_h1,
         current_h2s: seoData.h2s || [],
-        suggested_h2s: suggestions?.suggested_h2s || [],
+        suggested_h2s: suggestions.suggested_h2s,
         current_h3s: seoData.h3s || [],
-        suggested_h3s: suggestions?.suggested_h3s || [],
+        suggested_h3s: suggestions.suggested_h3s,
         current_h4s: seoData.h4s || [],
-        suggested_h4s: suggestions?.suggested_h4s || [],
-        visible_text: seoData.visible_text || []
+        suggested_h4s: suggestions.suggested_h4s
       };
 
-      console.log('Données à sauvegarder dans Supabase:', seoAnalysis);
-
-      const { data: insertedData, error: supabaseError } = await supabase
+      // Sauvegarder dans Supabase
+      const { error: supabaseError } = await supabase
         .from('seo_analyses')
-        .insert(seoAnalysis)
-        .select()
-        .single();
+        .insert([seoAnalysis]);
 
       if (supabaseError) {
         console.error('Erreur Supabase:', supabaseError);
-        throw new Error(`Erreur lors de la sauvegarde des données: ${supabaseError.message}`);
+        throw new Error("Erreur lors de la sauvegarde des données");
       }
 
-      console.log('Données insérées dans Supabase:', insertedData);
-      addSEOData(insertedData);
+      // Mettre à jour le store local
+      addSEOData(seoAnalysis);
       
       toast({
         title: "Analyse terminée",

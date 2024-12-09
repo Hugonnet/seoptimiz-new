@@ -15,15 +15,51 @@ serve(async (req) => {
 
   try {
     const { currentTitle, currentDescription, currentH1, currentH2s, currentH3s, currentH4s } = await req.json();
-    
-    console.log('Données reçues pour analyse:', {
-      currentTitle,
-      currentDescription,
-      currentH1,
-      currentH2s,
-      currentH3s,
-      currentH4s
-    });
+
+    console.log('Données reçues pour analyse:', { currentTitle, currentDescription, currentH1, currentH2s, currentH3s, currentH4s });
+
+    const prompt = `Tu es un expert SEO de renommée internationale avec plus de 15 ans d'expérience dans l'optimisation des sites web pour les moteurs de recherche. Analyse en profondeur le contenu suivant et fournis des recommandations détaillées pour améliorer le référencement.
+
+Contenu actuel à analyser :
+- Titre: "${currentTitle}"
+- Description: "${currentDescription}"
+- H1: "${currentH1}"
+- H2s: "${currentH2s?.join(', ')}"
+- H3s: "${currentH3s?.join(', ')}"
+- H4s: "${currentH4s?.join(', ')}"
+
+Pour CHAQUE élément, tu dois :
+1. Analyser sa pertinence SEO
+2. Vérifier sa longueur optimale (titre < 60 caractères, description < 155 caractères)
+3. Évaluer la présence et le placement des mots-clés
+4. Suggérer des améliorations concrètes
+5. Fournir un contexte explicatif pour chaque suggestion
+
+Fournis UNIQUEMENT un objet JSON avec cette structure exacte, sans texte avant ou après :
+{
+  "suggested_title": "nouveau titre optimisé",
+  "title_context": "explication détaillée de l'amélioration proposée",
+  "suggested_description": "nouvelle description optimisée",
+  "description_context": "explication détaillée de l'amélioration proposée",
+  "suggested_h1": "nouveau H1 optimisé",
+  "h1_context": "explication détaillée de l'amélioration proposée",
+  "suggested_h2s": ["nouveau H2 1", "nouveau H2 2"],
+  "h2s_context": ["explication pour H2 1", "explication pour H2 2"],
+  "suggested_h3s": ["nouveau H3 1", "nouveau H3 2"],
+  "h3s_context": ["explication pour H3 1", "explication pour H3 2"],
+  "suggested_h4s": ["nouveau H4 1", "nouveau H4 2"],
+  "h4s_context": ["explication pour H4 1", "explication pour H4 2"]
+}
+
+Les suggestions doivent :
+- Être basées sur les meilleures pratiques SEO 2024
+- Inclure des mots-clés pertinents et leur placement stratégique
+- Maintenir un style naturel et engageant
+- Respecter les contraintes de longueur
+- Être en français
+- Être concrètes et applicables immédiatement`;
+
+    console.log('Envoi du prompt à OpenAI');
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -34,101 +70,41 @@ serve(async (req) => {
       body: JSON.stringify({
         model: 'gpt-4o-mini',
         messages: [
-          {
-            role: 'system',
-            content: `Tu es un expert SEO de haut niveau spécialisé dans l'optimisation des contenus web. 
-            Ta mission est d'analyser et d'optimiser la structure SEO des pages web pour maximiser leur visibilité sur Google.
-            
-            Directives importantes :
-            - Fournis des suggestions significativement différentes des contenus actuels
-            - Optimise pour les mots-clés pertinents tout en gardant un langage naturel
-            - Respecte les bonnes pratiques SEO 2024 de Google
-            - Assure-toi que les suggestions sont plus percutantes et optimisées que les versions actuelles
-            - Évite les répétitions entre les différents niveaux de titres
-            - Limite la longueur du titre à 60 caractères et la description à 155 caractères`
+          { 
+            role: 'system', 
+            content: 'Tu es un expert SEO reconnu internationalement qui fournit des analyses approfondies et des recommandations concrètes.' 
           },
-          {
-            role: 'user',
-            content: `Analyse et optimise les éléments SEO suivants :
-            
-            Titre actuel : "${currentTitle}"
-            Description actuelle : "${currentDescription}"
-            H1 actuel : "${currentH1}"
-            H2s actuels : "${currentH2s?.join('", "')}"
-            H3s actuels : "${currentH3s?.join('", "')}"
-            H4s actuels : "${currentH4s?.join('", "')}"
-            
-            Fournis des suggestions optimisées pour chaque élément.`
-          }
+          { role: 'user', content: prompt }
         ],
         temperature: 0.7,
       }),
     });
 
-    if (!response.ok) {
-      throw new Error(`Erreur OpenAI: ${response.statusText}`);
+    const data = await response.json();
+    console.log('Réponse OpenAI:', data);
+
+    if (!data.choices?.[0]?.message?.content) {
+      throw new Error('Réponse invalide de OpenAI');
     }
 
-    const data = await response.json();
-    console.log('Réponse brute OpenAI:', data);
+    try {
+      const suggestions = JSON.parse(data.choices[0].message.content.trim());
+      console.log('Suggestions analysées:', suggestions);
 
-    const suggestions = data.choices[0].message.content;
-    console.log('Suggestions générées:', suggestions);
-
-    // Parser les suggestions
-    const parseSuggestions = (text: string) => {
-      const result: any = {};
-      
-      if (text.includes('Titre suggéré :')) {
-        result.suggested_title = text.match(/Titre suggéré : "(.*?)"/)?.[1];
-      }
-      if (text.includes('Description suggérée :')) {
-        result.suggested_description = text.match(/Description suggérée : "(.*?)"/)?.[1];
-      }
-      if (text.includes('H1 suggéré :')) {
-        result.suggested_h1 = text.match(/H1 suggéré : "(.*?)"/)?.[1];
-      }
-      
-      // Parser les H2s
-      const h2Matches = text.match(/H2s suggérés :([\s\S]*?)(?=\n\n|$)/);
-      if (h2Matches) {
-        result.suggested_h2s = h2Matches[1]
-          .split('\n')
-          .map(line => line.match(/- "(.*?)"/)?.[1])
-          .filter(Boolean);
-      }
-      
-      // Parser les H3s
-      const h3Matches = text.match(/H3s suggérés :([\s\S]*?)(?=\n\n|$)/);
-      if (h3Matches) {
-        result.suggested_h3s = h3Matches[1]
-          .split('\n')
-          .map(line => line.match(/- "(.*?)"/)?.[1])
-          .filter(Boolean);
-      }
-      
-      // Parser les H4s
-      const h4Matches = text.match(/H4s suggérés :([\s\S]*?)(?=\n\n|$)/);
-      if (h4Matches) {
-        result.suggested_h4s = h4Matches[1]
-          .split('\n')
-          .map(line => line.match(/- "(.*?)"/)?.[1])
-          .filter(Boolean);
-      }
-
-      return result;
-    };
-
-    const parsedSuggestions = parseSuggestions(suggestions);
-    console.log('Suggestions parsées:', parsedSuggestions);
-
-    return new Response(JSON.stringify(parsedSuggestions), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+      return new Response(JSON.stringify(suggestions), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    } catch (parseError) {
+      console.error('Erreur lors du parsing de la réponse OpenAI:', parseError);
+      throw new Error('Impossible de parser la réponse OpenAI en JSON');
+    }
   } catch (error) {
-    console.error('Erreur dans generate-seo-suggestions:', error);
+    console.error('Erreur dans la fonction generate-seo-suggestions:', error);
     return new Response(
-      JSON.stringify({ error: `Erreur lors de la génération des suggestions: ${error.message}` }), {
+      JSON.stringify({ 
+        error: error.message,
+        details: 'Une erreur est survenue lors de la génération des suggestions SEO' 
+      }), {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       }

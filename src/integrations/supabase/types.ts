@@ -41,7 +41,6 @@ export type Database = {
           suggested_h4s: string[] | null
           suggested_title: string | null
           url: string
-          visible_text: string[] | null
         }
         Insert: {
           created_at?: string | null
@@ -59,7 +58,6 @@ export type Database = {
           suggested_h4s?: string[] | null
           suggested_title?: string | null
           url: string
-          visible_text?: string[] | null
         }
         Update: {
           created_at?: string | null
@@ -77,7 +75,6 @@ export type Database = {
           suggested_h4s?: string[] | null
           suggested_title?: string | null
           url?: string
-          visible_text?: string[] | null
         }
         Relationships: []
       }
