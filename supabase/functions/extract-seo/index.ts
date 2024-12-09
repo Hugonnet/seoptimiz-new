@@ -24,7 +24,20 @@ serve(async (req) => {
       throw new Error(`Method ${req.method} not allowed`);
     }
 
-    const { url } = await req.json();
+    // Log the request body for debugging
+    const requestText = await req.text();
+    console.log('Raw request body:', requestText);
+
+    // Try to parse the JSON
+    let body;
+    try {
+      body = JSON.parse(requestText);
+    } catch (e) {
+      console.error('JSON parse error:', e);
+      throw new Error(`Invalid JSON in request body: ${e.message}`);
+    }
+
+    const { url } = body;
     console.log('Analyzing URL:', url);
     
     if (!url) {
