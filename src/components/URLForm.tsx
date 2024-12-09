@@ -35,7 +35,7 @@ export function URLForm() {
           currentH2s: seoData.h2s,
           currentH3s: seoData.h3s,
           currentH4s: seoData.h4s,
-          visibleText: seoData.visible_text // Ajout des textes visibles
+          visibleText: seoData.visible_text
         },
       });
 
@@ -44,23 +44,26 @@ export function URLForm() {
         throw new Error("Erreur lors de la génération des suggestions");
       }
 
-      // Préparer les données pour le stockage et l'affichage
+      console.log('Suggestions reçues:', suggestions);
+
+      // Préparer les données pour le stockage
       const seoAnalysis = {
         url,
         current_title: seoData.title || "",
-        suggested_title: suggestions.suggested_title,
+        suggested_title: suggestions?.suggested_title || "",
         current_description: seoData.description || "",
-        suggested_description: suggestions.suggested_description,
+        suggested_description: suggestions?.suggested_description || "",
         current_h1: seoData.h1 || "",
-        suggested_h1: suggestions.suggested_h1,
+        suggested_h1: suggestions?.suggested_h1 || "",
         current_h2s: seoData.h2s || [],
-        suggested_h2s: suggestions.suggested_h2s,
+        suggested_h2s: suggestions?.suggested_h2s || [],
         current_h3s: seoData.h3s || [],
-        suggested_h3s: suggestions.suggested_h3s,
+        suggested_h3s: suggestions?.suggested_h3s || [],
         current_h4s: seoData.h4s || [],
-        suggested_h4s: suggestions.suggested_h4s,
-        visible_text: seoData.visible_text || [] // Ajout des textes visibles
+        suggested_h4s: suggestions?.suggested_h4s || []
       };
+
+      console.log('Données à sauvegarder:', seoAnalysis);
 
       // Sauvegarder dans Supabase
       const { error: supabaseError } = await supabase
@@ -69,7 +72,7 @@ export function URLForm() {
 
       if (supabaseError) {
         console.error('Erreur Supabase:', supabaseError);
-        throw new Error("Erreur lors de la sauvegarde des données");
+        throw new Error(`Erreur lors de la sauvegarde des données: ${supabaseError.message}`);
       }
 
       // Mettre à jour le store local
