@@ -41,16 +41,16 @@ export function URLForm() {
       const seoAnalysis = {
         url,
         current_title: seoData.title || "",
-        current_description: seoData.description || "",
-        current_h1: seoData.h1 || "",
-        current_h2s: seoData.h2s || [],
-        current_h3s: seoData.h3s || [],
-        current_h4s: seoData.h4s || [],
         suggested_title: suggestions?.suggested_title || "",
+        current_description: seoData.description || "",
         suggested_description: suggestions?.suggested_description || "",
+        current_h1: seoData.h1 || "",
         suggested_h1: suggestions?.suggested_h1 || "",
+        current_h2s: seoData.h2s || [],
         suggested_h2s: suggestions?.suggested_h2s || [],
+        current_h3s: seoData.h3s || [],
         suggested_h3s: suggestions?.suggested_h3s || [],
+        current_h4s: seoData.h4s || [],
         suggested_h4s: suggestions?.suggested_h4s || [],
         visible_text: seoData.visible_text || []
       };
