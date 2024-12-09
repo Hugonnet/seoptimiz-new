@@ -21,39 +21,58 @@ export function SEOTable() {
       <div className="text-gray-700">
         <div className="font-semibold mb-1">H1 :</div>
         <div>{item.current_h1}</div>
+        {item.visible_text?.filter((text: string) => 
+          text && !item.current_h2s?.includes(text) && 
+          !item.current_h3s?.includes(text) && 
+          !item.current_h4s?.includes(text)
+        ).map((text: string, index: number) => (
+          <div key={`h1-text-${index}`} className="mt-2 p-2 bg-gray-50 rounded-md">
+            {text}
+          </div>
+        ))}
       </div>
       {item.current_h2s?.map((h2: string, index: number) => (
         <div key={index} className="text-gray-700">
           <div className="font-semibold mb-1">H2 :</div>
           <div>{h2}</div>
+          {item.visible_text?.filter((text: string) => 
+            text && text !== h2 &&
+            !item.current_h3s?.includes(text) && 
+            !item.current_h4s?.includes(text)
+          ).map((text: string, textIndex: number) => (
+            <div key={`h2-text-${index}-${textIndex}`} className="mt-2 p-2 bg-gray-50 rounded-md">
+              {text}
+            </div>
+          ))}
         </div>
       ))}
       {item.current_h3s?.map((h3: string, index: number) => (
         <div key={index} className="text-gray-700">
           <div className="font-semibold mb-1">H3 :</div>
           <div>{h3}</div>
+          {item.visible_text?.filter((text: string) => 
+            text && text !== h3 && 
+            !item.current_h4s?.includes(text)
+          ).map((text: string, textIndex: number) => (
+            <div key={`h3-text-${index}-${textIndex}`} className="mt-2 p-2 bg-gray-50 rounded-md">
+              {text}
+            </div>
+          ))}
         </div>
       ))}
       {item.current_h4s?.map((h4: string, index: number) => (
         <div key={index} className="text-gray-700">
           <div className="font-semibold mb-1">H4 :</div>
           <div>{h4}</div>
+          {item.visible_text?.filter((text: string) => 
+            text && text !== h4
+          ).map((text: string, textIndex: number) => (
+            <div key={`h4-text-${index}-${textIndex}`} className="mt-2 p-2 bg-gray-50 rounded-md">
+              {text}
+            </div>
+          ))}
         </div>
       ))}
-      <div className="text-gray-700">
-        <div className="font-semibold mb-1">Contenu textuel visible :</div>
-        <div className="space-y-2">
-          {Array.isArray(item.visible_text) ? (
-            item.visible_text.map((text: string, index: number) => (
-              <div key={index} className="p-2 bg-gray-50 rounded-md">
-                {text}
-              </div>
-            ))
-          ) : (
-            <div className="italic text-gray-500">Aucun contenu textuel trouvé</div>
-          )}
-        </div>
-      </div>
     </div>
   );
 
