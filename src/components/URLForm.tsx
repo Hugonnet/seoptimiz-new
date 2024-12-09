@@ -25,7 +25,6 @@ export function URLForm() {
         throw new Error("Aucune donnée SEO n'a pu être extraite de cette URL");
       }
 
-      // Ajouter les données au store
       addSEOData({
         url,
         currentTitle: seoData.title,
@@ -59,13 +58,13 @@ export function URLForm() {
           placeholder="Entrez l'URL du site (ex: https://example.com)"
           value={url}
           onChange={(e) => setUrl(e.target.value)}
-          className="h-14 pl-6 pr-36 text-lg rounded-full border-purple-100 focus-visible:ring-purple-600"
+          className="h-14 pl-6 pr-36 text-lg rounded-full border-gray-200 focus-visible:ring-[#6366F1] bg-white"
           required
         />
         <Button 
           type="submit" 
           disabled={isLoading}
-          className="absolute right-2 top-2 rounded-full bg-purple-600 hover:bg-purple-700 h-10 px-6"
+          className="absolute right-2 top-2 rounded-full bg-[#6366F1] hover:bg-[#5558E3] h-10 px-6"
         >
           <Search className="mr-2 h-4 w-4" />
           {isLoading ? "Analyse en cours..." : "Analyser"}
