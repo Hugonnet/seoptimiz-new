@@ -23,29 +23,19 @@ serve(async (req) => {
     // Log request details for debugging
     console.log('Headers reçus:', Object.fromEntries(req.headers.entries()));
     
-    // Get the raw body text
-    const bodyText = await req.text();
-    console.log('Body brut reçu:', bodyText);
-    
-    if (!bodyText) {
-      throw new Error('Le corps de la requête est vide');
-    }
-
-    // Parse the body
-    let body;
-    try {
-      body = JSON.parse(bodyText);
-      console.log('Body parsé:', body);
-    } catch (e) {
-      console.error('Erreur lors du parsing du body:', e);
+    // Parse the request body directly
+    const body = await req.json().catch(error => {
+      console.error('Erreur lors du parsing du body:', error);
       throw new Error('Format de requête JSON invalide');
-    }
+    });
 
-    const { url } = body;
-    if (!url) {
+    console.log('Body reçu:', body);
+
+    if (!body || !body.url) {
       throw new Error('URL manquante dans la requête');
     }
 
+    const { url } = body;
     console.log('Analyse de l\'URL:', url);
     
     const response = await fetch(url);
