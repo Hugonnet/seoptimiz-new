@@ -18,6 +18,7 @@ export const extractSEOMetadata = async (url: string): Promise<SEOMetadata> => {
     throw new Error("Veuillez entrer une URL valide");
   }
 
+  console.log('Démarrage de l\'analyse SEO pour:', url);
   console.log('Envoi de la requête avec URL:', url);
   
   try {
@@ -40,6 +41,8 @@ export const extractSEOMetadata = async (url: string): Promise<SEOMetadata> => {
   if (!data) {
     throw new Error("Aucune donnée n'a été récupérée");
   }
+
+  console.log('Données SEO extraites:', data);
 
   return data as SEOMetadata;
 };

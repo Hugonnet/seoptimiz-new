@@ -33,6 +33,8 @@ serve(async (req) => {
     }
 
     const html = await response.text();
+    console.log('HTML récupéré, longueur:', html.length);
+
     const parser = new DOMParser();
     const doc = parser.parseFromString(html, 'text/html');
 
@@ -40,9 +42,26 @@ serve(async (req) => {
       throw new Error("Impossible de parser le contenu HTML");
     }
 
-    const getData = (selector: string) => doc.querySelector(selector)?.textContent?.trim() || '';
-    const getMetaContent = (name: string) => doc.querySelector(`meta[name="${name}"]`)?.getAttribute('content')?.trim() || '';
-    const getAllData = (selector: string) => Array.from(doc.querySelectorAll(selector)).map(el => el.textContent?.trim() || '');
+    const getData = (selector: string) => {
+      const element = doc.querySelector(selector);
+      const text = element?.textContent?.trim() || '';
+      console.log(`Extraction ${selector}:`, text);
+      return text;
+    };
+
+    const getMetaContent = (name: string) => {
+      const element = doc.querySelector(`meta[name="${name}"]`);
+      const content = element?.getAttribute('content')?.trim() || '';
+      console.log(`Extraction meta ${name}:`, content);
+      return content;
+    };
+
+    const getAllData = (selector: string) => {
+      const elements = Array.from(doc.querySelectorAll(selector));
+      const texts = elements.map(el => el.textContent?.trim() || '');
+      console.log(`Extraction all ${selector}:`, texts);
+      return texts;
+    };
 
     const seoData = {
       title: getData('title'),
@@ -57,7 +76,7 @@ serve(async (req) => {
       ogImage: doc.querySelector('meta[property="og:image"]')?.getAttribute('content') || '',
     };
 
-    console.log('Données SEO extraites avec succès');
+    console.log('Données SEO extraites:', seoData);
     
     return new Response(JSON.stringify(seoData), {
       headers: { 
