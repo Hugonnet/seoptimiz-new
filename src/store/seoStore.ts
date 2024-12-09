@@ -15,7 +15,7 @@ interface SEOStore {
   addSEOData: (data: Omit<SEOData, "id" | "date">) => void;
 }
 
-export const useSEOStore = create<SEOStore>((set) => ({
+export const useSEOStore = create<SEOStore>()((set) => ({
   seoData: [],
   addSEOData: (data) => set((state) => ({
     seoData: [
