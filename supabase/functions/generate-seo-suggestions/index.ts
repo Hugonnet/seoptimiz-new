@@ -16,11 +16,11 @@ serve(async (req) => {
   try {
     const { currentTitle, currentDescription, currentH1, currentH2s, currentH3s, currentH4s } = await req.json();
 
-    console.log('Received data:', { currentTitle, currentDescription, currentH1, currentH2s, currentH3s, currentH4s });
+    console.log('Données reçues pour analyse:', { currentTitle, currentDescription, currentH1, currentH2s, currentH3s, currentH4s });
 
-    const prompt = `Tu es un expert SEO. Analyse et améliore le contenu suivant pour un meilleur référencement.
-    
-Contenu actuel :
+    const prompt = `Tu es un expert SEO de renommée internationale avec plus de 15 ans d'expérience dans l'optimisation des sites web pour les moteurs de recherche. Analyse en profondeur le contenu suivant et fournis des recommandations détaillées pour améliorer le référencement.
+
+Contenu actuel à analyser :
 - Titre: "${currentTitle}"
 - Description: "${currentDescription}"
 - H1: "${currentH1}"
@@ -28,25 +28,38 @@ Contenu actuel :
 - H3s: "${currentH3s?.join(', ')}"
 - H4s: "${currentH4s?.join(', ')}"
 
-Fournis UNIQUEMENT un objet JSON avec cette structure exacte, sans aucun texte avant ou après :
+Pour CHAQUE élément, tu dois :
+1. Analyser sa pertinence SEO
+2. Vérifier sa longueur optimale (titre < 60 caractères, description < 155 caractères)
+3. Évaluer la présence et le placement des mots-clés
+4. Suggérer des améliorations concrètes
+5. Fournir un contexte explicatif pour chaque suggestion
+
+Fournis UNIQUEMENT un objet JSON avec cette structure exacte, sans texte avant ou après :
 {
   "suggested_title": "nouveau titre optimisé",
+  "title_context": "explication détaillée de l'amélioration proposée",
   "suggested_description": "nouvelle description optimisée",
+  "description_context": "explication détaillée de l'amélioration proposée",
   "suggested_h1": "nouveau H1 optimisé",
+  "h1_context": "explication détaillée de l'amélioration proposée",
   "suggested_h2s": ["nouveau H2 1", "nouveau H2 2"],
+  "h2s_context": ["explication pour H2 1", "explication pour H2 2"],
   "suggested_h3s": ["nouveau H3 1", "nouveau H3 2"],
-  "suggested_h4s": ["nouveau H4 1", "nouveau H4 2"]
+  "h3s_context": ["explication pour H3 1", "explication pour H3 2"],
+  "suggested_h4s": ["nouveau H4 1", "nouveau H4 2"],
+  "h4s_context": ["explication pour H4 1", "explication pour H4 2"]
 }
 
 Les suggestions doivent :
-- Inclure des mots-clés pertinents
-- Être optimisées pour le SEO
-- Garder un style naturel et engageant
-- Respecter les bonnes pratiques SEO actuelles
+- Être basées sur les meilleures pratiques SEO 2024
+- Inclure des mots-clés pertinents et leur placement stratégique
+- Maintenir un style naturel et engageant
+- Respecter les contraintes de longueur
 - Être en français
-- Avoir une longueur appropriée (titre < 60 caractères, description < 155 caractères)`;
+- Être concrètes et applicables immédiatement`;
 
-    console.log('Sending prompt to OpenAI');
+    console.log('Envoi du prompt à OpenAI');
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -59,7 +72,7 @@ Les suggestions doivent :
         messages: [
           { 
             role: 'system', 
-            content: 'Tu es un expert SEO qui génère des suggestions d\'optimisation. Réponds UNIQUEMENT avec un objet JSON valide, sans texte avant ou après.' 
+            content: 'Tu es un expert SEO reconnu internationalement qui fournit des analyses approfondies et des recommandations concrètes.' 
           },
           { role: 'user', content: prompt }
         ],
@@ -68,30 +81,29 @@ Les suggestions doivent :
     });
 
     const data = await response.json();
-    console.log('OpenAI response:', data);
+    console.log('Réponse OpenAI:', data);
 
     if (!data.choices?.[0]?.message?.content) {
-      throw new Error('Invalid response from OpenAI');
+      throw new Error('Réponse invalide de OpenAI');
     }
 
-    // Essayer de parser la réponse en JSON
     try {
       const suggestions = JSON.parse(data.choices[0].message.content.trim());
-      console.log('Parsed suggestions:', suggestions);
+      console.log('Suggestions analysées:', suggestions);
 
       return new Response(JSON.stringify(suggestions), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     } catch (parseError) {
-      console.error('Error parsing OpenAI response:', parseError);
-      throw new Error('Failed to parse OpenAI response as JSON');
+      console.error('Erreur lors du parsing de la réponse OpenAI:', parseError);
+      throw new Error('Impossible de parser la réponse OpenAI en JSON');
     }
   } catch (error) {
-    console.error('Error in generate-seo-suggestions function:', error);
+    console.error('Erreur dans la fonction generate-seo-suggestions:', error);
     return new Response(
       JSON.stringify({ 
         error: error.message,
-        details: 'An error occurred while generating SEO suggestions' 
+        details: 'Une erreur est survenue lors de la génération des suggestions SEO' 
       }), {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

@@ -10,7 +10,6 @@ export function SEOTable() {
 
   const renderCurrentContent = (item: any) => (
     <div className="space-y-4">
-      <div className="font-semibold text-gray-800">{item.url}</div>
       <div className="text-gray-700">Titre : {item.current_title}</div>
       <div className="text-gray-700">Description : {item.current_description}</div>
       <div className="text-gray-700">H1 : {item.current_h1}</div>
@@ -28,17 +27,40 @@ export function SEOTable() {
 
   const renderSuggestedContent = (item: any) => (
     <div className="space-y-4">
-      <div className="font-bold text-purple-600">Titre : {item.suggested_title}</div>
-      <div className="font-bold text-purple-600">Description : {item.suggested_description}</div>
-      <div className="font-bold text-purple-600">H1 : {item.suggested_h1}</div>
+      <div className="space-y-2">
+        <div className="font-bold text-purple-600">Titre : {item.suggested_title}</div>
+        <div className="text-sm text-gray-600 italic">{item.title_context}</div>
+      </div>
+      
+      <div className="space-y-2">
+        <div className="font-bold text-purple-600">Description : {item.suggested_description}</div>
+        <div className="text-sm text-gray-600 italic">{item.description_context}</div>
+      </div>
+      
+      <div className="space-y-2">
+        <div className="font-bold text-purple-600">H1 : {item.suggested_h1}</div>
+        <div className="text-sm text-gray-600 italic">{item.h1_context}</div>
+      </div>
+      
       {item.suggested_h2s?.map((h2: string, index: number) => (
-        <div key={index} className="font-bold text-purple-600">H2 : {h2}</div>
+        <div key={index} className="space-y-2">
+          <div className="font-bold text-purple-600">H2 : {h2}</div>
+          <div className="text-sm text-gray-600 italic">{item.h2s_context?.[index]}</div>
+        </div>
       ))}
+      
       {item.suggested_h3s?.map((h3: string, index: number) => (
-        <div key={index} className="font-bold text-purple-600">H3 : {h3}</div>
+        <div key={index} className="space-y-2">
+          <div className="font-bold text-purple-600">H3 : {h3}</div>
+          <div className="text-sm text-gray-600 italic">{item.h3s_context?.[index]}</div>
+        </div>
       ))}
+      
       {item.suggested_h4s?.map((h4: string, index: number) => (
-        <div key={index} className="font-bold text-purple-600">H4 : {h4}</div>
+        <div key={index} className="space-y-2">
+          <div className="font-bold text-purple-600">H4 : {h4}</div>
+          <div className="text-sm text-gray-600 italic">{item.h4s_context?.[index]}</div>
+        </div>
       ))}
     </div>
   );
@@ -55,6 +77,10 @@ export function SEOTable() {
     <div className="space-y-4">
       {seoData.map((item) => (
         <div key={item.id} className="space-y-4">
+          <h2 className="text-xl font-semibold text-purple-600 mb-4">
+            Analyse SEO pour : <span className="text-gray-700">{item.url}</span>
+          </h2>
+          
           <div className="rounded-xl bg-white shadow-sm border border-gray-100 overflow-hidden">
             <Table>
               <SEOTableHeader />
