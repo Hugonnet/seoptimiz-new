@@ -6,6 +6,7 @@ export interface SEOMetadata {
   h1: string;
   h2s: string[];
   h3s: string[];
+  h4s: string[];
   keywords?: string;
   canonical?: string;
   ogTitle?: string;

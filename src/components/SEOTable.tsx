@@ -8,10 +8,38 @@ import { useSEOStore } from "@/store/seoStore";
 export function SEOTable() {
   const seoData = useSEOStore((state) => state.seoData);
 
-  const renderTagContent = (current: string, suggested: string) => (
-    <div className="space-y-2">
-      <div className="text-gray-700">{current}</div>
-      <div className="font-bold text-purple-600">{suggested}</div>
+  const renderCurrentContent = (item: any) => (
+    <div className="space-y-4">
+      <div className="font-semibold text-gray-800">{item.url}</div>
+      <div className="text-gray-700">Titre : {item.current_title}</div>
+      <div className="text-gray-700">Description : {item.current_description}</div>
+      <div className="text-gray-700">H1 : {item.current_h1}</div>
+      {item.current_h2s?.map((h2: string, index: number) => (
+        <div key={index} className="text-gray-700">H2 : {h2}</div>
+      ))}
+      {item.current_h3s?.map((h3: string, index: number) => (
+        <div key={index} className="text-gray-700">H3 : {h3}</div>
+      ))}
+      {item.current_h4s?.map((h4: string, index: number) => (
+        <div key={index} className="text-gray-700">H4 : {h4}</div>
+      ))}
+    </div>
+  );
+
+  const renderSuggestedContent = (item: any) => (
+    <div className="space-y-4">
+      <div className="font-bold text-purple-600">Titre : {item.suggested_title}</div>
+      <div className="font-bold text-purple-600">Description : {item.suggested_description}</div>
+      <div className="font-bold text-purple-600">H1 : {item.suggested_h1}</div>
+      {item.suggested_h2s?.map((h2: string, index: number) => (
+        <div key={index} className="font-bold text-purple-600">H2 : {h2}</div>
+      ))}
+      {item.suggested_h3s?.map((h3: string, index: number) => (
+        <div key={index} className="font-bold text-purple-600">H3 : {h3}</div>
+      ))}
+      {item.suggested_h4s?.map((h4: string, index: number) => (
+        <div key={index} className="font-bold text-purple-600">H4 : {h4}</div>
+      ))}
     </div>
   );
 
@@ -27,60 +55,13 @@ export function SEOTable() {
     <div className="space-y-4">
       {seoData.map((item) => (
         <div key={item.id} className="space-y-4">
-          <div className="text-left space-y-2">
-            <h2 className="text-xl font-semibold text-gray-800">{item.url}</h2>
-          </div>
-          
           <div className="rounded-xl bg-white shadow-sm border border-gray-100 overflow-hidden">
             <Table>
               <SEOTableHeader />
               <TableBody>
                 <TableRow className="hover:bg-gray-50/50">
-                  <TableCell>
-                    <div className="space-y-4">
-                      {renderTagContent(
-                        "Titre actuel: " + item.currentTitle,
-                        "Titre optimisé: " + item.suggestedTitle
-                      )}
-                      {renderTagContent(
-                        "H1 actuel: " + item.currentH1,
-                        "H1 optimisé: Un titre principal plus descriptif et optimisé pour le SEO"
-                      )}
-                      {renderTagContent(
-                        "H2 actuel: Application Frigorifique, Géothermie, Conditionnement d'air et Climatisation",
-                        "H2 optimisé: Solutions complètes en Froid Industriel, Géothermie et Climatisation Professionnelle"
-                      )}
-                      {renderTagContent(
-                        "H3 actuel: Nos services",
-                        "H3 optimisé: Expertise en Installation et Maintenance de Systèmes Thermiques"
-                      )}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="space-y-4">
-                      {renderTagContent(
-                        "Description actuelle: " + item.currentDescription,
-                        "Description optimisée: " + item.suggestedDescription
-                      )}
-                      {renderTagContent(
-                        "Mots-clés actuels: froid industriel, géothermie, climatisation",
-                        "Mots-clés optimisés: solutions frigorifiques, géothermie professionnelle, systèmes de climatisation industrielle"
-                      )}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="space-y-4">
-                      {renderTagContent(
-                        "Structure actuelle: Hiérarchie des titres bien définie",
-                        "Structure optimisée: Organisation logique des sections avec mots-clés ciblés"
-                      )}
-                      {renderTagContent(
-                        "Balises sémantiques actuelles: article, section, nav",
-                        "Balises sémantiques optimisées: Utilisation stratégique des balises HTML5"
-                      )}
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-right text-gray-600">{item.date}</TableCell>
+                  <TableCell className="align-top">{renderCurrentContent(item)}</TableCell>
+                  <TableCell className="align-top">{renderSuggestedContent(item)}</TableCell>
                 </TableRow>
               </TableBody>
             </Table>
