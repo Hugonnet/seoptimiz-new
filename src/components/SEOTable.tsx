@@ -40,12 +40,20 @@ export function SEOTable() {
           <div>{h4}</div>
         </div>
       ))}
-      {item.visible_text && (
-        <div className="text-gray-700">
-          <div className="font-semibold mb-1">Contenu visible :</div>
-          <div>{item.visible_text}</div>
+      <div className="text-gray-700">
+        <div className="font-semibold mb-1">Contenu textuel visible :</div>
+        <div className="space-y-2">
+          {Array.isArray(item.visible_text) ? (
+            item.visible_text.map((text: string, index: number) => (
+              <div key={index} className="p-2 bg-gray-50 rounded-md">
+                {text}
+              </div>
+            ))
+          ) : (
+            <div className="italic text-gray-500">Aucun contenu textuel trouvé</div>
+          )}
         </div>
-      )}
+      </div>
     </div>
   );
 
@@ -93,11 +101,25 @@ export function SEOTable() {
         </div>
       ))}
       
-      {item.suggested_visible_text && (
+      {item.visible_text && (
         <div className="space-y-2">
-          <div className="font-bold text-purple-600">Contenu visible optimisé :</div>
-          <div>{item.suggested_visible_text}</div>
-          <div className="text-sm text-gray-600 italic">{item.visible_text_context}</div>
+          <div className="font-bold text-purple-600">Contenu textuel optimisé :</div>
+          <div className="space-y-2">
+            {Array.isArray(item.suggested_visible_text) ? (
+              item.suggested_visible_text.map((text: string, index: number) => (
+                <div key={index} className="p-2 bg-purple-50 rounded-md">
+                  {text}
+                  {item.visible_text_context?.[index] && (
+                    <div className="text-sm text-gray-600 italic mt-1">
+                      {item.visible_text_context[index]}
+                    </div>
+                  )}
+                </div>
+              ))
+            ) : (
+              <div className="italic text-gray-500">Aucune suggestion disponible</div>
+            )}
+          </div>
         </div>
       )}
     </div>

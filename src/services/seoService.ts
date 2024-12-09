@@ -7,6 +7,7 @@ export interface SEOMetadata {
   h2s: string[];
   h3s: string[];
   h4s: string[];
+  visible_text: string[];
   keywords?: string;
   canonical?: string;
   ogTitle?: string;
@@ -49,28 +50,19 @@ export const extractSEOMetadata = async (url: string): Promise<SEOMetadata> => {
 };
 
 export const downloadTableAsCSV = (data: any[]) => {
-  // Pour chaque URL analysée
   const csvRows: string[] = [];
 
   data.forEach((item) => {
-    // Ajouter l'URL et la date comme en-tête de section
     csvRows.push(`"Analyse SEO pour : ${item.url}"`);
     csvRows.push(`"Date d'analyse : ${new Date(item.created_at).toLocaleDateString('fr-FR')}"`);
-    csvRows.push(''); // Ligne vide pour la lisibilité
+    csvRows.push('');
 
-    // En-têtes des colonnes
     csvRows.push('"Élément","Contenu actuel","Suggestion d\'amélioration","Contexte"');
 
-    // Titre
     csvRows.push(`"Titre","${escapeCSV(item.current_title)}","${escapeCSV(item.suggested_title)}","${escapeCSV(item.title_context || '')}"`);
-
-    // Description
     csvRows.push(`"Description","${escapeCSV(item.current_description)}","${escapeCSV(item.suggested_description)}","${escapeCSV(item.description_context || '')}"`);
-
-    // H1
     csvRows.push(`"H1","${escapeCSV(item.current_h1)}","${escapeCSV(item.suggested_h1)}","${escapeCSV(item.h1_context || '')}"`);
 
-    // H2s
     const h2sCount = Math.max(
       (item.current_h2s || []).length,
       (item.suggested_h2s || []).length
@@ -79,7 +71,6 @@ export const downloadTableAsCSV = (data: any[]) => {
       csvRows.push(`"H2 ${i + 1}","${escapeCSV(item.current_h2s?.[i] || '')}","${escapeCSV(item.suggested_h2s?.[i] || '')}","${escapeCSV(item.h2s_context?.[i] || '')}"`);
     }
 
-    // H3s
     const h3sCount = Math.max(
       (item.current_h3s || []).length,
       (item.suggested_h3s || []).length
@@ -88,7 +79,6 @@ export const downloadTableAsCSV = (data: any[]) => {
       csvRows.push(`"H3 ${i + 1}","${escapeCSV(item.current_h3s?.[i] || '')}","${escapeCSV(item.suggested_h3s?.[i] || '')}","${escapeCSV(item.h3s_context?.[i] || '')}"`);
     }
 
-    // H4s
     const h4sCount = Math.max(
       (item.current_h4s || []).length,
       (item.suggested_h4s || []).length
@@ -97,12 +87,17 @@ export const downloadTableAsCSV = (data: any[]) => {
       csvRows.push(`"H4 ${i + 1}","${escapeCSV(item.current_h4s?.[i] || '')}","${escapeCSV(item.suggested_h4s?.[i] || '')}","${escapeCSV(item.h4s_context?.[i] || '')}"`);
     }
 
-    // Ajouter une ligne vide entre chaque analyse d'URL
+    // Ajout des textes visibles dans le CSV
+    if (item.visible_text && Array.isArray(item.visible_text)) {
+      item.visible_text.forEach((text: string, index: number) => {
+        csvRows.push(`"Texte visible ${index + 1}","${escapeCSV(text)}","${escapeCSV(item.suggested_visible_text?.[index] || '')}","${escapeCSV(item.visible_text_context?.[index] || '')}"`);
+      });
+    }
+
     csvRows.push('');
-    csvRows.push(''); // Double ligne vide pour plus de lisibilité
+    csvRows.push('');
   });
 
-  // Créer et télécharger le fichier CSV
   const csvContent = csvRows.join('\n');
   const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
   const link = document.createElement('a');
@@ -112,7 +107,6 @@ export const downloadTableAsCSV = (data: any[]) => {
   link.click();
 };
 
-// Fonction utilitaire pour échapper les caractères spéciaux dans le CSV
 const escapeCSV = (str: string | null | undefined): string => {
   if (!str) return '';
   return str.replace(/"/g, '""');
