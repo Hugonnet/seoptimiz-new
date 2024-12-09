@@ -7,6 +7,12 @@ export interface SEOData {
   suggestedTitle: string;
   currentDescription: string;
   suggestedDescription: string;
+  currentH1: string;
+  suggestedH1: string;
+  currentH2: string;
+  suggestedH2: string;
+  currentH3: string;
+  suggestedH3: string;
   date: string;
 }
 
