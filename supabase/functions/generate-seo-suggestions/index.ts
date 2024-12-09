@@ -71,7 +71,7 @@ Les suggestions doivent :
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4',  // Correction du nom du modèle
+        model: 'gpt-4o',  // Utilisation du modèle recommandé
         messages: [
           { 
             role: 'system', 
@@ -83,11 +83,18 @@ Les suggestions doivent :
       }),
     });
 
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error('Erreur OpenAI:', errorData);
+      throw new Error(`Erreur OpenAI: ${errorData.error?.message || 'Erreur inconnue'}`);
+    }
+
     const data = await response.json();
-    console.log('Réponse OpenAI:', data);
+    console.log('Réponse brute OpenAI:', data);
 
     if (!data.choices?.[0]?.message?.content) {
-      throw new Error('Réponse invalide de OpenAI');
+      console.error('Réponse OpenAI invalide:', data);
+      throw new Error('Format de réponse OpenAI invalide');
     }
 
     try {
