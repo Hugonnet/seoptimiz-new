@@ -53,24 +53,25 @@ export function URLForm() {
         current_h3s: seoData.h3s || [],
         suggested_h3s: suggestions?.suggested_h3s || [],
         current_h4s: seoData.h4s || [],
-        suggested_h4s: suggestions?.suggested_h4s || [],
-        id: crypto.randomUUID() // Ajout d'un ID unique
+        suggested_h4s: suggestions?.suggested_h4s || []
       };
 
       console.log('Données à sauvegarder dans le store:', seoAnalysis);
 
       // Sauvegarder dans Supabase
-      const { error: supabaseError } = await supabase
+      const { data: insertedData, error: supabaseError } = await supabase
         .from('seo_analyses')
-        .insert([seoAnalysis]);
+        .insert([seoAnalysis])
+        .select()
+        .single();
 
       if (supabaseError) {
         console.error('Erreur Supabase:', supabaseError);
         throw new Error(`Erreur lors de la sauvegarde des données: ${supabaseError.message}`);
       }
 
-      // Mettre à jour le store local
-      addSEOData(seoAnalysis);
+      // Mettre à jour le store local avec les données insérées (qui incluent l'ID généré)
+      addSEOData(insertedData);
       
       toast({
         title: "Analyse terminée",
