@@ -8,21 +8,16 @@ import { useSEOStore } from "@/store/seoStore";
 export function SEOTable() {
   const seoData = useSEOStore((state) => state.seoData);
 
-  const renderTagContent = (label: string, current: string, suggested: string) => (
-    <div className="space-y-1">
-      <div className="text-sm text-white/60">{label}</div>
-      <div className="text-white/80">{current}</div>
-      <div className="font-bold text-purple-400">{suggested}</div>
+  const renderTagContent = (current: string, suggested: string) => (
+    <div className="space-y-2">
+      <div className="text-gray-700">{current}</div>
+      <div className="font-bold text-purple-600">{suggested}</div>
     </div>
   );
 
-  const handleDownload = () => {
-    downloadTableAsCSV(seoData);
-  };
-
   if (seoData.length === 0) {
     return (
-      <div className="text-center py-8 text-white/80 backdrop-blur-sm rounded-xl">
+      <div className="text-center py-8 text-gray-600 glass-card rounded-xl">
         Aucune donnée SEO disponible. Analysez une URL pour commencer.
       </div>
     );
@@ -33,44 +28,45 @@ export function SEOTable() {
       {seoData.map((item) => (
         <div key={item.id} className="space-y-4">
           <div className="text-left space-y-2">
-            <h2 className="text-xl font-semibold text-white">{item.url}</h2>
+            <h2 className="text-xl font-semibold text-gray-800">{item.url}</h2>
           </div>
           
           <div className="rounded-xl glass-card overflow-hidden">
             <Table>
               <SEOTableHeader />
               <TableBody>
-                <TableRow className="hover:bg-white/5">
+                <TableRow className="hover:bg-gray-50/50">
                   <TableCell>
-                    {renderTagContent("Title", item.currentTitle, "Titre suggéré optimisé pour le SEO")}
-                  </TableCell>
-                  <TableCell>
-                    {renderTagContent("Meta Description", item.currentDescription, "Description suggérée optimisée")}
-                  </TableCell>
-                  <TableCell>
-                    {renderTagContent("H1", "Titre principal actuel", "Titre H1 suggéré")}
-                  </TableCell>
-                  <TableCell className="text-right text-white/80">{item.date}</TableCell>
-                </TableRow>
-                <TableRow className="hover:bg-white/5">
-                  <TableCell>
-                    {renderTagContent("H2", "Sous-titre actuel", "Sous-titre H2 suggéré")}
+                    <div className="space-y-4">
+                      {renderTagContent("Titre actuel", "Titre optimisé pour le SEO")}
+                      {renderTagContent("H1: " + item.currentTitle, "H1 optimisé: Un titre plus descriptif")}
+                      {renderTagContent("H2: Sous-titre actuel", "H2 optimisé: Un sous-titre plus pertinent")}
+                      {renderTagContent("H3: Section actuelle", "H3 optimisé: Une section mieux structurée")}
+                    </div>
                   </TableCell>
                   <TableCell>
-                    {renderTagContent("H3", "Sous-section actuelle", "Sous-section H3 suggérée")}
+                    <div className="space-y-4">
+                      {renderTagContent("Meta Description actuelle", item.currentDescription)}
+                      {renderTagContent("Meta Description optimisée", "Description plus attractive et pertinente pour les moteurs de recherche")}
+                    </div>
                   </TableCell>
                   <TableCell>
-                    {renderTagContent("H4", "Sous-partie actuelle", "Sous-partie H4 suggérée")}
+                    <div className="space-y-4">
+                      {renderTagContent("Structure actuelle", "Hiérarchie des titres bien définie")}
+                      {renderTagContent("Balises sémantiques", "Utilisation optimale des balises article, section, nav")}
+                    </div>
                   </TableCell>
-                  <TableCell className="text-right">
-                    <Button onClick={handleDownload} variant="outline" className="gap-2 bg-white/10 text-white hover:bg-white/20">
-                      <Download className="h-4 w-4" />
-                      Exporter
-                    </Button>
-                  </TableCell>
+                  <TableCell className="text-right text-gray-600">{item.date}</TableCell>
                 </TableRow>
               </TableBody>
             </Table>
+          </div>
+          
+          <div className="flex justify-end">
+            <Button onClick={() => downloadTableAsCSV(seoData)} variant="outline" className="gap-2">
+              <Download className="h-4 w-4" />
+              Exporter
+            </Button>
           </div>
         </div>
       ))}
