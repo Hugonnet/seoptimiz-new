@@ -57,7 +57,10 @@ const Index = () => {
               </div>
               <h3 className="text-xl font-semibold mb-2 text-gray-900">Analyse Approfondie</h3>
               <p className="text-gray-600">Scan complet des balises meta, titres et structure du contenu</p>
-              <button className="w-full mt-4 flex items-center justify-center gap-2 gradient-button rounded-lg py-3 px-4">
+              <button 
+                onClick={() => navigate('/analyse')}
+                className="w-full mt-4 flex items-center justify-center gap-2 gradient-button rounded-lg py-3 px-4"
+              >
                 <Search className="w-5 h-5" />
                 Lancer l'analyse
               </button>
@@ -69,7 +72,10 @@ const Index = () => {
               </div>
               <h3 className="text-xl font-semibold mb-2 text-gray-900">Recommandations IA</h3>
               <p className="text-gray-600">Suggestions intelligentes alimentées par des algorithmes avancés</p>
-              <button className="w-full mt-4 flex items-center justify-center gap-2 gradient-button rounded-lg py-3 px-4">
+              <button 
+                onClick={() => navigate('/analyse')}
+                className="w-full mt-4 flex items-center justify-center gap-2 gradient-button rounded-lg py-3 px-4"
+              >
                 <Sparkles className="w-5 h-5" />
                 Obtenir les recommandations
               </button>
