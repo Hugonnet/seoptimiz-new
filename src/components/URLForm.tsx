@@ -110,22 +110,22 @@ export function URLForm() {
 
   return (
     <form onSubmit={handleSubmit} className="max-w-3xl mx-auto">
-      <div className="relative">
+      <div className="relative flex items-center">
         <Input
           type="text"
           placeholder="Entrez le nom de domaine (ex: example.com)"
           value={domain}
           onChange={(e) => setDomain(e.target.value)}
-          className="h-14 pl-6 pr-36 text-lg rounded-full border-gray-200 focus-visible:ring-[#6366F1] bg-white"
+          className="h-14 pl-6 pr-36 text-lg rounded-full border-gray-200 focus-visible:ring-[#6366F1] bg-white shadow-sm"
           required
         />
         <Button 
           type="submit" 
           disabled={isLoading}
-          className="absolute right-2 top-2 rounded-full gradient-button h-10 px-6"
+          className="absolute right-2 h-10 px-8 rounded-full bg-gradient-to-r from-[#8B5CF6] to-[#EC4899] hover:opacity-90 text-white font-medium"
         >
           <Search className="mr-2 h-4 w-4" />
-          {isLoading ? "Analyse en cours..." : "Analyser"}
+          {isLoading ? "Analyse..." : "Analyser"}
         </Button>
       </div>
     </form>
