@@ -13,11 +13,11 @@ export function SEOTable() {
       <div className="grid grid-cols-2 gap-4">
         <div className="p-3 bg-gray-50 rounded-lg">
           <div className="font-medium text-gray-700">Version actuelle :</div>
-          <div className="mt-1">{current}</div>
+          <div className="mt-1">{current || 'Non défini'}</div>
         </div>
         <div className="p-3 bg-purple-50 rounded-lg">
           <div className="font-medium text-purple-700">Version optimisée :</div>
-          <div className="mt-1 text-purple-600">{suggested}</div>
+          <div className="mt-1 text-purple-600">{suggested || 'Non défini'}</div>
         </div>
       </div>
       {context && (
@@ -28,29 +28,38 @@ export function SEOTable() {
     </div>
   );
 
-  const renderHeadingArrayComparison = (current: string[], suggested: string[], context: string[]) => (
-    <div className="space-y-4">
-      {current.map((_, index) => (
-        <div key={index} className="space-y-2">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="p-3 bg-gray-50 rounded-lg">
-              <div className="font-medium text-gray-700">Version actuelle :</div>
-              <div className="mt-1">{current[index]}</div>
+  const renderHeadingArrayComparison = (current: string[] = [], suggested: string[] = [], context: string[] = []) => {
+    if (!Array.isArray(current) || !Array.isArray(suggested) || !Array.isArray(context)) {
+      return null;
+    }
+
+    const maxLength = Math.max(current.length, suggested.length);
+    if (maxLength === 0) return null;
+
+    return (
+      <div className="space-y-4">
+        {Array.from({ length: maxLength }).map((_, index) => (
+          <div key={index} className="space-y-2">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="p-3 bg-gray-50 rounded-lg">
+                <div className="font-medium text-gray-700">Version actuelle :</div>
+                <div className="mt-1">{current[index] || 'Non défini'}</div>
+              </div>
+              <div className="p-3 bg-purple-50 rounded-lg">
+                <div className="font-medium text-purple-700">Version optimisée :</div>
+                <div className="mt-1 text-purple-600">{suggested[index] || 'Non défini'}</div>
+              </div>
             </div>
-            <div className="p-3 bg-purple-50 rounded-lg">
-              <div className="font-medium text-purple-700">Version optimisée :</div>
-              <div className="mt-1 text-purple-600">{suggested[index]}</div>
-            </div>
+            {context[index] && (
+              <div className="text-sm text-gray-600 italic bg-gray-50 p-2 rounded">
+                Explication : {context[index]}
+              </div>
+            )}
           </div>
-          {context[index] && (
-            <div className="text-sm text-gray-600 italic bg-gray-50 p-2 rounded">
-              Explication : {context[index]}
-            </div>
-          )}
-        </div>
-      ))}
-    </div>
-  );
+        ))}
+      </div>
+    );
+  };
 
   if (seoData.length === 0) {
     return (
@@ -85,21 +94,21 @@ export function SEOTable() {
                 {renderHeadingComparison(item.current_h1, item.suggested_h1, item.h1_context)}
               </div>
 
-              {item.current_h2s?.length > 0 && (
+              {item.current_h2s && item.current_h2s.length > 0 && (
                 <div className="space-y-6">
                   <h3 className="text-lg font-semibold">H2</h3>
                   {renderHeadingArrayComparison(item.current_h2s, item.suggested_h2s, item.h2s_context)}
                 </div>
               )}
 
-              {item.current_h3s?.length > 0 && (
+              {item.current_h3s && item.current_h3s.length > 0 && (
                 <div className="space-y-6">
                   <h3 className="text-lg font-semibold">H3</h3>
                   {renderHeadingArrayComparison(item.current_h3s, item.suggested_h3s, item.h3s_context)}
                 </div>
               )}
 
-              {item.current_h4s?.length > 0 && (
+              {item.current_h4s && item.current_h4s.length > 0 && (
                 <div className="space-y-6">
                   <h3 className="text-lg font-semibold">H4</h3>
                   {renderHeadingArrayComparison(item.current_h4s, item.suggested_h4s, item.h4s_context)}
