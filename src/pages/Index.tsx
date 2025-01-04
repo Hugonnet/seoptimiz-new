@@ -1,11 +1,11 @@
 import { Navigation } from "@/components/Navigation";
 import { URLForm } from "@/components/URLForm";
 import { motion } from "framer-motion";
-import { Search, Sparkles, BarChart3, History } from "lucide-react";
+import { Search, Sparkles, History } from "lucide-react";
 import { useSEOStore } from "@/store/seoStore";
 import { downloadTableAsCSV } from "@/services/seoService";
 import { useNavigate } from "react-router-dom";
-import { Button } from "./components/ui/button";
+import { Button } from "@/components/ui/button";
 
 const Index = () => {
   const seoData = useSEOStore((state) => state.seoData);
