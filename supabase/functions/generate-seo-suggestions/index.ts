@@ -15,43 +15,48 @@ serve(async (req) => {
 
   try {
     const { currentTitle, currentDescription, currentH1, currentH2s, currentH3s, currentH4s } = await req.json();
-
+    
     console.log('Données reçues:', { currentTitle, currentDescription, currentH1, currentH2s, currentH3s, currentH4s });
 
-    const prompt = `En tant qu'expert SEO, analyse et optimise chaque balise de titre et description pour maximiser leur impact SEO. 
-    Voici le contenu actuel du site :
+    // Construction du prompt pour l'IA
+    const prompt = `En tant qu'expert SEO spécialisé dans l'optimisation de contenu web, analyse et optimise les balises suivantes.
+    
+    Contenu actuel du site :
+    ${currentTitle ? `Titre : "${currentTitle}"` : ''}
+    ${currentDescription ? `Description : "${currentDescription}"` : ''}
+    ${currentH1 ? `H1 : "${currentH1}"` : ''}
+    ${currentH2s?.length ? `H2s : ${JSON.stringify(currentH2s)}` : ''}
+    ${currentH3s?.length ? `H3s : ${JSON.stringify(currentH3s)}` : ''}
+    ${currentH4s?.length ? `H4s : ${JSON.stringify(currentH4s)}` : ''}
 
-    Titre : "${currentTitle || ''}"
-    Description : "${currentDescription || ''}"
-    H1 : "${currentH1 || ''}"
-    H2s : ${JSON.stringify(currentH2s || [])}
-    H3s : ${JSON.stringify(currentH3s || [])}
-    H4s : ${JSON.stringify(currentH4s || [])}
+    Instructions spécifiques :
+    1. Pour chaque balise présente, propose une version optimisée SEO
+    2. Ne suggère rien pour les balises absentes ou vides
+    3. Respecte les bonnes pratiques SEO :
+       - Titre : 50-60 caractères max
+       - Meta description : 150-160 caractères max
+       - H1 : unique et contenant le mot-clé principal
+       - H2-H4 : structure hiérarchique cohérente
+    4. Maintiens les mots-clés principaux tout en améliorant leur placement
+    5. Optimise pour la lisibilité et l'engagement des utilisateurs
 
-    Pour chaque élément :
-    1. Optimise le contenu pour un meilleur référencement
-    2. Assure-toi que les mots-clés principaux sont bien placés
-    3. Vérifie la longueur optimale (titre < 60 caractères, description < 155 caractères)
-    4. Maintiens une hiérarchie logique entre les titres
-    5. Ajoute des mots-clés pertinents tout en gardant un style naturel
-
-    Retourne UNIQUEMENT un objet JSON valide avec cette structure exacte, sans texte avant ou après :
+    Retourne UNIQUEMENT un objet JSON avec cette structure exacte :
     {
-      "suggested_title": "nouveau titre optimisé",
-      "title_context": "explication de l'amélioration",
-      "suggested_description": "nouvelle description optimisée",
-      "description_context": "explication de l'amélioration",
-      "suggested_h1": "nouveau H1 optimisé",
-      "h1_context": "explication de l'amélioration",
-      "suggested_h2s": ["nouveau H2 1", "nouveau H2 2"],
-      "h2s_context": ["explication pour H2 1", "explication pour H2 2"],
-      "suggested_h3s": ["nouveau H3 1", "nouveau H3 2"],
-      "h3s_context": ["explication pour H3 1", "explication pour H3 2"],
-      "suggested_h4s": ["nouveau H4 1", "nouveau H4 2"],
-      "h4s_context": ["explication pour H4 1", "explication pour H4 2"]
+      "suggested_title": "titre optimisé si présent",
+      "title_context": "explication de l'optimisation",
+      "suggested_description": "description optimisée si présente",
+      "description_context": "explication de l'optimisation",
+      "suggested_h1": "H1 optimisé si présent",
+      "h1_context": "explication de l'optimisation",
+      "suggested_h2s": ["H2 optimisé 1", "H2 optimisé 2"] si présents,
+      "h2s_context": ["explication H2 1", "explication H2 2"],
+      "suggested_h3s": ["H3 optimisé 1", "H3 optimisé 2"] si présents,
+      "h3s_context": ["explication H3 1", "explication H3 2"],
+      "suggested_h4s": ["H4 optimisé 1", "H4 optimisé 2"] si présents,
+      "h4s_context": ["explication H4 1", "explication H4 2"]
     }`;
 
-    console.log('Envoi du prompt à OpenAI');
+    console.log('Envoi du prompt à OpenAI:', prompt);
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -62,9 +67,9 @@ serve(async (req) => {
       body: JSON.stringify({
         model: 'gpt-4o-mini',
         messages: [
-          { 
-            role: 'system', 
-            content: 'Tu es un expert SEO. Réponds UNIQUEMENT avec un objet JSON valide, sans texte avant ou après.' 
+          {
+            role: 'system',
+            content: 'Tu es un expert SEO spécialisé dans l\'optimisation de contenu web. Réponds UNIQUEMENT avec un objet JSON valide contenant tes suggestions, sans texte avant ou après.'
           },
           { role: 'user', content: prompt }
         ],
@@ -107,13 +112,29 @@ serve(async (req) => {
         }
       }
 
-      return new Response(JSON.stringify(suggestions), {
+      // Ne retourner des suggestions que pour les éléments qui existaient dans l'entrée
+      const filteredSuggestions = {
+        suggested_title: currentTitle ? suggestions.suggested_title : null,
+        title_context: currentTitle ? suggestions.title_context : null,
+        suggested_description: currentDescription ? suggestions.suggested_description : null,
+        description_context: currentDescription ? suggestions.description_context : null,
+        suggested_h1: currentH1 ? suggestions.suggested_h1 : null,
+        h1_context: currentH1 ? suggestions.h1_context : null,
+        suggested_h2s: currentH2s?.length ? suggestions.suggested_h2s.slice(0, currentH2s.length) : [],
+        h2s_context: currentH2s?.length ? suggestions.h2s_context.slice(0, currentH2s.length) : [],
+        suggested_h3s: currentH3s?.length ? suggestions.suggested_h3s.slice(0, currentH3s.length) : [],
+        h3s_context: currentH3s?.length ? suggestions.h3s_context.slice(0, currentH3s.length) : [],
+        suggested_h4s: currentH4s?.length ? suggestions.suggested_h4s.slice(0, currentH4s.length) : [],
+        h4s_context: currentH4s?.length ? suggestions.h4s_context.slice(0, currentH4s.length) : []
+      };
+
+      return new Response(JSON.stringify(filteredSuggestions), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     } catch (parseError) {
       console.error('Erreur de parsing JSON:', parseError);
       console.error('Contenu qui a causé l\'erreur:', content);
-      throw new Error('Impossible de parser la réponse en JSON');
+      throw new Error('Impossible de parser la réponse OpenAI en JSON');
     }
   } catch (error) {
     console.error('Erreur dans la fonction generate-seo-suggestions:', error);
