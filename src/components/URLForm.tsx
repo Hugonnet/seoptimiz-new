@@ -110,7 +110,7 @@ export function URLForm() {
 
   return (
     <form onSubmit={handleSubmit} className="max-w-3xl mx-auto space-y-4">
-      <h2 className="text-xl font-semibold text-gray-900 mb-2">
+      <h2 className="text-xl font-semibold text-gray-900 mb-2 text-center">
         Entrez une url particulière
       </h2>
       <Input
