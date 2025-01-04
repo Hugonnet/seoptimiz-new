@@ -8,18 +8,36 @@ import { useSEOStore } from "@/store/seoStore";
 import { supabase } from "@/integrations/supabase/client";
 
 export function URLForm() {
-  const [url, setUrl] = useState("");
+  const [domain, setDomain] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const addSEOData = useSEOStore((state) => state.addSEOData);
+
+  const formatURL = (domain: string) => {
+    let formattedURL = domain.toLowerCase().trim();
+    
+    // Supprimer http:// ou https:// s'ils existent
+    formattedURL = formattedURL.replace(/^https?:\/\//, '');
+    
+    // Supprimer www. s'il existe
+    formattedURL = formattedURL.replace(/^www\./, '');
+    
+    // Supprimer les slashes à la fin
+    formattedURL = formattedURL.replace(/\/$/, '');
+    
+    // Ajouter le préfixe complet
+    return `https://www.${formattedURL}`;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
     try {
-      console.log('Démarrage de l\'analyse SEO pour:', url);
-      const seoData = await extractSEOMetadata(url);
+      const formattedURL = formatURL(domain);
+      console.log('URL formatée:', formattedURL);
+      
+      const seoData = await extractSEOMetadata(formattedURL);
       console.log('Données SEO extraites:', seoData);
       
       if (!seoData.title && !seoData.description) {
@@ -45,7 +63,7 @@ export function URLForm() {
 
       // Préparer les données pour le stockage et l'affichage
       const seoAnalysis = {
-        url,
+        url: formattedURL,
         current_title: seoData.title || "",
         suggested_title: suggestions.suggested_title,
         current_description: seoData.description || "",
@@ -94,10 +112,10 @@ export function URLForm() {
     <form onSubmit={handleSubmit} className="max-w-3xl mx-auto">
       <div className="relative">
         <Input
-          type="url"
-          placeholder="Entrez l'URL du site (ex: https://example.com)"
-          value={url}
-          onChange={(e) => setUrl(e.target.value)}
+          type="text"
+          placeholder="Entrez le nom de domaine (ex: example.com)"
+          value={domain}
+          onChange={(e) => setDomain(e.target.value)}
           className="h-14 pl-6 pr-36 text-lg rounded-full border-gray-200 focus-visible:ring-[#6366F1] bg-white"
           required
         />
