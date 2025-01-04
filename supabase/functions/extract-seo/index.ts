@@ -1,6 +1,6 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import * as cheerio from "https://deno.land/x/cheerio@1.0.7/mod.ts";
+import { DOMParser } from "https://deno.land/x/deno_dom@v0.1.38/deno-dom-wasm.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -24,21 +24,26 @@ serve(async (req) => {
     }
 
     const html = await response.text();
-    const $ = cheerio.load(html);
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(html, "text/html");
+
+    if (!doc) {
+      throw new Error("Failed to parse HTML");
+    }
 
     // Extract metadata
     const metadata = {
-      title: $('title').text().trim(),
-      description: $('meta[name="description"]').attr('content')?.trim(),
-      h1: $('h1').first().text().trim(),
-      h2s: $('h2').map((_, el) => $(el).text().trim()).get(),
-      h3s: $('h3').map((_, el) => $(el).text().trim()).get(),
-      h4s: $('h4').map((_, el) => $(el).text().trim()).get(),
-      keywords: $('meta[name="keywords"]').attr('content')?.trim(),
-      canonical: $('link[rel="canonical"]').attr('href')?.trim(),
-      ogTitle: $('meta[property="og:title"]').attr('content')?.trim(),
-      ogDescription: $('meta[property="og:description"]').attr('content')?.trim(),
-      ogImage: $('meta[property="og:image"]').attr('content')?.trim(),
+      title: doc.querySelector('title')?.textContent?.trim() || '',
+      description: doc.querySelector('meta[name="description"]')?.getAttribute('content')?.trim() || '',
+      h1: doc.querySelector('h1')?.textContent?.trim() || '',
+      h2s: Array.from(doc.querySelectorAll('h2')).map(el => el.textContent?.trim()).filter(Boolean),
+      h3s: Array.from(doc.querySelectorAll('h3')).map(el => el.textContent?.trim()).filter(Boolean),
+      h4s: Array.from(doc.querySelectorAll('h4')).map(el => el.textContent?.trim()).filter(Boolean),
+      keywords: doc.querySelector('meta[name="keywords"]')?.getAttribute('content')?.trim(),
+      canonical: doc.querySelector('link[rel="canonical"]')?.getAttribute('href')?.trim(),
+      ogTitle: doc.querySelector('meta[property="og:title"]')?.getAttribute('content')?.trim(),
+      ogDescription: doc.querySelector('meta[property="og:description"]')?.getAttribute('content')?.trim(),
+      ogImage: doc.querySelector('meta[property="og:image"]')?.getAttribute('content')?.trim(),
     };
 
     console.log('Extracted metadata:', metadata);
