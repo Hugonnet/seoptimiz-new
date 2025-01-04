@@ -1,13 +1,15 @@
 import { Navigation } from "@/components/Navigation";
-import { SEOTable } from "@/components/SEOTable";
 import { URLForm } from "@/components/URLForm";
 import { motion } from "framer-motion";
-import { Search, Sparkles, BarChart3 } from "lucide-react";
+import { Search, Sparkles, BarChart3, History } from "lucide-react";
 import { useSEOStore } from "@/store/seoStore";
 import { downloadTableAsCSV } from "@/services/seoService";
+import { useNavigate } from "react-router-dom";
+import { Button } from "./components/ui/button";
 
 const Index = () => {
   const seoData = useSEOStore((state) => state.seoData);
+  const navigate = useNavigate();
 
   const handleExport = () => {
     if (seoData.length === 0) {
@@ -75,21 +77,19 @@ const Index = () => {
             
             <div className="p-6 rounded-xl bg-white shadow-sm border border-gray-100">
               <div className="w-12 h-12 bg-[#EEF2FF] rounded-lg flex items-center justify-center mb-4">
-                <BarChart3 className="w-6 h-6 text-[#6366F1]" />
+                <History className="w-6 h-6 text-[#6366F1]" />
               </div>
-              <h3 className="text-xl font-semibold mb-2 text-gray-900">Export Détaillé</h3>
-              <p className="text-gray-600">Rapports complets et exploitables au format Excel</p>
-              <button 
-                onClick={handleExport}
+              <h3 className="text-xl font-semibold mb-2 text-gray-900">Historique des analyses</h3>
+              <p className="text-gray-600">Consultez et exportez l'historique de vos analyses SEO</p>
+              <Button 
+                onClick={() => navigate('/historique')}
                 className="w-full mt-4 flex items-center justify-center gap-2 gradient-button rounded-lg py-3 px-4"
               >
-                <BarChart3 className="w-5 h-5" />
-                Exporter le rapport
-              </button>
+                <History className="w-5 h-5" />
+                Voir l'historique
+              </Button>
             </div>
           </div>
-          
-          <SEOTable />
         </motion.div>
       </div>
     </div>
