@@ -18,27 +18,28 @@ serve(async (req) => {
     
     console.log('Données reçues:', { currentTitle, currentDescription, currentH1, currentH2s, currentH3s, currentH4s });
 
-    // Construction du prompt pour l'IA
     const prompt = `En tant qu'expert SEO spécialisé dans l'optimisation de contenu web, analyse et optimise les balises suivantes.
     
     Contenu actuel du site :
     ${currentTitle ? `Titre : "${currentTitle}"` : ''}
     ${currentDescription ? `Description : "${currentDescription}"` : ''}
-    ${currentH1 ? `H1 : "${currentH1}"` : ''}
+    ${currentH1 ? `H1 : "${currentH1}"` : 'H1 : Aucune balise H1 trouvée'}
     ${currentH2s?.length ? `H2s : ${JSON.stringify(currentH2s)}` : ''}
     ${currentH3s?.length ? `H3s : ${JSON.stringify(currentH3s)}` : ''}
     ${currentH4s?.length ? `H4s : ${JSON.stringify(currentH4s)}` : ''}
 
     Instructions spécifiques :
     1. Pour chaque balise présente, propose une version optimisée SEO
-    2. Ne suggère rien pour les balises absentes ou vides
-    3. Respecte les bonnes pratiques SEO :
+    2. Pour la balise H1, TOUJOURS proposer une suggestion même si elle est absente du site
+    3. Ne suggère rien pour les autres balises absentes ou vides
+    4. Respecte les bonnes pratiques SEO :
        - Titre : 50-60 caractères max
        - Meta description : 150-160 caractères max
        - H1 : unique et contenant le mot-clé principal
        - H2-H4 : structure hiérarchique cohérente
-    4. Maintiens les mots-clés principaux tout en améliorant leur placement
-    5. Optimise pour la lisibilité et l'engagement des utilisateurs
+    5. Maintiens les mots-clés principaux tout en améliorant leur placement
+    6. Optimise pour la lisibilité et l'engagement des utilisateurs
+    7. Pour une balise H1 manquante, crée une suggestion basée sur le titre et la description
 
     Retourne UNIQUEMENT un objet JSON avec cette structure exacte :
     {
@@ -46,8 +47,8 @@ serve(async (req) => {
       "title_context": "explication de l'optimisation",
       "suggested_description": "description optimisée si présente",
       "description_context": "explication de l'optimisation",
-      "suggested_h1": "H1 optimisé si présent",
-      "h1_context": "explication de l'optimisation",
+      "suggested_h1": "H1 optimisé (TOUJOURS suggérer même si absent)",
+      "h1_context": "explication de l'optimisation ou pourquoi un H1 est nécessaire",
       "suggested_h2s": ["H2 optimisé 1", "H2 optimisé 2"] si présents,
       "h2s_context": ["explication H2 1", "explication H2 2"],
       "suggested_h3s": ["H3 optimisé 1", "H3 optimisé 2"] si présents,
@@ -69,7 +70,7 @@ serve(async (req) => {
         messages: [
           {
             role: 'system',
-            content: 'Tu es un expert SEO spécialisé dans l\'optimisation de contenu web. Réponds UNIQUEMENT avec un objet JSON valide contenant tes suggestions, sans texte avant ou après.'
+            content: 'Tu es un expert SEO spécialisé dans l\'optimisation de contenu web. Tu dois TOUJOURS suggérer une balise H1, même si elle est absente du site. Réponds UNIQUEMENT avec un objet JSON valide contenant tes suggestions, sans texte avant ou après.'
           },
           { role: 'user', content: prompt }
         ],
@@ -113,13 +114,14 @@ serve(async (req) => {
       }
 
       // Ne retourner des suggestions que pour les éléments qui existaient dans l'entrée
+      // SAUF pour H1 qui doit toujours avoir une suggestion
       const filteredSuggestions = {
         suggested_title: currentTitle ? suggestions.suggested_title : null,
         title_context: currentTitle ? suggestions.title_context : null,
         suggested_description: currentDescription ? suggestions.suggested_description : null,
         description_context: currentDescription ? suggestions.description_context : null,
-        suggested_h1: currentH1 ? suggestions.suggested_h1 : null,
-        h1_context: currentH1 ? suggestions.h1_context : null,
+        suggested_h1: suggestions.suggested_h1, // Toujours inclure la suggestion H1
+        h1_context: suggestions.h1_context, // Toujours inclure le contexte H1
         suggested_h2s: currentH2s?.length ? suggestions.suggested_h2s.slice(0, currentH2s.length) : [],
         h2s_context: currentH2s?.length ? suggestions.h2s_context.slice(0, currentH2s.length) : [],
         suggested_h3s: currentH3s?.length ? suggestions.suggested_h3s.slice(0, currentH3s.length) : [],
