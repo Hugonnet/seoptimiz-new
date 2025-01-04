@@ -38,7 +38,6 @@ const Index = () => {
           
           <p className="text-lg text-gray-600 max-w-2xl mx-auto">
             Optimisez votre référencement naturel avec notre outil d'analyse SEO avancé.
-            Obtenez des recommandations personnalisées et exploitables.
           </p>
         </motion.div>
 
