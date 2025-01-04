@@ -18,46 +18,47 @@ serve(async (req) => {
 
     console.log('Données reçues pour analyse:', { currentTitle, currentDescription, currentH1, currentH2s, currentH3s, currentH4s });
 
-    const prompt = `Tu es un expert SEO de renommée internationale avec plus de 15 ans d'expérience dans l'optimisation des sites web pour les moteurs de recherche. Analyse en profondeur le contenu suivant et fournis des recommandations détaillées pour améliorer le référencement.
+    const prompt = `En tant qu'expert SEO, analyse et optimise chaque balise de titre et description pour maximiser leur impact SEO. 
+    Voici le contenu actuel du site :
 
-Contenu actuel à analyser :
-- Titre: "${currentTitle}"
-- Description: "${currentDescription}"
-- H1: "${currentH1}"
-- H2s: "${currentH2s?.join(', ')}"
-- H3s: "${currentH3s?.join(', ')}"
-- H4s: "${currentH4s?.join(', ')}"
+    Titre : "${currentTitle}"
+    Description : "${currentDescription}"
+    H1 : "${currentH1}"
+    H2s : ${JSON.stringify(currentH2s)}
+    H3s : ${JSON.stringify(currentH3s)}
+    H4s : ${JSON.stringify(currentH4s)}
 
-Pour CHAQUE élément, tu dois :
-1. Analyser sa pertinence SEO
-2. Vérifier sa longueur optimale (titre < 60 caractères, description < 155 caractères)
-3. Évaluer la présence et le placement des mots-clés
-4. Suggérer des améliorations concrètes
-5. Fournir un contexte explicatif pour chaque suggestion
+    Pour chaque élément :
+    1. Optimise le contenu pour un meilleur référencement
+    2. Assure-toi que les mots-clés principaux sont bien placés
+    3. Vérifie la longueur optimale (titre < 60 caractères, description < 155 caractères)
+    4. Maintiens une hiérarchie logique entre les titres
+    5. Ajoute des mots-clés pertinents tout en gardant un style naturel
+    6. Fournis une explication détaillée pour chaque suggestion
 
-Fournis UNIQUEMENT un objet JSON avec cette structure exacte, sans texte avant ou après :
-{
-  "suggested_title": "nouveau titre optimisé",
-  "title_context": "explication détaillée de l'amélioration proposée",
-  "suggested_description": "nouvelle description optimisée",
-  "description_context": "explication détaillée de l'amélioration proposée",
-  "suggested_h1": "nouveau H1 optimisé",
-  "h1_context": "explication détaillée de l'amélioration proposée",
-  "suggested_h2s": ["nouveau H2 1", "nouveau H2 2"],
-  "h2s_context": ["explication pour H2 1", "explication pour H2 2"],
-  "suggested_h3s": ["nouveau H3 1", "nouveau H3 2"],
-  "h3s_context": ["explication pour H3 1", "explication pour H3 2"],
-  "suggested_h4s": ["nouveau H4 1", "nouveau H4 2"],
-  "h4s_context": ["explication pour H4 1", "explication pour H4 2"]
-}
+    Retourne un objet JSON avec cette structure exacte :
+    {
+      "suggested_title": "nouveau titre optimisé",
+      "title_context": "explication de l'amélioration",
+      "suggested_description": "nouvelle description optimisée",
+      "description_context": "explication de l'amélioration",
+      "suggested_h1": "nouveau H1 optimisé",
+      "h1_context": "explication de l'amélioration",
+      "suggested_h2s": ["nouveau H2 1", "nouveau H2 2"],
+      "h2s_context": ["explication pour H2 1", "explication pour H2 2"],
+      "suggested_h3s": ["nouveau H3 1", "nouveau H3 2"],
+      "h3s_context": ["explication pour H3 1", "explication pour H3 2"],
+      "suggested_h4s": ["nouveau H4 1", "nouveau H4 2"],
+      "h4s_context": ["explication pour H4 1", "explication pour H4 2"]
+    }
 
-Les suggestions doivent :
-- Être basées sur les meilleures pratiques SEO 2024
-- Inclure des mots-clés pertinents et leur placement stratégique
-- Maintenir un style naturel et engageant
-- Respecter les contraintes de longueur
-- Être en français
-- Être concrètes et applicables immédiatement`;
+    Les suggestions doivent :
+    - Être basées sur les meilleures pratiques SEO 2024
+    - Inclure des mots-clés pertinents
+    - Maintenir un style naturel et engageant
+    - Respecter les contraintes de longueur
+    - Être en français
+    - Être concrètes et applicables immédiatement`;
 
     console.log('Envoi du prompt à OpenAI');
 
@@ -72,7 +73,7 @@ Les suggestions doivent :
         messages: [
           { 
             role: 'system', 
-            content: 'Tu es un expert SEO reconnu internationalement qui fournit des analyses approfondies et des recommandations concrètes.' 
+            content: 'Tu es un expert SEO spécialisé dans l\'optimisation des balises meta et de la structure des titres.' 
           },
           { role: 'user', content: prompt }
         ],

@@ -8,58 +8,45 @@ import { useSEOStore } from "@/store/seoStore";
 export function SEOTable() {
   const seoData = useSEOStore((state) => state.seoData);
 
-  const renderCurrentContent = (item: any) => (
-    <div className="space-y-4">
-      <div className="text-gray-700">Titre : {item.current_title}</div>
-      <div className="text-gray-700">Description : {item.current_description}</div>
-      <div className="text-gray-700">H1 : {item.current_h1}</div>
-      {item.current_h2s?.map((h2: string, index: number) => (
-        <div key={index} className="text-gray-700">H2 : {h2}</div>
-      ))}
-      {item.current_h3s?.map((h3: string, index: number) => (
-        <div key={index} className="text-gray-700">H3 : {h3}</div>
-      ))}
-      {item.current_h4s?.map((h4: string, index: number) => (
-        <div key={index} className="text-gray-700">H4 : {h4}</div>
-      ))}
+  const renderHeadingComparison = (current: string, suggested: string, context: string) => (
+    <div className="space-y-2">
+      <div className="grid grid-cols-2 gap-4">
+        <div className="p-3 bg-gray-50 rounded-lg">
+          <div className="font-medium text-gray-700">Version actuelle :</div>
+          <div className="mt-1">{current}</div>
+        </div>
+        <div className="p-3 bg-purple-50 rounded-lg">
+          <div className="font-medium text-purple-700">Version optimisée :</div>
+          <div className="mt-1 text-purple-600">{suggested}</div>
+        </div>
+      </div>
+      {context && (
+        <div className="text-sm text-gray-600 italic bg-gray-50 p-2 rounded">
+          Explication : {context}
+        </div>
+      )}
     </div>
   );
 
-  const renderSuggestedContent = (item: any) => (
+  const renderHeadingArrayComparison = (current: string[], suggested: string[], context: string[]) => (
     <div className="space-y-4">
-      <div className="space-y-2">
-        <div className="font-bold text-purple-600">Titre : {item.suggested_title}</div>
-        <div className="text-sm text-gray-600 italic">{item.title_context}</div>
-      </div>
-      
-      <div className="space-y-2">
-        <div className="font-bold text-purple-600">Description : {item.suggested_description}</div>
-        <div className="text-sm text-gray-600 italic">{item.description_context}</div>
-      </div>
-      
-      <div className="space-y-2">
-        <div className="font-bold text-purple-600">H1 : {item.suggested_h1}</div>
-        <div className="text-sm text-gray-600 italic">{item.h1_context}</div>
-      </div>
-      
-      {item.suggested_h2s?.map((h2: string, index: number) => (
+      {current.map((_, index) => (
         <div key={index} className="space-y-2">
-          <div className="font-bold text-purple-600">H2 : {h2}</div>
-          <div className="text-sm text-gray-600 italic">{item.h2s_context?.[index]}</div>
-        </div>
-      ))}
-      
-      {item.suggested_h3s?.map((h3: string, index: number) => (
-        <div key={index} className="space-y-2">
-          <div className="font-bold text-purple-600">H3 : {h3}</div>
-          <div className="text-sm text-gray-600 italic">{item.h3s_context?.[index]}</div>
-        </div>
-      ))}
-      
-      {item.suggested_h4s?.map((h4: string, index: number) => (
-        <div key={index} className="space-y-2">
-          <div className="font-bold text-purple-600">H4 : {h4}</div>
-          <div className="text-sm text-gray-600 italic">{item.h4s_context?.[index]}</div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="p-3 bg-gray-50 rounded-lg">
+              <div className="font-medium text-gray-700">Version actuelle :</div>
+              <div className="mt-1">{current[index]}</div>
+            </div>
+            <div className="p-3 bg-purple-50 rounded-lg">
+              <div className="font-medium text-purple-700">Version optimisée :</div>
+              <div className="mt-1 text-purple-600">{suggested[index]}</div>
+            </div>
+          </div>
+          {context[index] && (
+            <div className="text-sm text-gray-600 italic bg-gray-50 p-2 rounded">
+              Explication : {context[index]}
+            </div>
+          )}
         </div>
       ))}
     </div>
@@ -82,15 +69,43 @@ export function SEOTable() {
           </h2>
           
           <div className="rounded-xl bg-white shadow-sm border border-gray-100 overflow-hidden">
-            <Table>
-              <SEOTableHeader />
-              <TableBody>
-                <TableRow className="hover:bg-gray-50/50">
-                  <TableCell className="align-top">{renderCurrentContent(item)}</TableCell>
-                  <TableCell className="align-top">{renderSuggestedContent(item)}</TableCell>
-                </TableRow>
-              </TableBody>
-            </Table>
+            <div className="p-6 space-y-8">
+              <div className="space-y-6">
+                <h3 className="text-lg font-semibold">Balise Title</h3>
+                {renderHeadingComparison(item.current_title, item.suggested_title, item.title_context)}
+              </div>
+
+              <div className="space-y-6">
+                <h3 className="text-lg font-semibold">Meta Description</h3>
+                {renderHeadingComparison(item.current_description, item.suggested_description, item.description_context)}
+              </div>
+
+              <div className="space-y-6">
+                <h3 className="text-lg font-semibold">H1</h3>
+                {renderHeadingComparison(item.current_h1, item.suggested_h1, item.h1_context)}
+              </div>
+
+              {item.current_h2s?.length > 0 && (
+                <div className="space-y-6">
+                  <h3 className="text-lg font-semibold">H2</h3>
+                  {renderHeadingArrayComparison(item.current_h2s, item.suggested_h2s, item.h2s_context)}
+                </div>
+              )}
+
+              {item.current_h3s?.length > 0 && (
+                <div className="space-y-6">
+                  <h3 className="text-lg font-semibold">H3</h3>
+                  {renderHeadingArrayComparison(item.current_h3s, item.suggested_h3s, item.h3s_context)}
+                </div>
+              )}
+
+              {item.current_h4s?.length > 0 && (
+                <div className="space-y-6">
+                  <h3 className="text-lg font-semibold">H4</h3>
+                  {renderHeadingArrayComparison(item.current_h4s, item.suggested_h4s, item.h4s_context)}
+                </div>
+              )}
+            </div>
           </div>
           
           <div className="flex justify-end">
