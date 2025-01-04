@@ -24,6 +24,39 @@ export type Database = {
         }
         Relationships: []
       }
+      project_submissions: {
+        Row: {
+          audio_path: string | null
+          city: string
+          company_name: string
+          created_at: string
+          department: string | null
+          description: string
+          id: number
+          photo_paths: string[] | null
+        }
+        Insert: {
+          audio_path?: string | null
+          city: string
+          company_name: string
+          created_at?: string
+          department?: string | null
+          description: string
+          id?: number
+          photo_paths?: string[] | null
+        }
+        Update: {
+          audio_path?: string | null
+          city?: string
+          company_name?: string
+          created_at?: string
+          department?: string | null
+          description?: string
+          id?: number
+          photo_paths?: string[] | null
+        }
+        Relationships: []
+      }
       seo_analyses: {
         Row: {
           created_at: string | null
@@ -41,6 +74,7 @@ export type Database = {
           suggested_h4s: string[] | null
           suggested_title: string | null
           url: string
+          visible_text: string[] | null
         }
         Insert: {
           created_at?: string | null
@@ -58,6 +92,7 @@ export type Database = {
           suggested_h4s?: string[] | null
           suggested_title?: string | null
           url: string
+          visible_text?: string[] | null
         }
         Update: {
           created_at?: string | null
@@ -75,6 +110,7 @@ export type Database = {
           suggested_h4s?: string[] | null
           suggested_title?: string | null
           url?: string
+          visible_text?: string[] | null
         }
         Relationships: []
       }

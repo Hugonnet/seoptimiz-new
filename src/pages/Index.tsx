@@ -19,7 +19,7 @@ const Index = () => {
           </div>
           
           <h1 className="text-6xl font-bold tracking-tight text-[#6366F1]">
-            LumenSEO
+            SEOptimiz
           </h1>
           
           <p className="text-lg text-gray-600 max-w-2xl mx-auto">
