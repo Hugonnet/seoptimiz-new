@@ -28,6 +28,7 @@ export interface SEOData {
 interface SEOStore {
   seoData: SEOData[];
   addSEOData: (data: Omit<SEOData, "id" | "date">) => void;
+  resetSEOData: () => void;
 }
 
 export const useSEOStore = create<SEOStore>()(
@@ -44,6 +45,7 @@ export const useSEOStore = create<SEOStore>()(
           },
         ],
       })),
+      resetSEOData: () => set({ seoData: [] }),
     }),
     {
       name: 'seo-storage',
