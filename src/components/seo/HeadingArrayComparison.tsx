@@ -7,11 +7,14 @@ interface HeadingArrayComparisonProps {
 }
 
 export function HeadingArrayComparison({ current = [], suggested = [], context = [] }: HeadingArrayComparisonProps) {
-  if (!Array.isArray(current) || !Array.isArray(suggested) || !Array.isArray(context)) {
+  if (!Array.isArray(current) || !Array.isArray(suggested)) {
     return null;
   }
 
-  const maxLength = Math.max(current.length, suggested.length);
+  // Ne prendre que les éléments qui ont une valeur actuelle
+  const validCurrentItems = current.filter(item => item && item !== 'Non défini');
+  const maxLength = validCurrentItems.length;
+
   if (maxLength === 0) return null;
 
   return (
@@ -21,7 +24,7 @@ export function HeadingArrayComparison({ current = [], suggested = [], context =
           <div className="grid grid-cols-2 gap-4">
             <div className="p-3 bg-gray-50 rounded-lg">
               <div className="font-medium text-gray-700">Version actuelle :</div>
-              <div className="mt-1">{current[index] || 'Non défini'}</div>
+              <div className="mt-1">{validCurrentItems[index] || 'Non défini'}</div>
             </div>
             <div className="p-3 bg-purple-50 rounded-lg">
               <div className="font-medium text-purple-700">Version optimisée :</div>
