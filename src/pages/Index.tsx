@@ -3,8 +3,20 @@ import { SEOTable } from "@/components/SEOTable";
 import { URLForm } from "@/components/URLForm";
 import { motion } from "framer-motion";
 import { Search, Sparkles, BarChart3 } from "lucide-react";
+import { useSEOStore } from "@/store/seoStore";
+import { downloadTableAsCSV } from "@/services/seoService";
 
 const Index = () => {
+  const seoData = useSEOStore((state) => state.seoData);
+
+  const handleExport = () => {
+    if (seoData.length === 0) {
+      console.log("Aucune donnée à exporter");
+      return;
+    }
+    downloadTableAsCSV(seoData);
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#F8F9FF] to-[#FFFFFF] p-6">
       <div className="max-w-7xl mx-auto space-y-12">
@@ -67,7 +79,10 @@ const Index = () => {
               </div>
               <h3 className="text-xl font-semibold mb-2 text-gray-900">Export Détaillé</h3>
               <p className="text-gray-600">Rapports complets et exploitables au format Excel</p>
-              <button className="w-full mt-4 flex items-center justify-center gap-2 gradient-button rounded-lg py-3 px-4">
+              <button 
+                onClick={handleExport}
+                className="w-full mt-4 flex items-center justify-center gap-2 gradient-button rounded-lg py-3 px-4"
+              >
                 <BarChart3 className="w-5 h-5" />
                 Exporter le rapport
               </button>
