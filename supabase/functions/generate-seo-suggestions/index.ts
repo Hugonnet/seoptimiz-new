@@ -16,17 +16,17 @@ serve(async (req) => {
   try {
     const { currentTitle, currentDescription, currentH1, currentH2s, currentH3s, currentH4s } = await req.json();
 
-    console.log('Données reçues pour analyse:', { currentTitle, currentDescription, currentH1, currentH2s, currentH3s, currentH4s });
+    console.log('Données reçues:', { currentTitle, currentDescription, currentH1, currentH2s, currentH3s, currentH4s });
 
     const prompt = `En tant qu'expert SEO, analyse et optimise chaque balise de titre et description pour maximiser leur impact SEO. 
     Voici le contenu actuel du site :
 
-    Titre : "${currentTitle}"
-    Description : "${currentDescription}"
-    H1 : "${currentH1}"
-    H2s : ${JSON.stringify(currentH2s)}
-    H3s : ${JSON.stringify(currentH3s)}
-    H4s : ${JSON.stringify(currentH4s)}
+    Titre : "${currentTitle || ''}"
+    Description : "${currentDescription || ''}"
+    H1 : "${currentH1 || ''}"
+    H2s : ${JSON.stringify(currentH2s || [])}
+    H3s : ${JSON.stringify(currentH3s || [])}
+    H4s : ${JSON.stringify(currentH4s || [])}
 
     Pour chaque élément :
     1. Optimise le contenu pour un meilleur référencement
@@ -34,9 +34,8 @@ serve(async (req) => {
     3. Vérifie la longueur optimale (titre < 60 caractères, description < 155 caractères)
     4. Maintiens une hiérarchie logique entre les titres
     5. Ajoute des mots-clés pertinents tout en gardant un style naturel
-    6. Fournis une explication détaillée pour chaque suggestion
 
-    Retourne un objet JSON avec cette structure exacte :
+    Retourne UNIQUEMENT un objet JSON valide avec cette structure exacte, sans texte avant ou après :
     {
       "suggested_title": "nouveau titre optimisé",
       "title_context": "explication de l'amélioration",
@@ -50,15 +49,7 @@ serve(async (req) => {
       "h3s_context": ["explication pour H3 1", "explication pour H3 2"],
       "suggested_h4s": ["nouveau H4 1", "nouveau H4 2"],
       "h4s_context": ["explication pour H4 1", "explication pour H4 2"]
-    }
-
-    Les suggestions doivent :
-    - Être basées sur les meilleures pratiques SEO 2024
-    - Inclure des mots-clés pertinents
-    - Maintenir un style naturel et engageant
-    - Respecter les contraintes de longueur
-    - Être en français
-    - Être concrètes et applicables immédiatement`;
+    }`;
 
     console.log('Envoi du prompt à OpenAI');
 
@@ -73,7 +64,7 @@ serve(async (req) => {
         messages: [
           { 
             role: 'system', 
-            content: 'Tu es un expert SEO spécialisé dans l\'optimisation des balises meta et de la structure des titres.' 
+            content: 'Tu es un expert SEO. Réponds UNIQUEMENT avec un objet JSON valide, sans texte avant ou après.' 
           },
           { role: 'user', content: prompt }
         ],
@@ -81,23 +72,48 @@ serve(async (req) => {
       }),
     });
 
-    const data = await response.json();
-    console.log('Réponse OpenAI:', data);
-
-    if (!data.choices?.[0]?.message?.content) {
-      throw new Error('Réponse invalide de OpenAI');
+    if (!response.ok) {
+      console.error('Erreur OpenAI:', await response.text());
+      throw new Error('Erreur lors de la requête OpenAI');
     }
 
+    const data = await response.json();
+    console.log('Réponse OpenAI brute:', data);
+
+    if (!data.choices?.[0]?.message?.content) {
+      throw new Error('Réponse OpenAI invalide');
+    }
+
+    const content = data.choices[0].message.content.trim();
+    console.log('Contenu de la réponse:', content);
+
     try {
-      const suggestions = JSON.parse(data.choices[0].message.content.trim());
-      console.log('Suggestions analysées:', suggestions);
+      const suggestions = JSON.parse(content);
+      console.log('Suggestions parsées:', suggestions);
+
+      // Vérification de la structure
+      const requiredFields = [
+        'suggested_title', 'title_context',
+        'suggested_description', 'description_context',
+        'suggested_h1', 'h1_context',
+        'suggested_h2s', 'h2s_context',
+        'suggested_h3s', 'h3s_context',
+        'suggested_h4s', 'h4s_context'
+      ];
+
+      for (const field of requiredFields) {
+        if (!(field in suggestions)) {
+          throw new Error(`Champ manquant dans la réponse: ${field}`);
+        }
+      }
 
       return new Response(JSON.stringify(suggestions), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     } catch (parseError) {
-      console.error('Erreur lors du parsing de la réponse OpenAI:', parseError);
-      throw new Error('Impossible de parser la réponse OpenAI en JSON');
+      console.error('Erreur de parsing JSON:', parseError);
+      console.error('Contenu qui a causé l\'erreur:', content);
+      throw new Error('Impossible de parser la réponse en JSON');
     }
   } catch (error) {
     console.error('Erreur dans la fonction generate-seo-suggestions:', error);
