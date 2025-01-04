@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
 
 export interface SEOData {
   id: string;
@@ -29,16 +30,23 @@ interface SEOStore {
   addSEOData: (data: Omit<SEOData, "id" | "date">) => void;
 }
 
-export const useSEOStore = create<SEOStore>()((set) => ({
-  seoData: [],
-  addSEOData: (data) => set((state) => ({
-    seoData: [
-      ...state.seoData,
-      {
-        ...data,
-        id: crypto.randomUUID(),
-        date: new Date().toISOString().split('T')[0],
-      },
-    ],
-  })),
-}));
+export const useSEOStore = create<SEOStore>()(
+  persist(
+    (set) => ({
+      seoData: [],
+      addSEOData: (data) => set((state) => ({
+        seoData: [
+          ...state.seoData,
+          {
+            ...data,
+            id: crypto.randomUUID(),
+            date: new Date().toISOString().split('T')[0],
+          },
+        ],
+      })),
+    }),
+    {
+      name: 'seo-storage',
+    }
+  )
+);
