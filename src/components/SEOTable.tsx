@@ -1,65 +1,11 @@
-import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Download } from "lucide-react";
-import { SEOTableHeader } from "./SEOTableHeader";
 import { downloadTableAsCSV } from "@/services/seoService";
 import { useSEOStore } from "@/store/seoStore";
+import { SEOAnalysisSection } from "./seo/SEOAnalysisSection";
 
 export function SEOTable() {
   const seoData = useSEOStore((state) => state.seoData);
-
-  const renderHeadingComparison = (current: string, suggested: string, context: string) => (
-    <div className="space-y-2">
-      <div className="grid grid-cols-2 gap-4">
-        <div className="p-3 bg-gray-50 rounded-lg">
-          <div className="font-medium text-gray-700">Version actuelle :</div>
-          <div className="mt-1">{current || 'Non défini'}</div>
-        </div>
-        <div className="p-3 bg-purple-50 rounded-lg">
-          <div className="font-medium text-purple-700">Version optimisée :</div>
-          <div className="mt-1 text-purple-600">{suggested || 'Non défini'}</div>
-        </div>
-      </div>
-      {context && (
-        <div className="text-sm text-gray-600 italic bg-gray-50 p-2 rounded">
-          Explication : {context}
-        </div>
-      )}
-    </div>
-  );
-
-  const renderHeadingArrayComparison = (current: string[] = [], suggested: string[] = [], context: string[] = []) => {
-    if (!Array.isArray(current) || !Array.isArray(suggested) || !Array.isArray(context)) {
-      return null;
-    }
-
-    const maxLength = Math.max(current.length, suggested.length);
-    if (maxLength === 0) return null;
-
-    return (
-      <div className="space-y-4">
-        {Array.from({ length: maxLength }).map((_, index) => (
-          <div key={index} className="space-y-2">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="p-3 bg-gray-50 rounded-lg">
-                <div className="font-medium text-gray-700">Version actuelle :</div>
-                <div className="mt-1">{current[index] || 'Non défini'}</div>
-              </div>
-              <div className="p-3 bg-purple-50 rounded-lg">
-                <div className="font-medium text-purple-700">Version optimisée :</div>
-                <div className="mt-1 text-purple-600">{suggested[index] || 'Non défini'}</div>
-              </div>
-            </div>
-            {context[index] && (
-              <div className="text-sm text-gray-600 italic bg-gray-50 p-2 rounded">
-                Explication : {context[index]}
-              </div>
-            )}
-          </div>
-        ))}
-      </div>
-    );
-  };
 
   if (seoData.length === 0) {
     return (
@@ -79,40 +25,58 @@ export function SEOTable() {
           
           <div className="rounded-xl bg-white shadow-sm border border-gray-100 overflow-hidden">
             <div className="p-6 space-y-8">
-              <div className="space-y-6">
-                <h3 className="text-lg font-semibold">Balise Title</h3>
-                {renderHeadingComparison(item.current_title, item.suggested_title, item.title_context)}
-              </div>
+              <SEOAnalysisSection
+                title="Balise Title"
+                type="single"
+                current={item.current_title}
+                suggested={item.suggested_title}
+                context={item.title_context}
+              />
 
-              <div className="space-y-6">
-                <h3 className="text-lg font-semibold">Meta Description</h3>
-                {renderHeadingComparison(item.current_description, item.suggested_description, item.description_context)}
-              </div>
+              <SEOAnalysisSection
+                title="Meta Description"
+                type="single"
+                current={item.current_description}
+                suggested={item.suggested_description}
+                context={item.description_context}
+              />
 
-              <div className="space-y-6">
-                <h3 className="text-lg font-semibold">H1</h3>
-                {renderHeadingComparison(item.current_h1, item.suggested_h1, item.h1_context)}
-              </div>
+              <SEOAnalysisSection
+                title="H1"
+                type="single"
+                current={item.current_h1}
+                suggested={item.suggested_h1}
+                context={item.h1_context}
+              />
 
               {item.current_h2s && item.current_h2s.length > 0 && (
-                <div className="space-y-6">
-                  <h3 className="text-lg font-semibold">H2</h3>
-                  {renderHeadingArrayComparison(item.current_h2s, item.suggested_h2s, item.h2s_context)}
-                </div>
+                <SEOAnalysisSection
+                  title="H2"
+                  type="array"
+                  current={item.current_h2s}
+                  suggested={item.suggested_h2s}
+                  context={item.h2s_context}
+                />
               )}
 
               {item.current_h3s && item.current_h3s.length > 0 && (
-                <div className="space-y-6">
-                  <h3 className="text-lg font-semibold">H3</h3>
-                  {renderHeadingArrayComparison(item.current_h3s, item.suggested_h3s, item.h3s_context)}
-                </div>
+                <SEOAnalysisSection
+                  title="H3"
+                  type="array"
+                  current={item.current_h3s}
+                  suggested={item.suggested_h3s}
+                  context={item.h3s_context}
+                />
               )}
 
               {item.current_h4s && item.current_h4s.length > 0 && (
-                <div className="space-y-6">
-                  <h3 className="text-lg font-semibold">H4</h3>
-                  {renderHeadingArrayComparison(item.current_h4s, item.suggested_h4s, item.h4s_context)}
-                </div>
+                <SEOAnalysisSection
+                  title="H4"
+                  type="array"
+                  current={item.current_h4s}
+                  suggested={item.suggested_h4s}
+                  context={item.h4s_context}
+                />
               )}
             </div>
           </div>
