@@ -110,9 +110,12 @@ export function URLForm() {
 
   return (
     <form onSubmit={handleSubmit} className="max-w-3xl mx-auto space-y-4">
+      <h2 className="text-xl font-semibold text-gray-900 mb-2">
+        Entrez une url particulière
+      </h2>
       <Input
         type="text"
-        placeholder="Entrez le nom de domaine (ex: example.com)"
+        placeholder="Ex: mondomaine.com/mapage/"
         value={domain}
         onChange={(e) => setDomain(e.target.value)}
         className="h-14 pl-6 text-lg rounded-full border-gray-200 focus-visible:ring-[#6366F1] bg-white shadow-sm w-full"
