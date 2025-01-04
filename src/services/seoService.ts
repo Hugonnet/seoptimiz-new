@@ -1,4 +1,6 @@
 import { supabase } from '@/integrations/supabase/client';
+import { format } from 'date-fns';
+import { fr } from 'date-fns/locale';
 
 export interface SEOMetadata {
   title: string;
@@ -49,13 +51,14 @@ export const extractSEOMetadata = async (url: string): Promise<SEOMetadata> => {
 };
 
 export const downloadTableAsCSV = (data: any[]) => {
-  // Pour chaque URL analysée
   const csvRows: string[] = [];
 
   data.forEach((item) => {
-    // Ajouter l'URL et la date comme en-tête de section
+    // Formater la date en français
+    const formattedDate = format(new Date(item.date), 'dd MMMM yyyy à HH:mm', { locale: fr });
+    
     csvRows.push(`"Analyse SEO pour : ${item.url}"`);
-    csvRows.push(`"Date d'analyse : ${new Date(item.created_at).toLocaleDateString('fr-FR')}"`);
+    csvRows.push(`"Date d'analyse : ${formattedDate}"`);
     csvRows.push(''); // Ligne vide pour la lisibilité
 
     // En-têtes des colonnes
@@ -71,30 +74,42 @@ export const downloadTableAsCSV = (data: any[]) => {
     csvRows.push(`"H1","${escapeCSV(item.current_h1)}","${escapeCSV(item.suggested_h1)}","${escapeCSV(item.h1_context || '')}"`);
 
     // H2s
-    const h2sCount = Math.max(
-      (item.current_h2s || []).length,
-      (item.suggested_h2s || []).length
-    );
-    for (let i = 0; i < h2sCount; i++) {
-      csvRows.push(`"H2 ${i + 1}","${escapeCSV(item.current_h2s?.[i] || '')}","${escapeCSV(item.suggested_h2s?.[i] || '')}","${escapeCSV(item.h2s_context?.[i] || '')}"`);
+    if (item.current_h2s && item.current_h2s.length > 0) {
+      const h2sCount = Math.max(
+        item.current_h2s.length,
+        (item.suggested_h2s || []).length
+      );
+      for (let i = 0; i < h2sCount; i++) {
+        if (item.current_h2s[i]) { // Ne traiter que les H2 qui existent
+          csvRows.push(`"H2 ${i + 1}","${escapeCSV(item.current_h2s[i])}","${escapeCSV(item.suggested_h2s?.[i] || '')}","${escapeCSV(item.h2s_context?.[i] || '')}"`);
+        }
+      }
     }
 
     // H3s
-    const h3sCount = Math.max(
-      (item.current_h3s || []).length,
-      (item.suggested_h3s || []).length
-    );
-    for (let i = 0; i < h3sCount; i++) {
-      csvRows.push(`"H3 ${i + 1}","${escapeCSV(item.current_h3s?.[i] || '')}","${escapeCSV(item.suggested_h3s?.[i] || '')}","${escapeCSV(item.h3s_context?.[i] || '')}"`);
+    if (item.current_h3s && item.current_h3s.length > 0) {
+      const h3sCount = Math.max(
+        item.current_h3s.length,
+        (item.suggested_h3s || []).length
+      );
+      for (let i = 0; i < h3sCount; i++) {
+        if (item.current_h3s[i]) { // Ne traiter que les H3 qui existent
+          csvRows.push(`"H3 ${i + 1}","${escapeCSV(item.current_h3s[i])}","${escapeCSV(item.suggested_h3s?.[i] || '')}","${escapeCSV(item.h3s_context?.[i] || '')}"`);
+        }
+      }
     }
 
     // H4s
-    const h4sCount = Math.max(
-      (item.current_h4s || []).length,
-      (item.suggested_h4s || []).length
-    );
-    for (let i = 0; i < h4sCount; i++) {
-      csvRows.push(`"H4 ${i + 1}","${escapeCSV(item.current_h4s?.[i] || '')}","${escapeCSV(item.suggested_h4s?.[i] || '')}","${escapeCSV(item.h4s_context?.[i] || '')}"`);
+    if (item.current_h4s && item.current_h4s.length > 0) {
+      const h4sCount = Math.max(
+        item.current_h4s.length,
+        (item.suggested_h4s || []).length
+      );
+      for (let i = 0; i < h4sCount; i++) {
+        if (item.current_h4s[i]) { // Ne traiter que les H4 qui existent
+          csvRows.push(`"H4 ${i + 1}","${escapeCSV(item.current_h4s[i])}","${escapeCSV(item.suggested_h4s?.[i] || '')}","${escapeCSV(item.h4s_context?.[i] || '')}"`);
+        }
+      }
     }
 
     // Ajouter une ligne vide entre chaque analyse d'URL
@@ -106,7 +121,7 @@ export const downloadTableAsCSV = (data: any[]) => {
   const csvContent = csvRows.join('\n');
   const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
   const link = document.createElement('a');
-  const date = new Date().toLocaleDateString('fr-FR').replace(/\//g, '-');
+  const date = format(new Date(), 'dd-MM-yyyy', { locale: fr });
   link.href = URL.createObjectURL(blob);
   link.download = `analyse-seo-${date}.csv`;
   link.click();
