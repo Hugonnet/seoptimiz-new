@@ -12,7 +12,9 @@ export function HeadingComparison({ current, suggested, context }: HeadingCompar
       <div className="grid grid-cols-2 gap-4">
         <div className="p-3 bg-gray-50 rounded-lg">
           <div className="font-medium text-gray-700">Version actuelle :</div>
-          <div className="mt-1">{current || 'Non défini'}</div>
+          <div className="mt-1 text-gray-500 italic">
+            {current || 'Aucune balise H1 trouvée'}
+          </div>
         </div>
         <div className="p-3 bg-purple-50 rounded-lg">
           <div className="font-medium text-purple-700">Version optimisée :</div>

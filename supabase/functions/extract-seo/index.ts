@@ -1,103 +1,130 @@
+import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { DOMParser } from "https://deno.land/x/deno_dom@v0.1.38/deno-dom-wasm.ts";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.0';
+import { load } from "https://deno.land/x/cheerio@1.0.7/mod.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
 };
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders });
+    return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    if (req.method !== 'POST') {
-      throw new Error('Méthode non autorisée. Utilisez POST.');
-    }
+    const { url } = await req.json();
+    console.log('Analysing URL:', url);
 
-    const body = await req.json();
-    console.log('Body reçu:', body);
-
-    if (!body?.url) {
-      throw new Error('URL manquante dans la requête');
-    }
-
-    const { url } = body;
-    console.log('Analyse de l\'URL:', url);
-    
     const response = await fetch(url);
-    if (!response.ok) {
-      throw new Error(`Impossible d'accéder à l'URL (${response.status})`);
-    }
-
     const html = await response.text();
-    console.log('HTML récupéré, longueur:', html.length);
+    const $ = load(html);
 
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(html, 'text/html');
+    // Extraction des données
+    const title = $('title').text();
+    const description = $('meta[name="description"]').attr('content');
+    const h1 = $('h1').first().text();
+    const h2s = $('h2').map((_, el) => $(el).text()).get();
+    const h3s = $('h3').map((_, el) => $(el).text()).get();
+    const h4s = $('h4').map((_, el) => $(el).text()).get();
+    const visibleText = $('body').text().split(/\s+/).filter(Boolean);
 
-    if (!doc) {
-      throw new Error("Impossible de parser le contenu HTML");
+    // Appel à l'API OpenAI pour générer des suggestions
+    const openAIResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${Deno.env.get('OPENAI_API_KEY')}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'gpt-4',
+        messages: [
+          {
+            role: 'system',
+            content: 'Tu es un expert SEO spécialisé dans l\'optimisation de contenu web. Analyse le contenu fourni et suggère des améliorations pour les balises meta et titres.'
+          },
+          {
+            role: 'user',
+            content: `Analyse ce contenu et suggère des améliorations SEO :
+              Titre actuel : ${title || 'Non défini'}
+              Description actuelle : ${description || 'Non définie'}
+              H1 actuel : ${h1 || 'Non défini'}
+              H2s actuels : ${h2s.join(' | ') || 'Non définis'}
+              H3s actuels : ${h3s.join(' | ') || 'Non définis'}
+              H4s actuels : ${h4s.join(' | ') || 'Non définis'}
+              Texte visible : ${visibleText.slice(0, 200).join(' ')}
+              
+              IMPORTANT : Fournis TOUJOURS une suggestion de H1, même s'il n'y en a pas sur la page.
+              Retourne uniquement un objet JSON avec cette structure :
+              {
+                "suggested_title": "titre optimisé",
+                "title_context": "explication de l'optimisation du titre",
+                "suggested_description": "description optimisée",
+                "description_context": "explication de l'optimisation de la description",
+                "suggested_h1": "H1 optimisé",
+                "h1_context": "explication de l'optimisation du H1",
+                "suggested_h2s": ["H2 optimisé 1", "H2 optimisé 2"],
+                "h2s_context": ["explication H2 1", "explication H2 2"],
+                "suggested_h3s": ["H3 optimisé 1", "H3 optimisé 2"],
+                "h3s_context": ["explication H3 1", "explication H3 2"],
+                "suggested_h4s": ["H4 optimisé 1", "H4 optimisé 2"],
+                "h4s_context": ["explication H4 1", "explication H4 2"]
+              }`
+          }
+        ],
+        temperature: 0.7,
+      }),
+    });
+
+    if (!openAIResponse.ok) {
+      throw new Error('Erreur lors de la génération des suggestions');
     }
 
-    const getData = (selector: string) => {
-      const element = doc.querySelector(selector);
-      const text = element?.textContent?.trim() || '';
-      console.log(`Extraction ${selector}:`, text);
-      return text;
-    };
+    const aiData = await openAIResponse.json();
+    const suggestions = JSON.parse(aiData.choices[0].message.content);
 
-    const getMetaContent = (name: string) => {
-      const element = doc.querySelector(`meta[name="${name}"]`);
-      const content = element?.getAttribute('content')?.trim() || '';
-      console.log(`Extraction meta ${name}:`, content);
-      return content;
-    };
+    // Création de l'analyse dans la base de données
+    const supabaseClient = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    );
 
-    const getAllData = (selector: string) => {
-      const elements = Array.from(doc.querySelectorAll(selector));
-      const texts = elements.map(el => el.textContent?.trim() || '');
-      console.log(`Extraction all ${selector}:`, texts);
-      return texts;
-    };
+    const { data: seoAnalysis, error: insertError } = await supabaseClient
+      .from('seo_analyses')
+      .insert({
+        url,
+        current_title: title || null,
+        current_description: description || null,
+        current_h1: h1 || null,
+        current_h2s: h2s,
+        current_h3s: h3s,
+        current_h4s: h4s,
+        suggested_title: suggestions.suggested_title,
+        suggested_description: suggestions.suggested_description,
+        suggested_h1: suggestions.suggested_h1,
+        suggested_h2s: suggestions.suggested_h2s,
+        suggested_h3s: suggestions.suggested_h3s,
+        suggested_h4s: suggestions.suggested_h4s,
+        visible_text: visibleText
+      })
+      .select()
+      .single();
 
-    const seoData = {
-      title: getData('title'),
-      description: getMetaContent('description'),
-      h1: getData('h1'),
-      h2s: getAllData('h2'),
-      h3s: getAllData('h3'),
-      keywords: getMetaContent('keywords'),
-      canonical: doc.querySelector('link[rel="canonical"]')?.getAttribute('href') || '',
-      ogTitle: doc.querySelector('meta[property="og:title"]')?.getAttribute('content') || '',
-      ogDescription: doc.querySelector('meta[property="og:description"]')?.getAttribute('content') || '',
-      ogImage: doc.querySelector('meta[property="og:image"]')?.getAttribute('content') || '',
-    };
+    if (insertError) {
+      throw insertError;
+    }
 
-    console.log('Données SEO extraites:', seoData);
-    
-    return new Response(JSON.stringify(seoData), {
-      headers: { 
-        ...corsHeaders,
-        'Content-Type': 'application/json'
-      }
+    return new Response(JSON.stringify(seoAnalysis), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
 
   } catch (error) {
-    console.error('Erreur:', error.message);
-    
+    console.error('Erreur:', error);
     return new Response(
-      JSON.stringify({ 
-        error: `Erreur lors de l'analyse: ${error.message}` 
-      }), 
-      { 
-        headers: { 
-          ...corsHeaders,
-          'Content-Type': 'application/json'
-        },
-        status: 400
+      JSON.stringify({ error: error.message }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       }
     );
   }
