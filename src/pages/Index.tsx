@@ -1,4 +1,3 @@
-import { Navigation } from "@/components/Navigation";
 import { URLForm } from "@/components/URLForm";
 import { motion } from "framer-motion";
 import { Search, Sparkles, History } from "lucide-react";
@@ -20,23 +19,23 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#F8F9FF] to-[#FFFFFF] p-6">
-      <div className="max-w-7xl mx-auto space-y-12">
+    <div className="min-h-[calc(100vh-5rem)] bg-gradient-to-br from-[#F8F9FF] to-[#FFFFFF] -mt-8 -mx-4 p-4 md:p-6">
+      <div className="max-w-7xl mx-auto space-y-8 md:space-y-12">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="text-center space-y-6 pt-12"
+          className="text-center space-y-4 md:space-y-6 pt-8 md:pt-12"
         >
-          <div className="inline-flex items-center px-4 py-2 rounded-full gradient-button">
+          <div className="inline-flex items-center px-3 py-1 md:px-4 md:py-2 rounded-full gradient-button text-sm md:text-base">
             Analyse SEO Intelligente
           </div>
           
-          <h1 className="text-6xl font-bold tracking-tight text-[#6366F1]">
+          <h1 className="text-4xl md:text-6xl font-bold tracking-tight text-[#6366F1]">
             SEOptimiz
           </h1>
           
-          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+          <p className="text-base md:text-lg text-gray-600 max-w-2xl mx-auto px-4">
             Optimisez votre référencement naturel avec notre outil d'analyse SEO avancé.
           </p>
         </motion.div>
@@ -45,52 +44,52 @@ const Index = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.2 }}
-          className="space-y-8"
+          className="space-y-6 md:space-y-8"
         >
           <URLForm />
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-            <div className="p-6 rounded-xl bg-white shadow-sm border border-gray-100">
-              <div className="w-12 h-12 bg-[#EEF2FF] rounded-lg flex items-center justify-center mb-4">
-                <Search className="w-6 h-6 text-[#6366F1]" />
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 mb-8 md:mb-12">
+            <div className="p-4 md:p-6 rounded-xl bg-white/80 backdrop-blur-sm shadow-sm border border-gray-100 hover:shadow-md transition-all duration-300">
+              <div className="w-10 h-10 md:w-12 md:h-12 bg-[#EEF2FF] rounded-lg flex items-center justify-center mb-4">
+                <Search className="w-5 h-5 md:w-6 md:h-6 text-[#6366F1]" />
               </div>
-              <h3 className="text-xl font-semibold mb-2 text-gray-900">Analyse Approfondie</h3>
-              <p className="text-gray-600">Scan complet des balises meta, titres et structure du contenu</p>
+              <h3 className="text-lg md:text-xl font-semibold mb-2 text-gray-900">Analyse Approfondie</h3>
+              <p className="text-sm md:text-base text-gray-600 mb-4">Scan complet des balises meta, titres et structure du contenu</p>
               <button 
                 onClick={() => navigate('/analyse')}
-                className="w-full mt-4 flex items-center justify-center gap-2 gradient-button rounded-lg py-3 px-4"
+                className="w-full flex items-center justify-center gap-2 gradient-button rounded-lg py-2 md:py-3 px-3 md:px-4 text-sm md:text-base"
               >
-                <Search className="w-5 h-5" />
+                <Search className="w-4 h-4 md:w-5 md:h-5" />
                 Lancer l'analyse
               </button>
             </div>
             
-            <div className="p-6 rounded-xl bg-white shadow-sm border border-gray-100">
-              <div className="w-12 h-12 bg-[#EEF2FF] rounded-lg flex items-center justify-center mb-4">
-                <Sparkles className="w-6 h-6 text-[#6366F1]" />
+            <div className="p-4 md:p-6 rounded-xl bg-white/80 backdrop-blur-sm shadow-sm border border-gray-100 hover:shadow-md transition-all duration-300">
+              <div className="w-10 h-10 md:w-12 md:h-12 bg-[#EEF2FF] rounded-lg flex items-center justify-center mb-4">
+                <Sparkles className="w-5 h-5 md:w-6 md:h-6 text-[#6366F1]" />
               </div>
-              <h3 className="text-xl font-semibold mb-2 text-gray-900">Recommandations IA</h3>
-              <p className="text-gray-600">Suggestions intelligentes alimentées par des algorithmes avancés</p>
+              <h3 className="text-lg md:text-xl font-semibold mb-2 text-gray-900">Recommandations IA</h3>
+              <p className="text-sm md:text-base text-gray-600 mb-4">Suggestions intelligentes alimentées par des algorithmes avancés</p>
               <button 
                 onClick={() => navigate('/analyse')}
-                className="w-full mt-4 flex items-center justify-center gap-2 gradient-button rounded-lg py-3 px-4"
+                className="w-full flex items-center justify-center gap-2 gradient-button rounded-lg py-2 md:py-3 px-3 md:px-4 text-sm md:text-base"
               >
-                <Sparkles className="w-5 h-5" />
+                <Sparkles className="w-4 h-4 md:w-5 md:h-5" />
                 Obtenir les recommandations
               </button>
             </div>
             
-            <div className="p-6 rounded-xl bg-white shadow-sm border border-gray-100">
-              <div className="w-12 h-12 bg-[#EEF2FF] rounded-lg flex items-center justify-center mb-4">
-                <History className="w-6 h-6 text-[#6366F1]" />
+            <div className="p-4 md:p-6 rounded-xl bg-white/80 backdrop-blur-sm shadow-sm border border-gray-100 hover:shadow-md transition-all duration-300">
+              <div className="w-10 h-10 md:w-12 md:h-12 bg-[#EEF2FF] rounded-lg flex items-center justify-center mb-4">
+                <History className="w-5 h-5 md:w-6 md:h-6 text-[#6366F1]" />
               </div>
-              <h3 className="text-xl font-semibold mb-2 text-gray-900">Historique des analyses</h3>
-              <p className="text-gray-600">Consultez et exportez l'historique de vos analyses SEO</p>
+              <h3 className="text-lg md:text-xl font-semibold mb-2 text-gray-900">Historique des analyses</h3>
+              <p className="text-sm md:text-base text-gray-600 mb-4">Consultez et exportez l'historique de vos analyses SEO</p>
               <Button 
                 onClick={() => navigate('/historique')}
-                className="w-full mt-4 flex items-center justify-center gap-2 gradient-button rounded-lg py-3 px-4"
+                className="w-full flex items-center justify-center gap-2 gradient-button rounded-lg py-2 md:py-3 px-3 md:px-4 text-sm md:text-base"
               >
-                <History className="w-5 h-5" />
+                <History className="w-4 h-4 md:w-5 md:h-5" />
                 Voir l'historique
               </Button>
             </div>
