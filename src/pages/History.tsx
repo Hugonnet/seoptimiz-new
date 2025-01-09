@@ -30,29 +30,37 @@ const History = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#F8F9FF] to-[#FFFFFF] p-6">
-      <div className="max-w-7xl mx-auto space-y-8">
-        <Navigation />
-        
+    <div className="min-h-screen bg-gradient-to-br from-[#F8F9FF] to-[#FFFFFF]">
+      <Navigation />
+      
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-16">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="space-y-6"
+          className="space-y-8"
         >
-          <div className="flex justify-between items-center">
-            <h1 className="text-3xl font-bold text-[#6366F1]">
-              Historique des analyses SEO
-            </h1>
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
+            <div className="space-y-2">
+              <h1 className="text-4xl font-bold bg-gradient-to-r from-[#6366F1] to-[#EC4899] text-transparent bg-clip-text">
+                Historique des analyses SEO
+              </h1>
+              <p className="text-gray-600 text-lg max-w-2xl">
+                Retrouvez ici l'historique complet de vos analyses SEO avec leurs recommandations.
+              </p>
+            </div>
 
             <AlertDialog>
               <AlertDialogTrigger asChild>
-                <Button variant="destructive" className="gap-2">
+                <Button 
+                  variant="destructive" 
+                  className="shadow-lg hover:shadow-xl transition-all duration-300 gap-2"
+                >
                   <Trash2 className="h-4 w-4" />
                   Réinitialiser l'historique
                 </Button>
               </AlertDialogTrigger>
-              <AlertDialogContent>
+              <AlertDialogContent className="sm:max-w-[425px]">
                 <AlertDialogHeader>
                   <AlertDialogTitle>Êtes-vous sûr ?</AlertDialogTitle>
                   <AlertDialogDescription>
@@ -62,19 +70,20 @@ const History = () => {
                 </AlertDialogHeader>
                 <AlertDialogFooter>
                   <AlertDialogCancel>Annuler</AlertDialogCancel>
-                  <AlertDialogAction onClick={handleReset}>
+                  <AlertDialogAction 
+                    onClick={handleReset}
+                    className="bg-red-500 hover:bg-red-600"
+                  >
                     Confirmer la suppression
                   </AlertDialogAction>
                 </AlertDialogFooter>
               </AlertDialogContent>
             </AlertDialog>
           </div>
-          
-          <p className="text-gray-600">
-            Retrouvez ici l'historique complet de vos analyses SEO avec leurs recommandations.
-          </p>
 
-          <SEOTable />
+          <div className="bg-white rounded-xl shadow-xl p-6">
+            <SEOTable />
+          </div>
         </motion.div>
       </div>
     </div>
