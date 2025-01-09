@@ -53,14 +53,12 @@ export const extractSEOMetadata = async (url: string): Promise<SEOMetadata> => {
 export const downloadTableAsCSV = async (data: any[]) => {
   if (data.length === 0) return;
 
-  // Utiliser le nom de l'entreprise du premier élément comme nom de fichier
   const company = data[0].company;
   if (!company) {
     console.error('Nom d\'entreprise manquant');
     return;
   }
 
-  // Récupérer toutes les analyses pour cette entreprise depuis la base de données
   const { data: allAnalyses, error } = await supabase
     .from('seo_analyses')
     .select('*')
