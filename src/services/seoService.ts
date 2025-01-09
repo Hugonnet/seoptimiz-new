@@ -70,7 +70,7 @@ export const downloadTableAsCSV = (data: any[]) => {
 
     (companyData as any[]).forEach((item) => {
       // Formater la date en français
-      const formattedDate = format(new Date(item.date), 'dd MMMM yyyy à HH:mm', { locale: fr });
+      const formattedDate = format(new Date(item.created_at), 'dd MMMM yyyy à HH:mm', { locale: fr });
       
       csvRows.push(`"URL analysée : ${item.url}"`);
       csvRows.push(`"Date d'analyse : ${formattedDate}"`);
@@ -95,9 +95,7 @@ export const downloadTableAsCSV = (data: any[]) => {
           (item.suggested_h2s || []).length
         );
         for (let i = 0; i < h2sCount; i++) {
-          if (item.current_h2s[i]) {
-            csvRows.push(`"H2 ${i + 1}","${escapeCSV(item.current_h2s[i])}","${escapeCSV(item.suggested_h2s?.[i] || '')}","${escapeCSV(item.h2s_context?.[i] || '')}"`);
-          }
+          csvRows.push(`"H2 ${i + 1}","${escapeCSV(item.current_h2s[i] || '')}","${escapeCSV(item.suggested_h2s?.[i] || '')}","${escapeCSV(item.h2s_context?.[i] || '')}"`);
         }
       }
 
@@ -108,9 +106,7 @@ export const downloadTableAsCSV = (data: any[]) => {
           (item.suggested_h3s || []).length
         );
         for (let i = 0; i < h3sCount; i++) {
-          if (item.current_h3s[i]) {
-            csvRows.push(`"H3 ${i + 1}","${escapeCSV(item.current_h3s[i])}","${escapeCSV(item.suggested_h3s?.[i] || '')}","${escapeCSV(item.h3s_context?.[i] || '')}"`);
-          }
+          csvRows.push(`"H3 ${i + 1}","${escapeCSV(item.current_h3s[i] || '')}","${escapeCSV(item.suggested_h3s?.[i] || '')}","${escapeCSV(item.h3s_context?.[i] || '')}"`);
         }
       }
 
@@ -121,9 +117,7 @@ export const downloadTableAsCSV = (data: any[]) => {
           (item.suggested_h4s || []).length
         );
         for (let i = 0; i < h4sCount; i++) {
-          if (item.current_h4s[i]) {
-            csvRows.push(`"H4 ${i + 1}","${escapeCSV(item.current_h4s[i])}","${escapeCSV(item.suggested_h4s?.[i] || '')}","${escapeCSV(item.h4s_context?.[i] || '')}"`);
-          }
+          csvRows.push(`"H4 ${i + 1}","${escapeCSV(item.current_h4s[i] || '')}","${escapeCSV(item.suggested_h4s?.[i] || '')}","${escapeCSV(item.h4s_context?.[i] || '')}"`);
         }
       }
 

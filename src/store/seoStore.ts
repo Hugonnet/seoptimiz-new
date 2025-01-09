@@ -4,6 +4,7 @@ import { persist } from 'zustand/middleware';
 export interface SEOData {
   id: string;
   url: string;
+  company: string;
   current_title: string;
   suggested_title: string;
   title_context?: string;
