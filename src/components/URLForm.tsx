@@ -27,7 +27,7 @@ export function URLForm() {
     if (!company.trim()) {
       toast({
         title: "Erreur",
-        description: "Veuillez spécifier le nom de l'entreprise",
+        description: "Le nom de l'entreprise est obligatoire",
         variant: "destructive",
       });
       return;
@@ -112,14 +112,18 @@ export function URLForm() {
         Entrez une url particulière
       </h2>
       <div className="space-y-4">
-        <Input
-          type="text"
-          placeholder="Nom de l'entreprise"
-          value={company}
-          onChange={(e) => setCompany(e.target.value)}
-          className="h-14 pl-6 text-lg rounded-full border-gray-200 focus-visible:ring-[#6366F1] bg-white shadow-sm w-full"
-          required
-        />
+        <div className="space-y-2">
+          <Input
+            type="text"
+            placeholder="Nom de l'entreprise"
+            value={company}
+            onChange={(e) => setCompany(e.target.value)}
+            className="h-14 pl-6 text-lg rounded-full border-gray-200 focus-visible:ring-[#6366F1] bg-white shadow-sm w-full"
+            required
+            aria-required="true"
+          />
+          <p className="text-sm text-gray-500 ml-4">* Champ obligatoire</p>
+        </div>
         <Input
           type="text"
           placeholder="Ex: mondomaine.com/mapage/"
