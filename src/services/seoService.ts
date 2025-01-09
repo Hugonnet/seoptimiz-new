@@ -50,7 +50,7 @@ export const extractSEOMetadata = async (url: string): Promise<SEOMetadata> => {
   return data as SEOMetadata;
 };
 
-export const downloadTableAsCSV = (data: any[]) => {
+export const downloadTableAsCSV = async (data: any[]) => {
   if (data.length === 0) return;
 
   // Utiliser le nom de l'entreprise du premier élément comme nom de fichier
@@ -60,12 +60,24 @@ export const downloadTableAsCSV = (data: any[]) => {
     return;
   }
 
+  // Récupérer toutes les analyses pour cette entreprise depuis la base de données
+  const { data: allAnalyses, error } = await supabase
+    .from('seo_analyses')
+    .select('*')
+    .eq('company', company)
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    console.error('Erreur lors de la récupération des analyses:', error);
+    return;
+  }
+
   const csvRows: string[] = [];
 
   csvRows.push(`"Analyse SEO pour l'entreprise : ${company}"`);
   csvRows.push(''); // Ligne vide pour la lisibilité
 
-  data.forEach((item) => {
+  allAnalyses.forEach((item) => {
     let formattedDate;
     try {
       const date = item.created_at ? parseISO(item.created_at) : new Date();
@@ -133,10 +145,9 @@ export const downloadTableAsCSV = (data: any[]) => {
   const csvContent = csvRows.join('\n');
   const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
   const link = document.createElement('a');
-  const date = format(new Date(), 'dd-MM-yyyy', { locale: fr });
   const safeCompanyName = company.replace(/[^a-z0-9]/gi, '_').toLowerCase();
   link.href = URL.createObjectURL(blob);
-  link.download = `analyse-seo-${safeCompanyName}.csv`;
+  link.download = `${safeCompanyName}.csv`;
   link.click();
 };
 

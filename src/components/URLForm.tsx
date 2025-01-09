@@ -1,18 +1,50 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { extractSEOMetadata } from "@/services/seoService";
 import { useToast } from "@/hooks/use-toast";
 import { Search } from "lucide-react";
 import { useSEOStore } from "@/store/seoStore";
 import { supabase } from "@/integrations/supabase/client";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 export function URLForm() {
   const [domain, setDomain] = useState("");
   const [company, setCompany] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [open, setOpen] = useState(false);
+  const [companies, setCompanies] = useState<string[]>([]);
   const { toast } = useToast();
   const addSEOData = useSEOStore((state) => state.addSEOData);
+
+  useEffect(() => {
+    if (company.length >= 3) {
+      fetchCompanies();
+    }
+  }, [company]);
+
+  const fetchCompanies = async () => {
+    const { data, error } = await supabase
+      .from('seo_analyses')
+      .select('company')
+      .ilike('company', `${company}%`)
+      .order('created_at', { ascending: false });
+
+    if (!error && data) {
+      // Récupérer les noms d'entreprises uniques
+      const uniqueCompanies = Array.from(new Set(data.map(item => item.company)));
+      setCompanies(uniqueCompanies);
+      setOpen(true);
+    }
+  };
 
   const formatURL = (domain: string) => {
     let formattedURL = domain.toLowerCase().trim();
@@ -113,15 +145,40 @@ export function URLForm() {
       </h2>
       <div className="space-y-4">
         <div className="space-y-2">
-          <Input
-            type="text"
-            placeholder="Nom de l'entreprise"
-            value={company}
-            onChange={(e) => setCompany(e.target.value)}
-            className="h-14 pl-6 text-lg rounded-full border-gray-200 focus-visible:ring-[#6366F1] bg-white shadow-sm w-full"
-            required
-            aria-required="true"
-          />
+          <Popover open={open} onOpenChange={setOpen}>
+            <PopoverTrigger asChild>
+              <Input
+                type="text"
+                placeholder="Nom de l'entreprise"
+                value={company}
+                onChange={(e) => setCompany(e.target.value)}
+                className="h-14 pl-6 text-lg rounded-full border-gray-200 focus-visible:ring-[#6366F1] bg-white shadow-sm w-full"
+                required
+                aria-required="true"
+              />
+            </PopoverTrigger>
+            {companies.length > 0 && (
+              <PopoverContent className="p-0" align="start">
+                <Command>
+                  <CommandList>
+                    <CommandGroup>
+                      {companies.map((companyName) => (
+                        <CommandItem
+                          key={companyName}
+                          onSelect={() => {
+                            setCompany(companyName);
+                            setOpen(false);
+                          }}
+                        >
+                          {companyName}
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                  </CommandList>
+                </Command>
+              </PopoverContent>
+            )}
+          </Popover>
           <p className="text-sm text-gray-500 ml-4">* Champ obligatoire</p>
         </div>
         <Input
