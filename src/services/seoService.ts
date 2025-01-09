@@ -51,80 +51,97 @@ export const extractSEOMetadata = async (url: string): Promise<SEOMetadata> => {
 };
 
 export const downloadTableAsCSV = (data: any[]) => {
-  const csvRows: string[] = [];
+  // Grouper les données par entreprise
+  const companiesData = data.reduce((acc, item) => {
+    const company = item.company || 'Non spécifié';
+    if (!acc[company]) {
+      acc[company] = [];
+    }
+    acc[company].push(item);
+    return acc;
+  }, {});
 
-  data.forEach((item) => {
-    // Formater la date en français
-    const formattedDate = format(new Date(item.date), 'dd MMMM yyyy à HH:mm', { locale: fr });
-    
-    csvRows.push(`"Analyse SEO pour : ${item.url}"`);
-    csvRows.push(`"Date d'analyse : ${formattedDate}"`);
+  // Créer un fichier CSV pour chaque entreprise
+  Object.entries(companiesData).forEach(([company, companyData]) => {
+    const csvRows: string[] = [];
+
+    csvRows.push(`"Analyse SEO pour l'entreprise : ${company}"`);
     csvRows.push(''); // Ligne vide pour la lisibilité
 
-    // En-têtes des colonnes
-    csvRows.push('"Élément","Contenu actuel","Suggestion d\'amélioration","Contexte"');
+    (companyData as any[]).forEach((item) => {
+      // Formater la date en français
+      const formattedDate = format(new Date(item.date), 'dd MMMM yyyy à HH:mm', { locale: fr });
+      
+      csvRows.push(`"URL analysée : ${item.url}"`);
+      csvRows.push(`"Date d'analyse : ${formattedDate}"`);
+      csvRows.push(''); // Ligne vide pour la lisibilité
 
-    // Titre
-    csvRows.push(`"Titre","${escapeCSV(item.current_title)}","${escapeCSV(item.suggested_title)}","${escapeCSV(item.title_context || '')}"`);
+      // En-têtes des colonnes
+      csvRows.push('"Élément","Contenu actuel","Suggestion d\'amélioration","Contexte"');
 
-    // Description
-    csvRows.push(`"Description","${escapeCSV(item.current_description)}","${escapeCSV(item.suggested_description)}","${escapeCSV(item.description_context || '')}"`);
+      // Titre
+      csvRows.push(`"Titre","${escapeCSV(item.current_title)}","${escapeCSV(item.suggested_title)}","${escapeCSV(item.title_context || '')}"`);
 
-    // H1
-    csvRows.push(`"H1","${escapeCSV(item.current_h1)}","${escapeCSV(item.suggested_h1)}","${escapeCSV(item.h1_context || '')}"`);
+      // Description
+      csvRows.push(`"Description","${escapeCSV(item.current_description)}","${escapeCSV(item.suggested_description)}","${escapeCSV(item.description_context || '')}"`);
 
-    // H2s
-    if (item.current_h2s && item.current_h2s.length > 0) {
-      const h2sCount = Math.max(
-        item.current_h2s.length,
-        (item.suggested_h2s || []).length
-      );
-      for (let i = 0; i < h2sCount; i++) {
-        if (item.current_h2s[i]) { // Ne traiter que les H2 qui existent
-          csvRows.push(`"H2 ${i + 1}","${escapeCSV(item.current_h2s[i])}","${escapeCSV(item.suggested_h2s?.[i] || '')}","${escapeCSV(item.h2s_context?.[i] || '')}"`);
+      // H1
+      csvRows.push(`"H1","${escapeCSV(item.current_h1)}","${escapeCSV(item.suggested_h1)}","${escapeCSV(item.h1_context || '')}"`);
+
+      // H2s
+      if (item.current_h2s && item.current_h2s.length > 0) {
+        const h2sCount = Math.max(
+          item.current_h2s.length,
+          (item.suggested_h2s || []).length
+        );
+        for (let i = 0; i < h2sCount; i++) {
+          if (item.current_h2s[i]) {
+            csvRows.push(`"H2 ${i + 1}","${escapeCSV(item.current_h2s[i])}","${escapeCSV(item.suggested_h2s?.[i] || '')}","${escapeCSV(item.h2s_context?.[i] || '')}"`);
+          }
         }
       }
-    }
 
-    // H3s
-    if (item.current_h3s && item.current_h3s.length > 0) {
-      const h3sCount = Math.max(
-        item.current_h3s.length,
-        (item.suggested_h3s || []).length
-      );
-      for (let i = 0; i < h3sCount; i++) {
-        if (item.current_h3s[i]) { // Ne traiter que les H3 qui existent
-          csvRows.push(`"H3 ${i + 1}","${escapeCSV(item.current_h3s[i])}","${escapeCSV(item.suggested_h3s?.[i] || '')}","${escapeCSV(item.h3s_context?.[i] || '')}"`);
+      // H3s
+      if (item.current_h3s && item.current_h3s.length > 0) {
+        const h3sCount = Math.max(
+          item.current_h3s.length,
+          (item.suggested_h3s || []).length
+        );
+        for (let i = 0; i < h3sCount; i++) {
+          if (item.current_h3s[i]) {
+            csvRows.push(`"H3 ${i + 1}","${escapeCSV(item.current_h3s[i])}","${escapeCSV(item.suggested_h3s?.[i] || '')}","${escapeCSV(item.h3s_context?.[i] || '')}"`);
+          }
         }
       }
-    }
 
-    // H4s
-    if (item.current_h4s && item.current_h4s.length > 0) {
-      const h4sCount = Math.max(
-        item.current_h4s.length,
-        (item.suggested_h4s || []).length
-      );
-      for (let i = 0; i < h4sCount; i++) {
-        if (item.current_h4s[i]) { // Ne traiter que les H4 qui existent
-          csvRows.push(`"H4 ${i + 1}","${escapeCSV(item.current_h4s[i])}","${escapeCSV(item.suggested_h4s?.[i] || '')}","${escapeCSV(item.h4s_context?.[i] || '')}"`);
+      // H4s
+      if (item.current_h4s && item.current_h4s.length > 0) {
+        const h4sCount = Math.max(
+          item.current_h4s.length,
+          (item.suggested_h4s || []).length
+        );
+        for (let i = 0; i < h4sCount; i++) {
+          if (item.current_h4s[i]) {
+            csvRows.push(`"H4 ${i + 1}","${escapeCSV(item.current_h4s[i])}","${escapeCSV(item.suggested_h4s?.[i] || '')}","${escapeCSV(item.h4s_context?.[i] || '')}"`);
+          }
         }
       }
-    }
 
-    // Ajouter une ligne vide entre chaque analyse d'URL
-    csvRows.push('');
-    csvRows.push(''); // Double ligne vide pour plus de lisibilité
+      // Ajouter des lignes vides entre chaque URL
+      csvRows.push('');
+      csvRows.push('');
+    });
+
+    // Créer et télécharger le fichier CSV
+    const csvContent = csvRows.join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const date = format(new Date(), 'dd-MM-yyyy', { locale: fr });
+    const safeCompanyName = company.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+    link.href = URL.createObjectURL(blob);
+    link.download = `analyse-seo-${safeCompanyName}-${date}.csv`;
+    link.click();
   });
-
-  // Créer et télécharger le fichier CSV
-  const csvContent = csvRows.join('\n');
-  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-  const link = document.createElement('a');
-  const date = format(new Date(), 'dd-MM-yyyy', { locale: fr });
-  link.href = URL.createObjectURL(blob);
-  link.download = `analyse-seo-${date}.csv`;
-  link.click();
 };
 
 // Fonction utilitaire pour échapper les caractères spéciaux dans le CSV

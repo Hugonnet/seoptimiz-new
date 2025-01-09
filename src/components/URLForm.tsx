@@ -9,28 +9,29 @@ import { supabase } from "@/integrations/supabase/client";
 
 export function URLForm() {
   const [domain, setDomain] = useState("");
+  const [company, setCompany] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const addSEOData = useSEOStore((state) => state.addSEOData);
 
   const formatURL = (domain: string) => {
     let formattedURL = domain.toLowerCase().trim();
-    
-    // Supprimer http:// ou https:// s'ils existent
     formattedURL = formattedURL.replace(/^https?:\/\//, '');
-    
-    // Supprimer www. s'il existe
     formattedURL = formattedURL.replace(/^www\./, '');
-    
-    // Supprimer les slashes à la fin
     formattedURL = formattedURL.replace(/\/$/, '');
-    
-    // Ajouter le préfixe complet
     return `https://www.${formattedURL}`;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!company.trim()) {
+      toast({
+        title: "Erreur",
+        description: "Veuillez spécifier le nom de l'entreprise",
+        variant: "destructive",
+      });
+      return;
+    }
     setIsLoading(true);
 
     try {
@@ -44,7 +45,6 @@ export function URLForm() {
         throw new Error("Aucune donnée SEO n'a pu être extraite de cette URL");
       }
 
-      // Obtenir les suggestions d'OpenAI
       const { data: suggestions, error: aiError } = await supabase.functions.invoke('generate-seo-suggestions', {
         body: {
           currentTitle: seoData.title,
@@ -61,9 +61,9 @@ export function URLForm() {
         throw new Error("Erreur lors de la génération des suggestions");
       }
 
-      // Préparer les données pour le stockage et l'affichage
       const seoAnalysis = {
         url: formattedURL,
+        company: company.trim(),
         current_title: seoData.title || "",
         suggested_title: suggestions.suggested_title,
         current_description: seoData.description || "",
@@ -78,7 +78,6 @@ export function URLForm() {
         suggested_h4s: suggestions.suggested_h4s
       };
 
-      // Sauvegarder dans Supabase
       const { error: supabaseError } = await supabase
         .from('seo_analyses')
         .insert([seoAnalysis]);
@@ -88,7 +87,6 @@ export function URLForm() {
         throw new Error("Erreur lors de la sauvegarde des données");
       }
 
-      // Mettre à jour le store local
       addSEOData(seoAnalysis);
       
       toast({
@@ -113,14 +111,24 @@ export function URLForm() {
       <h2 className="text-xl font-semibold text-gray-900 mb-2 text-center">
         Entrez une url particulière
       </h2>
-      <Input
-        type="text"
-        placeholder="Ex: mondomaine.com/mapage/"
-        value={domain}
-        onChange={(e) => setDomain(e.target.value)}
-        className="h-14 pl-6 text-lg rounded-full border-gray-200 focus-visible:ring-[#6366F1] bg-white shadow-sm w-full"
-        required
-      />
+      <div className="space-y-4">
+        <Input
+          type="text"
+          placeholder="Nom de l'entreprise"
+          value={company}
+          onChange={(e) => setCompany(e.target.value)}
+          className="h-14 pl-6 text-lg rounded-full border-gray-200 focus-visible:ring-[#6366F1] bg-white shadow-sm w-full"
+          required
+        />
+        <Input
+          type="text"
+          placeholder="Ex: mondomaine.com/mapage/"
+          value={domain}
+          onChange={(e) => setDomain(e.target.value)}
+          className="h-14 pl-6 text-lg rounded-full border-gray-200 focus-visible:ring-[#6366F1] bg-white shadow-sm w-full"
+          required
+        />
+      </div>
       <Button 
         type="submit" 
         disabled={isLoading}
