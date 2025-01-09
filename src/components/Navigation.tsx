@@ -1,11 +1,10 @@
 import {
   NavigationMenu,
   NavigationMenuItem,
-  NavigationMenuLink,
   NavigationMenuList,
   navigationMenuTriggerStyle,
 } from "@/components/ui/navigation-menu";
-import { ArrowLeft, Search, History } from "lucide-react";
+import { ArrowLeft, Search, History, Download } from "lucide-react";
 import { Link } from "react-router-dom";
 
 export function Navigation() {
@@ -37,6 +36,15 @@ export function Navigation() {
           >
             <History className="mr-2 h-4 w-4" />
             Historique
+          </Link>
+        </NavigationMenuItem>
+        <NavigationMenuItem>
+          <Link 
+            to="/exports" 
+            className={navigationMenuTriggerStyle() + " hover:bg-[#EEF2FF] hover:text-[#6366F1] transition-colors"}
+          >
+            <Download className="mr-2 h-4 w-4" />
+            Exports
           </Link>
         </NavigationMenuItem>
       </NavigationMenuList>
