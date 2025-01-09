@@ -1,5 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
-import { format } from 'date-fns';
+import { format, parseISO } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
 export interface SEOMetadata {
@@ -69,8 +69,15 @@ export const downloadTableAsCSV = (data: any[]) => {
     csvRows.push(''); // Ligne vide pour la lisibilité
 
     (companyData as any[]).forEach((item) => {
-      // Formater la date en français
-      const formattedDate = format(new Date(item.created_at), 'dd MMMM yyyy à HH:mm', { locale: fr });
+      // S'assurer que la date est valide et la formater
+      let formattedDate;
+      try {
+        const date = item.created_at ? parseISO(item.created_at) : new Date();
+        formattedDate = format(date, 'dd MMMM yyyy à HH:mm', { locale: fr });
+      } catch (error) {
+        formattedDate = format(new Date(), 'dd MMMM yyyy à HH:mm', { locale: fr });
+        console.error('Error formatting date:', error);
+      }
       
       csvRows.push(`"URL analysée : ${item.url}"`);
       csvRows.push(`"Date d'analyse : ${formattedDate}"`);
