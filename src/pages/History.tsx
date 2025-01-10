@@ -1,5 +1,5 @@
 import { SEOTable } from "@/components/SEOTable";
-import { Navigation } from "@/components/Navigation";
+import { StickyHeader } from "@/components/StickyHeader";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Trash2 } from "lucide-react";
@@ -64,9 +64,9 @@ const History = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#F8F9FF] to-[#FFFFFF]">
-      <Navigation />
+      <StickyHeader />
       
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-16">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-16">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -77,7 +77,7 @@ const History = () => {
             <h1 className="text-4xl font-bold bg-gradient-to-r from-[#6366F1] to-[#EC4899] text-transparent bg-clip-text">
               Historique des analyses SEO
             </h1>
-            <p className="text-gray-600 text-lg max-w-2xl">
+            <p className="text-gray-600 text-lg">
               Retrouvez ici l'historique complet de vos analyses SEO avec leurs recommandations.
             </p>
           </div>
