@@ -59,6 +59,7 @@ export type Database = {
       }
       seo_analyses: {
         Row: {
+          archived: boolean | null
           company: string | null
           created_at: string | null
           current_description: string | null
@@ -84,6 +85,7 @@ export type Database = {
           visible_text: string[] | null
         }
         Insert: {
+          archived?: boolean | null
           company?: string | null
           created_at?: string | null
           current_description?: string | null
@@ -109,6 +111,7 @@ export type Database = {
           visible_text?: string[] | null
         }
         Update: {
+          archived?: boolean | null
           company?: string | null
           created_at?: string | null
           current_description?: string | null
