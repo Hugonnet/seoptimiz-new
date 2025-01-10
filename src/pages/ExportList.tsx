@@ -32,6 +32,7 @@ export default function ExportList() {
 
   const handleArchive = async (company: string) => {
     try {
+      console.log('Archiving analyses for company:', company);
       const { error } = await supabase
         .from('seo_analyses')
         .update({ archived: true })
@@ -65,12 +66,35 @@ export default function ExportList() {
     }
 
     try {
-      const { error } = await supabase
+      console.log('Deleting analyses for company:', company);
+      
+      // First, get all analyses for this company
+      const { data: analysesToDelete, error: fetchError } = await supabase
+        .from('seo_analyses')
+        .select('id')
+        .eq('company', company);
+
+      if (fetchError) {
+        console.error('Error fetching analyses to delete:', fetchError);
+        throw fetchError;
+      }
+
+      console.log('Found analyses to delete:', analysesToDelete);
+
+      if (!analysesToDelete || analysesToDelete.length === 0) {
+        throw new Error('No analyses found to delete');
+      }
+
+      // Delete the analyses
+      const { error: deleteError } = await supabase
         .from('seo_analyses')
         .delete()
         .eq('company', company);
 
-      if (error) throw error;
+      if (deleteError) {
+        console.error('Error deleting analyses:', deleteError);
+        throw deleteError;
+      }
 
       // Update local state
       const updatedData = seoData.filter(item => item.company !== company);
@@ -81,7 +105,7 @@ export default function ExportList() {
         description: `Les analyses pour ${company} ont été supprimées avec succès.`,
       });
     } catch (error) {
-      console.error('Error deleting analyses:', error);
+      console.error('Error in handleDelete:', error);
       toast({
         title: "Erreur",
         description: "Une erreur est survenue lors de la suppression des analyses.",
