@@ -40,16 +40,20 @@ const History = () => {
           transition={{ duration: 0.5 }}
           className="space-y-8"
         >
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
-            <div className="space-y-2">
-              <h1 className="text-4xl font-bold bg-gradient-to-r from-[#6366F1] to-[#EC4899] text-transparent bg-clip-text">
-                Historique des analyses SEO
-              </h1>
-              <p className="text-gray-600 text-lg max-w-2xl">
-                Retrouvez ici l'historique complet de vos analyses SEO avec leurs recommandations.
-              </p>
-            </div>
+          <div className="space-y-2">
+            <h1 className="text-4xl font-bold bg-gradient-to-r from-[#6366F1] to-[#EC4899] text-transparent bg-clip-text">
+              Historique des analyses SEO
+            </h1>
+            <p className="text-gray-600 text-lg max-w-2xl">
+              Retrouvez ici l'historique complet de vos analyses SEO avec leurs recommandations.
+            </p>
+          </div>
 
+          <div className="bg-white rounded-xl shadow-xl p-6">
+            <SEOTable />
+          </div>
+
+          <div className="flex justify-center pt-8">
             <AlertDialog>
               <AlertDialogTrigger asChild>
                 <Button 
@@ -79,10 +83,6 @@ const History = () => {
                 </AlertDialogFooter>
               </AlertDialogContent>
             </AlertDialog>
-          </div>
-
-          <div className="bg-white rounded-xl shadow-xl p-6">
-            <SEOTable />
           </div>
         </motion.div>
       </div>
