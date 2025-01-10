@@ -36,13 +36,15 @@ export default function ExportList() {
       const { error } = await supabase
         .from('seo_analyses')
         .update({ archived: true })
-        .eq('company', company);
+        .is('company', company === 'Sans nom d\'entreprise' ? null : company);
 
       if (error) throw error;
 
       // Update local state
       const updatedData = seoData.map(item => 
-        item.company === company ? { ...item, archived: true } : item
+        (item.company === company || (!item.company && company === 'Sans nom d\'entreprise'))
+          ? { ...item, archived: true }
+          : item
       );
       setSEOData(updatedData);
 
@@ -68,28 +70,18 @@ export default function ExportList() {
     try {
       console.log('Deleting analyses for company:', company);
       
-      // First, get all analyses for this company
-      const { data: analysesToDelete, error: fetchError } = await supabase
+      // Handle null company case differently
+      const query = supabase
         .from('seo_analyses')
-        .select('id')
-        .eq('company', company);
-
-      if (fetchError) {
-        console.error('Error fetching analyses to delete:', fetchError);
-        throw fetchError;
+        .delete();
+      
+      if (company === 'Sans nom d\'entreprise') {
+        query.is('company', null);
+      } else {
+        query.eq('company', company);
       }
 
-      console.log('Found analyses to delete:', analysesToDelete);
-
-      if (!analysesToDelete || analysesToDelete.length === 0) {
-        throw new Error('No analyses found to delete');
-      }
-
-      // Delete the analyses
-      const { error: deleteError } = await supabase
-        .from('seo_analyses')
-        .delete()
-        .eq('company', company);
+      const { error: deleteError } = await query;
 
       if (deleteError) {
         console.error('Error deleting analyses:', deleteError);
@@ -97,7 +89,11 @@ export default function ExportList() {
       }
 
       // Update local state
-      const updatedData = seoData.filter(item => item.company !== company);
+      const updatedData = seoData.filter(item => 
+        company === 'Sans nom d\'entreprise' 
+          ? item.company !== null && item.company !== ''
+          : item.company !== company
+      );
       setSEOData(updatedData);
 
       toast({
