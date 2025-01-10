@@ -7,19 +7,18 @@ interface HeadingArrayComparisonProps {
 }
 
 export function HeadingArrayComparison({ current = [], suggested = [], context = [] }: HeadingArrayComparisonProps) {
-  if (!Array.isArray(current) || !Array.isArray(suggested)) {
-    return null;
-  }
-
-  const validCurrentItems = current.filter(item => item && item !== 'Non défini');
-  const validSuggestedItems = suggested.filter(item => item && item !== 'Non défini');
+  // Ensure we have arrays and filter out invalid items
+  const validCurrentItems = Array.isArray(current) ? current.filter(item => item && item !== 'Non défini') : [];
+  const validSuggestedItems = Array.isArray(suggested) ? suggested.filter(item => item && item !== 'Non défini') : [];
+  const validContextItems = Array.isArray(context) ? context : [];
 
   if (validCurrentItems.length === 0) return null;
 
   return (
     <div className="space-y-8">
       {validCurrentItems.map((currentItem, index) => {
-        if (!validSuggestedItems[index]) return null;
+        // Only render if we have both current and suggested items
+        if (!currentItem || !validSuggestedItems[index]) return null;
 
         return (
           <div key={index} className="space-y-6 animate-fade-in">
@@ -33,10 +32,10 @@ export function HeadingArrayComparison({ current = [], suggested = [], context =
                 <div className="text-purple-700 break-words text-lg">{validSuggestedItems[index]}</div>
               </div>
             </div>
-            {context[index] && (
+            {validContextItems[index] && (
               <div className="text-sm bg-blue-50 p-4 rounded-xl border border-blue-100 shadow-sm">
                 <span className="font-medium text-blue-800">Explication : </span>
-                <span className="text-blue-700">{context[index]}</span>
+                <span className="text-blue-700">{validContextItems[index]}</span>
               </div>
             )}
           </div>
