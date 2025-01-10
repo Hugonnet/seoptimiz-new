@@ -1,6 +1,6 @@
 import { URLForm } from "@/components/URLForm";
 import { motion } from "framer-motion";
-import { Search, Sparkles, History } from "lucide-react";
+import { Search, Download, History } from "lucide-react";
 import { useSEOStore } from "@/store/seoStore";
 import { downloadTableAsCSV } from "@/services/seoService";
 import { useNavigate } from "react-router-dom";
@@ -56,7 +56,7 @@ const Index = () => {
               <h3 className="text-lg md:text-xl font-semibold mb-2 text-gray-900">Analyse Approfondie</h3>
               <p className="text-sm md:text-base text-gray-600 mb-4">Scan complet des balises meta, titres et structure du contenu</p>
               <button 
-                onClick={() => navigate('/analyse')}
+                onClick={() => navigate('/')}
                 className="w-full flex items-center justify-center gap-2 gradient-button rounded-lg py-2 md:py-3 px-3 md:px-4 text-sm md:text-base"
               >
                 <Search className="w-4 h-4 md:w-5 md:h-5" />
@@ -66,16 +66,16 @@ const Index = () => {
             
             <div className="p-4 md:p-6 rounded-xl bg-white/80 backdrop-blur-sm shadow-sm border border-gray-100 hover:shadow-md transition-all duration-300">
               <div className="w-10 h-10 md:w-12 md:h-12 bg-[#EEF2FF] rounded-lg flex items-center justify-center mb-4">
-                <Sparkles className="w-5 h-5 md:w-6 md:h-6 text-[#6366F1]" />
+                <Download className="w-5 h-5 md:w-6 md:h-6 text-[#6366F1]" />
               </div>
-              <h3 className="text-lg md:text-xl font-semibold mb-2 text-gray-900">Recommandations IA</h3>
-              <p className="text-sm md:text-base text-gray-600 mb-4">Suggestions intelligentes alimentées par des algorithmes avancés</p>
+              <h3 className="text-lg md:text-xl font-semibold mb-2 text-gray-900">Exports</h3>
+              <p className="text-sm md:text-base text-gray-600 mb-4">Exportez et gérez vos analyses SEO par entreprise</p>
               <button 
-                onClick={() => navigate('/analyse')}
+                onClick={() => navigate('/exports')}
                 className="w-full flex items-center justify-center gap-2 gradient-button rounded-lg py-2 md:py-3 px-3 md:px-4 text-sm md:text-base"
               >
-                <Sparkles className="w-4 h-4 md:w-5 md:h-5" />
-                Obtenir les recommandations
+                <Download className="w-4 h-4 md:w-5 md:h-5" />
+                Voir les exports
               </button>
             </div>
             
