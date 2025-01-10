@@ -4,6 +4,8 @@ import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Trash2 } from "lucide-react";
 import { useSEOStore } from "@/store/seoStore";
+import { supabase } from "@/integrations/supabase/client";
+import { useEffect, useState } from "react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -15,11 +17,42 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 
 const History = () => {
   const clearSEOData = useSEOStore((state) => state.clearSEOData);
+  const setSEOData = useSEOStore((state) => state.setSEOData);
   const { toast } = useToast();
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const loadSEOData = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('seo_analyses')
+          .select('*')
+          .eq('archived', false)
+          .order('created_at', { ascending: false });
+
+        if (error) {
+          throw error;
+        }
+
+        setSEOData(data || []);
+      } catch (error) {
+        console.error('Erreur lors du chargement des données:', error);
+        toast({
+          title: "Erreur",
+          description: "Impossible de charger l'historique des analyses",
+          variant: "destructive",
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadSEOData();
+  }, [setSEOData, toast]);
 
   const handleReset = () => {
     clearSEOData();
@@ -49,9 +82,15 @@ const History = () => {
             </p>
           </div>
 
-          <div className="bg-white rounded-xl shadow-xl p-6">
-            <SEOTable />
-          </div>
+          {isLoading ? (
+            <div className="text-center py-8 text-gray-600">
+              Chargement de l'historique...
+            </div>
+          ) : (
+            <div className="bg-white rounded-xl shadow-xl p-6">
+              <SEOTable />
+            </div>
+          )}
 
           <div className="flex justify-center pt-8">
             <AlertDialog>
