@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 
-interface SEOAnalysis {
+export interface SEOAnalysis {
   id: number;
   url: string;
   company?: string;
@@ -18,6 +18,12 @@ interface SEOAnalysis {
   current_h4s?: string[];
   suggested_h4s?: string[];
   archived?: boolean;
+  title_context?: string;
+  description_context?: string;
+  h1_context?: string;
+  h2s_context?: string[];
+  h3s_context?: string[];
+  h4s_context?: string[];
 }
 
 interface SEOStore {

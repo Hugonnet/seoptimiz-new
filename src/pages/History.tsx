@@ -18,11 +18,11 @@ import {
 import { useToast } from "@/components/ui/use-toast";
 
 const History = () => {
-  const resetSEOData = useSEOStore((state) => state.resetSEOData);
+  const clearSEOData = useSEOStore((state) => state.clearSEOData);
   const { toast } = useToast();
 
   const handleReset = () => {
-    resetSEOData();
+    clearSEOData();
     toast({
       title: "Historique réinitialisé",
       description: "L'historique des analyses SEO a été effacé avec succès.",

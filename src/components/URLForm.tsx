@@ -60,28 +60,36 @@ export function URLForm() {
         company: company.trim(),
         current_title: seoData.title || "",
         suggested_title: suggestions.suggested_title,
+        title_context: suggestions.title_context,
         current_description: seoData.description || "",
         suggested_description: suggestions.suggested_description,
+        description_context: suggestions.description_context,
         current_h1: seoData.h1 || "",
         suggested_h1: suggestions.suggested_h1,
+        h1_context: suggestions.h1_context,
         current_h2s: seoData.h2s || [],
         suggested_h2s: suggestions.suggested_h2s,
+        h2s_context: suggestions.h2s_context,
         current_h3s: seoData.h3s || [],
         suggested_h3s: suggestions.suggested_h3s,
+        h3s_context: suggestions.h3s_context,
         current_h4s: seoData.h4s || [],
-        suggested_h4s: suggestions.suggested_h4s
+        suggested_h4s: suggestions.suggested_h4s,
+        h4s_context: suggestions.h4s_context
       };
 
-      const { error: supabaseError } = await supabase
+      const { data: insertedData, error: supabaseError } = await supabase
         .from('seo_analyses')
-        .insert([seoAnalysis]);
+        .insert([seoAnalysis])
+        .select()
+        .single();
 
       if (supabaseError) {
         console.error('Erreur Supabase:', supabaseError);
         throw new Error("Erreur lors de la sauvegarde des données");
       }
 
-      addSEOData(seoAnalysis);
+      addSEOData(insertedData);
       
       toast({
         title: "Analyse terminée",
