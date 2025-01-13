@@ -9,6 +9,7 @@ export interface SEOMetadata {
   h2s: string[];
   h3s: string[];
   h4s: string[];
+  visibleText: string[];
   keywords?: string;
   canonical?: string;
   ogTitle?: string;
@@ -132,6 +133,14 @@ export const downloadTableAsCSV = async (data: any[]) => {
       for (let i = 0; i < h4sCount; i++) {
         csvRows.push(`"H4 ${i + 1}","${escapeCSV(item.current_h4s[i] || '')}","${escapeCSV(item.suggested_h4s?.[i] || '')}","${escapeCSV(item.h4s_context?.[i] || '')}"`);
       }
+    }
+
+    // Contenu textuel
+    if (item.visible_text && item.visible_text.length > 0) {
+      csvRows.push('');
+      csvRows.push('"Analyse du contenu textuel"');
+      csvRows.push(`"Suggestions d'amélioration","${escapeCSV(item.content_suggestions || '')}"`);
+      csvRows.push(`"Contexte","${escapeCSV(item.content_context || '')}"`);
     }
 
     // Ajouter des lignes vides entre chaque URL

@@ -14,7 +14,7 @@ serve(async (req) => {
   }
 
   try {
-    const { currentTitle, currentDescription, currentH1, currentH2s, currentH3s, currentH4s } = await req.json();
+    const { currentTitle, currentDescription, currentH1, currentH2s, currentH3s, currentH4s, visibleText } = await req.json();
     
     console.log('Données reçues pour analyse:', { 
       currentTitle, 
@@ -22,10 +22,11 @@ serve(async (req) => {
       currentH1, 
       currentH2s, 
       currentH3s, 
-      currentH4s 
+      currentH4s,
+      visibleText
     });
 
-    const prompt = `En tant qu'expert SEO spécialisé dans l'optimisation de contenu web, analyse et optimise TOUTES les balises suivantes sans exception.
+    const prompt = `En tant qu'expert SEO spécialisé dans l'optimisation de contenu web, analyse et optimise TOUTES les balises et le contenu textuel suivants sans exception.
     
     Contenu actuel du site :
     ${currentTitle ? `Titre : "${currentTitle}"` : ''}
@@ -34,20 +35,24 @@ serve(async (req) => {
     ${currentH2s?.length ? `H2s : ${JSON.stringify(currentH2s)}` : ''}
     ${currentH3s?.length ? `H3s : ${JSON.stringify(currentH3s)}` : ''}
     ${currentH4s?.length ? `H4s : ${JSON.stringify(currentH4s)}` : ''}
+    ${visibleText?.length ? `Contenu textuel visible : ${JSON.stringify(visibleText)}` : ''}
 
     Instructions spécifiques :
     1. IMPORTANT : Tu DOIS proposer une version optimisée pour CHAQUE balise présente, sans exception
     2. Pour la balise H1, propose TOUJOURS une suggestion même si elle est absente du site
     3. Pour chaque balise H2, H3 et H4 présente, propose OBLIGATOIREMENT une version optimisée
-    4. Respecte les bonnes pratiques SEO :
+    4. Analyse le contenu textuel visible et propose des améliorations pour une meilleure optimisation SEO
+    5. Respecte les bonnes pratiques SEO :
        - Titre : 50-60 caractères max
        - Meta description : 150-160 caractères max
        - H1 : unique et contenant le mot-clé principal
        - H2-H4 : structure hiérarchique cohérente
-    5. Maintiens les mots-clés principaux tout en améliorant leur placement
-    6. Optimise pour la lisibilité et l'engagement des utilisateurs
-    7. Pour une balise H1 manquante, crée une suggestion basée sur le titre et la description
-    8. VÉRIFIE que tu as bien fourni une suggestion pour CHAQUE balise présente
+       - Contenu : densité de mots-clés optimale, lisibilité, pertinence
+    6. Maintiens les mots-clés principaux tout en améliorant leur placement
+    7. Optimise pour la lisibilité et l'engagement des utilisateurs
+    8. Pour une balise H1 manquante, crée une suggestion basée sur le titre et la description
+    9. VÉRIFIE que tu as bien fourni une suggestion pour CHAQUE balise présente
+    10. Fournis des explications détaillées pour chaque suggestion d'amélioration
 
     Retourne UNIQUEMENT un objet JSON avec cette structure exacte :
     {
@@ -62,7 +67,9 @@ serve(async (req) => {
       "suggested_h3s": ["H3 optimisé 1", "H3 optimisé 2"] si présents,
       "h3s_context": ["explication H3 1", "explication H3 2"],
       "suggested_h4s": ["H4 optimisé 1", "H4 optimisé 2"] si présents,
-      "h4s_context": ["explication H4 1", "explication H4 2"]
+      "h4s_context": ["explication H4 1", "explication H4 2"],
+      "content_suggestions": "suggestions d'amélioration pour le contenu textuel",
+      "content_context": "explication détaillée des améliorations proposées pour le contenu"
     }`;
 
     console.log('Envoi du prompt à OpenAI:', prompt);
@@ -74,7 +81,7 @@ serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4',
+        model: 'gpt-4o',
         messages: [
           {
             role: 'system',
@@ -112,7 +119,8 @@ serve(async (req) => {
         'suggested_h1', 'h1_context',
         'suggested_h2s', 'h2s_context',
         'suggested_h3s', 'h3s_context',
-        'suggested_h4s', 'h4s_context'
+        'suggested_h4s', 'h4s_context',
+        'content_suggestions', 'content_context'
       ];
 
       for (const field of requiredFields) {
@@ -145,7 +153,9 @@ serve(async (req) => {
         suggested_h3s: currentH3s?.length ? suggestions.suggested_h3s.slice(0, currentH3s.length) : [],
         h3s_context: currentH3s?.length ? suggestions.h3s_context.slice(0, currentH3s.length) : [],
         suggested_h4s: currentH4s?.length ? suggestions.suggested_h4s.slice(0, currentH4s.length) : [],
-        h4s_context: currentH4s?.length ? suggestions.h4s_context.slice(0, currentH4s.length) : []
+        h4s_context: currentH4s?.length ? suggestions.h4s_context.slice(0, currentH4s.length) : [],
+        content_suggestions: suggestions.content_suggestions,
+        content_context: suggestions.content_context
       };
 
       return new Response(JSON.stringify(filteredSuggestions), {
