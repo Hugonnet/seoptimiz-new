@@ -61,6 +61,8 @@ export type Database = {
         Row: {
           archived: boolean | null
           company: string | null
+          content_context: string | null
+          content_suggestions: string | null
           created_at: string | null
           current_description: string | null
           current_h1: string | null
@@ -87,6 +89,8 @@ export type Database = {
         Insert: {
           archived?: boolean | null
           company?: string | null
+          content_context?: string | null
+          content_suggestions?: string | null
           created_at?: string | null
           current_description?: string | null
           current_h1?: string | null
@@ -113,6 +117,8 @@ export type Database = {
         Update: {
           archived?: boolean | null
           company?: string | null
+          content_context?: string | null
+          content_suggestions?: string | null
           created_at?: string | null
           current_description?: string | null
           current_h1?: string | null

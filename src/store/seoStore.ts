@@ -24,6 +24,8 @@ export interface SEOAnalysis {
   h2s_context?: string[];
   h3s_context?: string[];
   h4s_context?: string[];
+  content_suggestions?: string;
+  content_context?: string;
 }
 
 interface SEOStore {
