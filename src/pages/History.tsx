@@ -66,38 +66,39 @@ const History = () => {
     <div className="min-h-screen bg-gradient-to-br from-[#F8F9FF] to-[#FFFFFF]">
       <StickyHeader />
       
-      <div className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-6 pt-4 sm:pt-6 lg:pt-8 pb-8 sm:pb-12 lg:pb-16">
+      <div className="mx-auto max-w-7xl px-2 sm:px-4 lg:px-6 py-2 sm:py-4 lg:py-6">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="space-y-4 sm:space-y-6 lg:space-y-8"
+          className="space-y-3 sm:space-y-4 lg:space-y-6"
         >
-          <div className="space-y-2 px-2">
-            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-[#6366F1] to-[#EC4899] text-transparent bg-clip-text">
+          <div className="space-y-1 sm:space-y-2 px-1 sm:px-2">
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold bg-gradient-to-r from-[#6366F1] to-[#EC4899] text-transparent bg-clip-text">
               Historique des analyses SEO
             </h1>
-            <p className="text-gray-600 text-base sm:text-lg">
+            <p className="text-sm sm:text-base text-gray-600">
               Retrouvez ici l'historique complet de vos analyses SEO avec leurs recommandations.
             </p>
           </div>
 
           {isLoading ? (
-            <div className="text-center py-8 text-gray-600">
+            <div className="text-center py-4 sm:py-6 text-gray-600">
               Chargement de l'historique...
             </div>
           ) : (
-            <div className="bg-white rounded-xl shadow-xl p-2 sm:p-4 lg:p-6">
+            <div className="bg-white rounded-lg sm:rounded-xl shadow-md sm:shadow-xl p-1 sm:p-3 lg:p-4">
               <SEOTable />
             </div>
           )}
 
-          <div className="flex justify-center pt-4 sm:pt-6">
+          <div className="flex justify-center pt-2 sm:pt-4">
             <AlertDialog>
               <AlertDialogTrigger asChild>
                 <Button 
                   variant="destructive" 
-                  className="shadow-lg hover:shadow-xl transition-all duration-300 gap-2"
+                  className="shadow hover:shadow-lg transition-all duration-300 gap-2 text-sm sm:text-base"
+                  size="sm"
                 >
                   <Trash2 className="h-4 w-4" />
                   Réinitialiser l'historique
