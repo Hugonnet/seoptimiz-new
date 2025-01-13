@@ -8,21 +8,21 @@ interface HeadingComparisonProps {
 
 export function HeadingComparison({ current, suggested, context }: HeadingComparisonProps) {
   return (
-    <div className="space-y-4 sm:space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4 lg:gap-6 w-full">
-        <div className="p-3 sm:p-4 lg:p-6 bg-white rounded-xl shadow-md border border-gray-100 hover:shadow-lg transition-shadow duration-300">
-          <div className="font-semibold text-gray-800 mb-2 sm:mb-3">Version actuelle :</div>
-          <div className="text-gray-600 italic break-words text-base sm:text-lg">
+    <div className="space-y-3">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-2 sm:gap-3 w-full">
+        <div className="p-2 sm:p-3 bg-white rounded-lg shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-300">
+          <div className="font-medium text-gray-800 mb-1.5">Version actuelle :</div>
+          <div className="text-gray-600 italic break-words text-sm sm:text-base">
             {current || 'Non défini'}
           </div>
         </div>
-        <div className="p-3 sm:p-4 lg:p-6 bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl shadow-md border border-purple-100 hover:shadow-lg transition-shadow duration-300">
-          <div className="font-semibold text-purple-800 mb-2 sm:mb-3">Version optimisée :</div>
-          <div className="text-purple-700 break-words text-base sm:text-lg">{suggested || 'Non défini'}</div>
+        <div className="p-2 sm:p-3 bg-gradient-to-br from-purple-50 to-pink-50 rounded-lg shadow-sm border border-purple-100 hover:shadow-md transition-shadow duration-300">
+          <div className="font-medium text-purple-800 mb-1.5">Version optimisée :</div>
+          <div className="text-purple-700 break-words text-sm sm:text-base">{suggested || 'Non défini'}</div>
         </div>
       </div>
       {context && (
-        <div className="text-sm bg-blue-50 p-3 sm:p-4 rounded-xl border border-blue-100 shadow-sm">
+        <div className="text-xs sm:text-sm bg-blue-50 p-2 sm:p-3 rounded-lg border border-blue-100 shadow-sm">
           <span className="font-medium text-blue-800">Explication : </span>
           <span className="text-blue-700">{context}</span>
         </div>

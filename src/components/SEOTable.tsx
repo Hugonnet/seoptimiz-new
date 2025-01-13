@@ -9,7 +9,7 @@ export function SEOTable() {
 
   if (seoData.length === 0) {
     return (
-      <div className="text-center py-4 sm:py-6 text-gray-600 bg-white rounded-xl shadow-sm border border-gray-100">
+      <div className="text-center py-3 sm:py-4 text-gray-600 bg-white rounded-lg shadow-sm border border-gray-100">
         Aucune donnée SEO disponible. Analysez une URL pour commencer.
       </div>
     );
@@ -18,13 +18,13 @@ export function SEOTable() {
   return (
     <div className="space-y-4">
       {seoData.map((item) => (
-        <div key={item.id} className="space-y-4">
-          <h2 className="text-lg sm:text-xl font-semibold text-purple-600 mb-2 sm:mb-4 break-words">
+        <div key={item.id} className="space-y-3 sm:space-y-4">
+          <h2 className="text-base sm:text-lg font-semibold text-purple-600 mb-2 break-words">
             Analyse SEO pour : <span className="text-gray-700">{item.url}</span>
           </h2>
           
-          <div className="rounded-xl bg-white shadow-sm border border-gray-100 overflow-hidden">
-            <div className="p-3 sm:p-4 lg:p-6 space-y-6 sm:space-y-8">
+          <div className="rounded-lg bg-white shadow-sm border border-gray-100 overflow-hidden">
+            <div className="p-2 sm:p-4 space-y-4 sm:space-y-6">
               <SEOAnalysisSection
                 title="Balise Title"
                 type="single"
@@ -59,22 +59,22 @@ export function SEOTable() {
                 />
               )}
 
-              {item.current_h3s && (
+              {item.current_h3s && item.current_h3s.length > 0 && (
                 <SEOAnalysisSection
                   title="H3"
                   type="array"
-                  current={item.current_h3s || []}
-                  suggested={item.suggested_h3s || []}
+                  current={item.current_h3s}
+                  suggested={item.suggested_h3s}
                   context={item.h3s_context}
                 />
               )}
 
-              {item.current_h4s && (
+              {item.current_h4s && item.current_h4s.length > 0 && (
                 <SEOAnalysisSection
                   title="H4"
                   type="array"
-                  current={item.current_h4s || []}
-                  suggested={item.suggested_h4s || []}
+                  current={item.current_h4s}
+                  suggested={item.suggested_h4s}
                   context={item.h4s_context}
                 />
               )}
@@ -82,7 +82,11 @@ export function SEOTable() {
           </div>
           
           <div className="flex justify-end">
-            <Button onClick={() => downloadTableAsCSV(seoData)} variant="outline" className="gap-2 gradient-button text-sm sm:text-base">
+            <Button 
+              onClick={() => downloadTableAsCSV(seoData)} 
+              variant="outline" 
+              className="gap-2 gradient-button text-sm"
+            >
               <Download className="h-4 w-4" />
               Exporter
             </Button>
