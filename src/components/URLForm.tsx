@@ -62,7 +62,10 @@ export function URLForm() {
         
         // Si nous avons plus de balises actuelles que de suggestions
         while (suggestedArray.length < currentArray.length) {
-          suggestedArray.push("Suggestion à générer");
+          const index = suggestedArray.length;
+          // Utiliser la balise actuelle comme base pour la suggestion
+          const currentTag = currentArray[index];
+          suggestedArray.push(`Optimisez "${currentTag}" pour plus d'impact SEO`);
         }
         
         // Si nous avons plus de suggestions que de balises (cas improbable mais géré)
@@ -77,14 +80,14 @@ export function URLForm() {
         url: formattedURL,
         company: company.trim(),
         current_title: seoData.title || "",
-        suggested_title: suggestions.suggested_title,
-        title_context: suggestions.title_context,
+        suggested_title: suggestions.suggested_title || "Optimisez le titre pour plus d'impact SEO",
+        title_context: suggestions.title_context || "Analysez le titre actuel et proposez une version optimisée",
         current_description: seoData.description || "",
-        suggested_description: suggestions.suggested_description,
-        description_context: suggestions.description_context,
+        suggested_description: suggestions.suggested_description || "Optimisez la description pour plus d'impact SEO",
+        description_context: suggestions.description_context || "Analysez la description actuelle et proposez une version optimisée",
         current_h1: seoData.h1 || "",
-        suggested_h1: suggestions.suggested_h1,
-        h1_context: suggestions.h1_context,
+        suggested_h1: suggestions.suggested_h1 || "Optimisez le H1 pour plus d'impact SEO",
+        h1_context: suggestions.h1_context || "Analysez le H1 actuel et proposez une version optimisée",
         current_h2s: seoData.h2s || [],
         suggested_h2s: ensurePostgresArray(seoData.h2s, suggestions.suggested_h2s),
         h2s_context: ensurePostgresArray(seoData.h2s, suggestions.h2s_context),
