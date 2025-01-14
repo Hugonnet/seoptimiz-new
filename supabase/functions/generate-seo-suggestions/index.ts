@@ -19,22 +19,22 @@ serve(async (req) => {
     2. Proposer une version optimisée plus descriptive et pertinente
     3. Expliquer brièvement pourquoi cette optimisation est meilleure
 
-    Les suggestions doivent être concises et pertinentes, jamais de texte générique comme "Optimisez cette balise".
+    Les suggestions doivent être concises et pertinentes, jamais de texte générique.
     
-    Format de réponse attendu en JSON :
+    Format de réponse STRICT en JSON :
     {
-      "suggested_title": "Version optimisée du titre",
-      "title_context": "Explication courte de l'amélioration",
-      "suggested_description": "Version optimisée de la description",
-      "description_context": "Explication courte de l'amélioration",
-      "suggested_h1": "Version optimisée du H1",
-      "h1_context": "Explication courte de l'amélioration",
-      "suggested_h2s": ["Version optimisée H2 1", "Version optimisée H2 2"],
-      "h2s_context": ["Explication H2 1", "Explication H2 2"],
-      "suggested_h3s": ["Version optimisée H3 1", "Version optimisée H3 2"],
-      "h3s_context": ["Explication H3 1", "Explication H3 2"],
-      "suggested_h4s": ["Version optimisée H4 1", "Version optimisée H4 2"],
-      "h4s_context": ["Explication H4 1", "Explication H4 2"]
+      "suggested_title": "string",
+      "title_context": "string",
+      "suggested_description": "string",
+      "description_context": "string",
+      "suggested_h1": "string",
+      "h1_context": "string",
+      "suggested_h2s": ["string"],
+      "h2s_context": ["string"],
+      "suggested_h3s": ["string"],
+      "h3s_context": ["string"],
+      "suggested_h4s": ["string"],
+      "h4s_context": ["string"]
     }`
 
     const userPrompt = `Voici les éléments actuels de la page à optimiser :
@@ -46,8 +46,12 @@ serve(async (req) => {
     H3s : ${currentH3s?.join(', ') || 'Non définis'}
     H4s : ${currentH4s?.join(', ') || 'Non définis'}
 
-    Analyse chaque élément et propose des optimisations SEO pertinentes en suivant le format JSON demandé.
+    Analyse chaque élément et propose des optimisations SEO pertinentes en suivant STRICTEMENT le format JSON demandé.
     Les suggestions doivent être en français et adaptées au contexte de chaque balise.`
+
+    console.log('Envoi de la requête à OpenAI avec les prompts suivants:')
+    console.log('System prompt:', systemPrompt)
+    console.log('User prompt:', userPrompt)
 
     const openAIResponse = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -56,7 +60,7 @@ serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
+        model: 'gpt-4',
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: userPrompt },
@@ -66,24 +70,48 @@ serve(async (req) => {
     })
 
     if (!openAIResponse.ok) {
+      console.error('Erreur OpenAI:', await openAIResponse.text())
       throw new Error('Erreur lors de la génération des suggestions SEO')
     }
 
     const openAIData = await openAIResponse.json()
+    console.log('Réponse OpenAI brute:', openAIData)
 
     if (!openAIData.choices?.[0]?.message?.content) {
-      throw new Error('Réponse OpenAI invalide')
+      throw new Error('Réponse OpenAI invalide ou vide')
     }
 
     try {
-      const suggestions = JSON.parse(openAIData.choices[0].message.content)
+      const content = openAIData.choices[0].message.content
+      console.log('Contenu à parser:', content)
+      const suggestions = JSON.parse(content.trim())
+      
+      // Validation basique du format
+      const requiredKeys = [
+        'suggested_title', 'title_context',
+        'suggested_description', 'description_context',
+        'suggested_h1', 'h1_context',
+        'suggested_h2s', 'h2s_context',
+        'suggested_h3s', 'h3s_context',
+        'suggested_h4s', 'h4s_context'
+      ]
+
+      for (const key of requiredKeys) {
+        if (!(key in suggestions)) {
+          throw new Error(`Clé manquante dans la réponse JSON: ${key}`)
+        }
+      }
+
       return new Response(JSON.stringify(suggestions), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
     } catch (error) {
-      throw new Error('Impossible de parser la réponse OpenAI en JSON')
+      console.error('Erreur de parsing JSON:', error)
+      console.error('Contenu qui a causé l\'erreur:', openAIData.choices[0].message.content)
+      throw new Error('Impossible de parser la réponse OpenAI en JSON valide')
     }
   } catch (error) {
+    console.error('Erreur complète:', error)
     return new Response(
       JSON.stringify({
         error: error.message || 'Une erreur est survenue lors de la génération des suggestions SEO',
