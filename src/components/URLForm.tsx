@@ -111,13 +111,6 @@ export function URLForm() {
         throw new Error("Erreur lors de la génération des suggestions");
       }
 
-      const ensurePostgresArray = (current: string[] | null | undefined, suggested: string[] | null | undefined): string[] => {
-        if (!current || current.length === 0) return [];
-        const currentArray = Array.isArray(current) ? current : [current];
-        const suggestedArray = Array.isArray(suggested) ? suggested : [];
-        return suggestedArray.slice(0, currentArray.length);
-      };
-
       const seoAnalysis = {
         url: formattedURL,
         company: company.trim(),
@@ -131,14 +124,14 @@ export function URLForm() {
         suggested_h1: suggestions.suggested_h1 || "",
         h1_context: suggestions.h1_context || "",
         current_h2s: seoData.h2s || [],
-        suggested_h2s: ensurePostgresArray(seoData.h2s, suggestions.suggested_h2s),
-        h2s_context: ensurePostgresArray(seoData.h2s, suggestions.h2s_context),
+        suggested_h2s: suggestions.suggested_h2s || [],
+        h2s_context: suggestions.h2s_context || [],
         current_h3s: seoData.h3s || [],
-        suggested_h3s: ensurePostgresArray(seoData.h3s, suggestions.suggested_h3s),
-        h3s_context: ensurePostgresArray(seoData.h3s, suggestions.h3s_context),
+        suggested_h3s: suggestions.suggested_h3s || [],
+        h3s_context: suggestions.h3s_context || [],
         current_h4s: seoData.h4s || [],
-        suggested_h4s: ensurePostgresArray(seoData.h4s, suggestions.suggested_h4s),
-        h4s_context: ensurePostgresArray(seoData.h4s, suggestions.h4s_context)
+        suggested_h4s: suggestions.suggested_h4s || [],
+        h4s_context: suggestions.h4s_context || []
       };
 
       const { data: insertedData, error: supabaseError } = await supabase
