@@ -55,10 +55,22 @@ export function URLForm() {
         throw new Error("Erreur lors de la génération des suggestions");
       }
 
-      // Fonction pour s'assurer qu'un array est au format PostgreSQL
-      const ensurePostgresArray = (arr: string[] | null | undefined): string[] => {
-        if (!arr || !Array.isArray(arr)) return [];
-        return arr;
+      // Fonction pour s'assurer qu'un array est au format PostgreSQL et a le même nombre d'éléments
+      const ensurePostgresArray = (current: string[] | null | undefined, suggested: string[] | null | undefined): string[] => {
+        const currentArray = current || [];
+        const suggestedArray = suggested || [];
+        
+        // Si nous avons plus de balises actuelles que de suggestions
+        while (suggestedArray.length < currentArray.length) {
+          suggestedArray.push("Suggestion à générer");
+        }
+        
+        // Si nous avons plus de suggestions que de balises (cas improbable mais géré)
+        while (suggestedArray.length > currentArray.length) {
+          suggestedArray.pop();
+        }
+        
+        return suggestedArray;
       };
 
       const seoAnalysis = {
@@ -73,15 +85,15 @@ export function URLForm() {
         current_h1: seoData.h1 || "",
         suggested_h1: suggestions.suggested_h1,
         h1_context: suggestions.h1_context,
-        current_h2s: ensurePostgresArray(seoData.h2s),
-        suggested_h2s: ensurePostgresArray(suggestions.suggested_h2s),
-        h2s_context: ensurePostgresArray(suggestions.h2s_context),
-        current_h3s: ensurePostgresArray(seoData.h3s),
-        suggested_h3s: ensurePostgresArray(suggestions.suggested_h3s),
-        h3s_context: ensurePostgresArray(suggestions.h3s_context),
-        current_h4s: ensurePostgresArray(seoData.h4s),
-        suggested_h4s: ensurePostgresArray(suggestions.suggested_h4s),
-        h4s_context: ensurePostgresArray(suggestions.h4s_context)
+        current_h2s: seoData.h2s || [],
+        suggested_h2s: ensurePostgresArray(seoData.h2s, suggestions.suggested_h2s),
+        h2s_context: ensurePostgresArray(seoData.h2s, suggestions.h2s_context),
+        current_h3s: seoData.h3s || [],
+        suggested_h3s: ensurePostgresArray(seoData.h3s, suggestions.suggested_h3s),
+        h3s_context: ensurePostgresArray(seoData.h3s, suggestions.h3s_context),
+        current_h4s: seoData.h4s || [],
+        suggested_h4s: ensurePostgresArray(seoData.h4s, suggestions.suggested_h4s),
+        h4s_context: ensurePostgresArray(seoData.h4s, suggestions.h4s_context)
       };
 
       const { data: insertedData, error: supabaseError } = await supabase
