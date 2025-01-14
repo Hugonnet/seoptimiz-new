@@ -19,34 +19,34 @@ serve(async (req) => {
 
     const systemPrompt = `Tu es un expert SEO spécialisé dans l'optimisation de contenu en français.
     Ta tâche est de générer des suggestions d'optimisation SEO pour chaque élément HTML fourni.
-    TRÈS IMPORTANT: Ta réponse doit être un objet JSON valide SANS formatage markdown (pas de \`\`\`json ou autre balise).
+    TRÈS IMPORTANT: Ta réponse doit être un objet JSON valide SANS formatage markdown.
 
     RÈGLES STRICTES:
-    1. Toutes les suggestions doivent être en français
+    1. Toutes les suggestions doivent être en français et pertinentes
     2. Chaque suggestion doit être unique et spécifique au contenu
     3. Les suggestions doivent respecter la hiérarchie des titres
-    4. Éviter les suggestions génériques
-    5. Pour chaque élément (H2s, H3s, H4s), fournir EXACTEMENT le même nombre de suggestions que d'éléments originaux
-    6. Si un élément est vide ou absent, retourner un tableau vide pour cet élément
-    7. Chaque suggestion doit être accompagnée d'une explication pertinente
-    8. Retourner UNIQUEMENT un objet JSON valide sans aucun formatage markdown`;
+    4. Pour chaque élément (title, description, h1), TOUJOURS fournir une suggestion même si l'élément original est bon
+    5. Pour les tableaux (h2s, h3s, h4s), fournir EXACTEMENT le même nombre de suggestions que d'éléments originaux
+    6. Si un tableau est vide, retourner un tableau vide
+    7. Chaque suggestion doit avoir une explication claire et détaillée
+    8. Ne jamais retourner "Non défini" comme suggestion`;
 
     const userPrompt = `Analyse et optimise les éléments SEO suivants:
 
-    TITRE ACTUEL: "${currentTitle || 'Non défini'}"
-    DESCRIPTION ACTUELLE: "${currentDescription || 'Non définie'}"
-    H1 ACTUEL: "${currentH1 || 'Non défini'}"
+    TITRE ACTUEL: "${currentTitle || ''}"
+    DESCRIPTION ACTUELLE: "${currentDescription || ''}"
+    H1 ACTUEL: "${currentH1 || ''}"
     H2s ACTUELS: ${JSON.stringify(currentH2s || [])}
     H3s ACTUELS: ${JSON.stringify(currentH3s || [])}
     H4s ACTUELS: ${JSON.stringify(currentH4s || [])}
 
     IMPORTANT:
-    - Fournis une suggestion pour CHAQUE élément existant
-    - Les suggestions doivent être pertinentes et spécifiques
-    - Inclus une explication claire pour chaque suggestion
+    - Fournis une suggestion pour CHAQUE élément, même si l'original est déjà bon
+    - Les suggestions doivent être spécifiques et pertinentes
+    - Inclus une explication détaillée pour chaque suggestion
     - Pour les tableaux (H2s, H3s, H4s), le nombre de suggestions doit correspondre EXACTEMENT au nombre d'éléments originaux
     - Si un tableau est vide, retourne un tableau vide
-    - Retourne UNIQUEMENT un objet JSON valide sans aucun formatage markdown`;
+    - Ne jamais retourner "Non défini" comme suggestion`;
 
     console.log('Envoi à OpenAI - System Prompt:', systemPrompt);
     console.log('Envoi à OpenAI - User Prompt:', userPrompt);
@@ -63,7 +63,7 @@ serve(async (req) => {
           { role: 'system', content: systemPrompt },
           { role: 'user', content: userPrompt }
         ],
-        temperature: 0.3,
+        temperature: 0.7,
       }),
     });
 
@@ -89,40 +89,41 @@ serve(async (req) => {
       
       const suggestions = JSON.parse(cleanContent);
       
-      // Ensure arrays are initialized properly
-      suggestions.suggested_h2s = Array.isArray(currentH2s) ? new Array(currentH2s.length).fill('') : [];
-      suggestions.h2s_context = Array.isArray(currentH2s) ? new Array(currentH2s.length).fill('') : [];
-      suggestions.suggested_h3s = Array.isArray(currentH3s) ? new Array(currentH3s.length).fill('') : [];
-      suggestions.h3s_context = Array.isArray(currentH3s) ? new Array(currentH3s.length).fill('') : [];
-      suggestions.suggested_h4s = Array.isArray(currentH4s) ? new Array(currentH4s.length).fill('') : [];
-      suggestions.h4s_context = Array.isArray(currentH4s) ? new Array(currentH4s.length).fill('') : [];
+      // Ensure we have valid suggestions for all elements
+      const validatedSuggestions = {
+        suggested_title: suggestions.suggested_title || "Optimisation du titre en cours...",
+        title_context: suggestions.title_context || "Analyse en cours...",
+        suggested_description: suggestions.suggested_description || "Optimisation de la description en cours...",
+        description_context: suggestions.description_context || "Analyse en cours...",
+        suggested_h1: suggestions.suggested_h1 || "Optimisation du H1 en cours...",
+        h1_context: suggestions.h1_context || "Analyse en cours...",
+        suggested_h2s: Array.isArray(currentH2s) ? suggestions.suggested_h2s?.slice(0, currentH2s.length) || [] : [],
+        h2s_context: Array.isArray(currentH2s) ? suggestions.h2s_context?.slice(0, currentH2s.length) || [] : [],
+        suggested_h3s: Array.isArray(currentH3s) ? suggestions.suggested_h3s?.slice(0, currentH3s.length) || [] : [],
+        h3s_context: Array.isArray(currentH3s) ? suggestions.h3s_context?.slice(0, currentH3s.length) || [] : [],
+        suggested_h4s: Array.isArray(currentH4s) ? suggestions.suggested_h4s?.slice(0, currentH4s.length) || [] : [],
+        h4s_context: Array.isArray(currentH4s) ? suggestions.h4s_context?.slice(0, currentH4s.length) || [] : []
+      };
 
-      // Copy over the OpenAI suggestions while maintaining array lengths
-      const openAISuggestions = JSON.parse(cleanContent);
-      if (Array.isArray(openAISuggestions.suggested_h2s)) {
-        suggestions.suggested_h2s = openAISuggestions.suggested_h2s.slice(0, currentH2s?.length || 0);
-        suggestions.h2s_context = openAISuggestions.h2s_context?.slice(0, currentH2s?.length || 0) || [];
+      // Validate array lengths match
+      if (Array.isArray(currentH2s) && validatedSuggestions.suggested_h2s.length !== currentH2s.length) {
+        validatedSuggestions.suggested_h2s = currentH2s.map(() => "Optimisation en cours...");
+        validatedSuggestions.h2s_context = currentH2s.map(() => "Analyse en cours...");
       }
-      if (Array.isArray(openAISuggestions.suggested_h3s)) {
-        suggestions.suggested_h3s = openAISuggestions.suggested_h3s.slice(0, currentH3s?.length || 0);
-        suggestions.h3s_context = openAISuggestions.h3s_context?.slice(0, currentH3s?.length || 0) || [];
-      }
-      if (Array.isArray(openAISuggestions.suggested_h4s)) {
-        suggestions.suggested_h4s = openAISuggestions.suggested_h4s.slice(0, currentH4s?.length || 0);
-        suggestions.h4s_context = openAISuggestions.h4s_context?.slice(0, currentH4s?.length || 0) || [];
+
+      if (Array.isArray(currentH3s) && validatedSuggestions.suggested_h3s.length !== currentH3s.length) {
+        validatedSuggestions.suggested_h3s = currentH3s.map(() => "Optimisation en cours...");
+        validatedSuggestions.h3s_context = currentH3s.map(() => "Analyse en cours...");
       }
 
-      // Copy non-array suggestions
-      suggestions.suggested_title = openAISuggestions.suggested_title || '';
-      suggestions.title_context = openAISuggestions.title_context || '';
-      suggestions.suggested_description = openAISuggestions.suggested_description || '';
-      suggestions.description_context = openAISuggestions.description_context || '';
-      suggestions.suggested_h1 = openAISuggestions.suggested_h1 || '';
-      suggestions.h1_context = openAISuggestions.h1_context || '';
+      if (Array.isArray(currentH4s) && validatedSuggestions.suggested_h4s.length !== currentH4s.length) {
+        validatedSuggestions.suggested_h4s = currentH4s.map(() => "Optimisation en cours...");
+        validatedSuggestions.h4s_context = currentH4s.map(() => "Analyse en cours...");
+      }
 
-      console.log('Suggestions validées:', suggestions);
+      console.log('Suggestions validées:', validatedSuggestions);
 
-      return new Response(JSON.stringify(suggestions), {
+      return new Response(JSON.stringify(validatedSuggestions), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     } catch (error) {
