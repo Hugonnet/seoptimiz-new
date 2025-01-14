@@ -19,6 +19,7 @@ serve(async (req) => {
 
     const systemPrompt = `Tu es un expert SEO spécialisé dans l'optimisation de contenu en français.
     Ta tâche est de générer des suggestions d'optimisation SEO pour chaque élément HTML fourni.
+    TRÈS IMPORTANT: Ta réponse doit être un objet JSON valide SANS formatage markdown (pas de \`\`\`json ou autre balise).
 
     RÈGLES STRICTES:
     1. Toutes les suggestions doivent être en français
@@ -27,9 +28,9 @@ serve(async (req) => {
     4. Éviter les suggestions génériques
     5. Maintenir le même nombre de suggestions que d'éléments originaux
     6. Chaque suggestion doit être accompagnée d'une explication pertinente
-    7. Format JSON strict requis pour la réponse
+    7. Retourner UNIQUEMENT un objet JSON valide sans aucun formatage markdown
 
-    FORMAT DE RÉPONSE REQUIS:
+    FORMAT DE RÉPONSE REQUIS (EXACTEMENT):
     {
       "suggested_title": "string",
       "title_context": "string",
@@ -58,7 +59,7 @@ serve(async (req) => {
     - Fournis une suggestion pour CHAQUE élément existant
     - Les suggestions doivent être pertinentes et spécifiques
     - Inclus une explication claire pour chaque suggestion
-    - Respecte STRICTEMENT le format JSON demandé`;
+    - Retourne UNIQUEMENT un objet JSON valide sans aucun formatage markdown`;
 
     console.log('Envoi à OpenAI - System Prompt:', systemPrompt);
     console.log('Envoi à OpenAI - User Prompt:', userPrompt);
@@ -75,7 +76,7 @@ serve(async (req) => {
           { role: 'system', content: systemPrompt },
           { role: 'user', content: userPrompt }
         ],
-        temperature: 0.5, // Réduit pour plus de cohérence
+        temperature: 0.3, // Réduit encore plus pour plus de cohérence
       }),
     });
 
@@ -96,7 +97,11 @@ serve(async (req) => {
     console.log('Contenu à parser:', content);
 
     try {
-      const suggestions = JSON.parse(content);
+      // Tentative de nettoyage si jamais il y a encore du markdown
+      const cleanContent = content.replace(/```json\n?|\n?```/g, '').trim();
+      console.log('Contenu nettoyé:', cleanContent);
+      
+      const suggestions = JSON.parse(cleanContent);
       
       // Validation approfondie de la structure
       const requiredKeys = [
