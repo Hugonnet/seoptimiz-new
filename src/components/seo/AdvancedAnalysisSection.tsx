@@ -22,7 +22,7 @@ interface AdvancedAnalysisSectionProps {
   internalLinks?: string[];
   externalLinks?: string[];
   brokenLinks?: string[];
-  imageAlts?: any;
+  imageAlts?: Record<string, string>;
   pageLoadSpeed?: number;
   mobileFriendly?: boolean;
 }
@@ -39,7 +39,7 @@ export function AdvancedAnalysisSection({
   internalLinks = [],
   externalLinks = [],
   brokenLinks = [],
-  imageAlts,
+  imageAlts = {},
   pageLoadSpeed = 0,
   mobileFriendly = true,
 }: AdvancedAnalysisSectionProps) {
@@ -103,16 +103,16 @@ export function AdvancedAnalysisSection({
                   <Link2 className="h-4 w-4 text-blue-500" />
                   Liens internes
                 </span>
-                <Badge variant="outline">{internalLinks.length}</Badge>
+                <Badge variant="outline">{internalLinks?.length || 0}</Badge>
               </div>
               <div className="flex items-center justify-between">
                 <span className="flex items-center gap-2">
                   <Link2 className="h-4 w-4 text-green-500" />
                   Liens externes
                 </span>
-                <Badge variant="outline">{externalLinks.length}</Badge>
+                <Badge variant="outline">{externalLinks?.length || 0}</Badge>
               </div>
-              {brokenLinks.length > 0 && (
+              {brokenLinks && brokenLinks.length > 0 && (
                 <div className="flex items-center justify-between">
                   <span className="flex items-center gap-2 text-red-500">
                     <AlertTriangle className="h-4 w-4" />
@@ -170,7 +170,7 @@ export function AdvancedAnalysisSection({
                 {Object.entries(imageAlts).map(([src, alt], index) => (
                   <div key={index} className="flex items-center gap-2 text-sm">
                     <Image className="h-4 w-4 text-gray-500" />
-                    <span className="text-gray-600">{alt as string}</span>
+                    <span className="text-gray-600">{alt}</span>
                   </div>
                 ))}
               </div>
