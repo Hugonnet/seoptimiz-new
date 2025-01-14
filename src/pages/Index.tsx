@@ -37,6 +37,7 @@ const Index = () => {
           
           <p className="text-base md:text-lg text-gray-600 max-w-2xl mx-auto px-4">
             Optimisez votre référencement naturel avec notre outil d'analyse SEO avancé.
+            Obtenez des insights détaillés sur la performance de votre site.
           </p>
         </motion.div>
 
@@ -53,14 +54,17 @@ const Index = () => {
               <div className="w-10 h-10 md:w-12 md:h-12 bg-[#EEF2FF] rounded-lg flex items-center justify-center mb-4">
                 <Search className="w-5 h-5 md:w-6 md:h-6 text-[#6366F1]" />
               </div>
-              <h3 className="text-lg md:text-xl font-semibold mb-2 text-gray-900">Analyse Approfondie</h3>
-              <p className="text-sm md:text-base text-gray-600 mb-4">Scan complet des balises meta, titres et structure du contenu</p>
+              <h3 className="text-lg md:text-xl font-semibold mb-2 text-gray-900">Analyse SEO Avancée</h3>
+              <p className="text-sm md:text-base text-gray-600 mb-4">
+                Analyse complète incluant la densité des mots-clés, la lisibilité, 
+                les liens et la performance mobile
+              </p>
               <button 
                 onClick={() => navigate('/')}
                 className="w-full flex items-center justify-center gap-2 gradient-button rounded-lg py-2 md:py-3 px-3 md:px-4 text-sm md:text-base"
               >
                 <Search className="w-4 h-4 md:w-5 md:h-5" />
-                Lancer l'analyse
+                Analyse avancée
               </button>
             </div>
             
