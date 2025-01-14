@@ -80,89 +80,6 @@ export function URLForm() {
     }
   };
 
-  const handleAdvancedAnalysis = async () => {
-    if (!company.trim() || !domain) {
-      toast({
-        title: "Erreur",
-        description: "L'entreprise et l'URL sont obligatoires pour l'analyse avancée",
-        variant: "destructive",
-      });
-      return;
-    }
-    setIsLoading(true);
-
-    try {
-      const formattedURL = formatURL(domain);
-      const seoData = await extractSEOMetadata(formattedURL);
-      
-      const { data: suggestions, error: aiError } = await supabase.functions.invoke('generate-seo-suggestions', {
-        body: {
-          currentTitle: seoData.title,
-          currentDescription: seoData.description,
-          currentH1: seoData.h1,
-          currentH2s: seoData.h2s,
-          currentH3s: seoData.h3s,
-          currentH4s: seoData.h4s,
-        },
-      });
-
-      if (aiError) {
-        console.error('Erreur IA:', aiError);
-        throw new Error("Erreur lors de la génération des suggestions");
-      }
-
-      const seoAnalysis = {
-        url: formattedURL,
-        company: company.trim(),
-        current_title: seoData.title || "",
-        suggested_title: suggestions.suggested_title || "",
-        title_context: suggestions.title_context || "",
-        current_description: seoData.description || "",
-        suggested_description: suggestions.suggested_description || "",
-        description_context: suggestions.description_context || "",
-        current_h1: seoData.h1 || "",
-        suggested_h1: suggestions.suggested_h1 || "",
-        h1_context: suggestions.h1_context || "",
-        current_h2s: seoData.h2s || [],
-        suggested_h2s: suggestions.suggested_h2s || [],
-        h2s_context: suggestions.h2s_context || [],
-        current_h3s: seoData.h3s || [],
-        suggested_h3s: suggestions.suggested_h3s || [],
-        h3s_context: suggestions.h3s_context || [],
-        current_h4s: seoData.h4s || [],
-        suggested_h4s: suggestions.suggested_h4s || [],
-        h4s_context: suggestions.h4s_context || []
-      };
-
-      const { data: insertedData, error: supabaseError } = await supabase
-        .from('seo_analyses')
-        .insert([seoAnalysis])
-        .select()
-        .single();
-
-      if (supabaseError) {
-        console.error('Erreur Supabase:', supabaseError);
-        throw new Error("Erreur lors de la sauvegarde des données");
-      }
-
-      addSEOData(insertedData);
-      
-      toast({
-        title: "Analyse avancée terminée",
-        description: "Les données SEO ont été extraites et optimisées avec succès.",
-      });
-    } catch (error) {
-      console.error('Erreur détaillée:', error);
-      toast({
-        title: "Erreur",
-        description: error.message || "Une erreur inattendue s'est produite",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   return (
     <form onSubmit={handleSimpleAnalysis} className="max-w-3xl mx-auto space-y-4">
       <h2 className="text-xl font-semibold text-gray-900 mb-2 text-center">
@@ -187,16 +104,6 @@ export function URLForm() {
         >
           <Search className="mr-2 h-5 w-5" />
           {isLoading ? "Analyse..." : "Analyser"}
-        </Button>
-        
-        <Button 
-          type="button"
-          onClick={handleAdvancedAnalysis}
-          disabled={isLoading}
-          className="w-full h-12 rounded-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:opacity-90 text-white font-medium"
-        >
-          <Search className="mr-2 h-5 w-5" />
-          {isLoading ? "Analyse avancée..." : "Analyse avancée avec IA"}
         </Button>
       </div>
     </form>
