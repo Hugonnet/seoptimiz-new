@@ -4,6 +4,9 @@ export const formatURL = (domain: string): string => {
   // Remove any trailing slashes
   formattedURL = formattedURL.replace(/\/$/, '');
   
+  // Remove consecutive dots
+  formattedURL = formattedURL.replace(/\.{2,}/g, '.');
+  
   // If the URL doesn't start with http:// or https://, add https://
   if (!formattedURL.match(/^https?:\/\//)) {
     formattedURL = `https://${formattedURL}`;
