@@ -16,7 +16,7 @@ export function URLForm() {
   const { toast } = useToast();
   const addSEOData = useSEOStore((state) => state.addSEOData);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSimpleAnalysis = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!company.trim()) {
       toast({
@@ -39,6 +39,62 @@ export function URLForm() {
         throw new Error("Aucune donnée SEO n'a pu être extraite de cette URL");
       }
 
+      const seoAnalysis = {
+        url: formattedURL,
+        company: company.trim(),
+        current_title: seoData.title || "",
+        current_description: seoData.description || "",
+        current_h1: seoData.h1 || "",
+        current_h2s: seoData.h2s || [],
+        current_h3s: seoData.h3s || [],
+        current_h4s: seoData.h4s || [],
+      };
+
+      const { data: insertedData, error: supabaseError } = await supabase
+        .from('seo_analyses')
+        .insert([seoAnalysis])
+        .select()
+        .single();
+
+      if (supabaseError) {
+        console.error('Erreur Supabase:', supabaseError);
+        throw new Error("Erreur lors de la sauvegarde des données");
+      }
+
+      addSEOData(insertedData);
+      
+      toast({
+        title: "Analyse terminée",
+        description: "Les données SEO ont été extraites avec succès.",
+      });
+    } catch (error) {
+      console.error('Erreur détaillée:', error);
+      
+      toast({
+        title: "Erreur",
+        description: error.message || "Une erreur inattendue s'est produite",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleAdvancedAnalysis = async () => {
+    if (!company.trim() || !domain) {
+      toast({
+        title: "Erreur",
+        description: "L'entreprise et l'URL sont obligatoires pour l'analyse avancée",
+        variant: "destructive",
+      });
+      return;
+    }
+    setIsLoading(true);
+
+    try {
+      const formattedURL = formatURL(domain);
+      const seoData = await extractSEOMetadata(formattedURL);
+      
       const { data: suggestions, error: aiError } = await supabase.functions.invoke('generate-seo-suggestions', {
         body: {
           currentTitle: seoData.title,
@@ -55,14 +111,10 @@ export function URLForm() {
         throw new Error("Erreur lors de la génération des suggestions");
       }
 
-      // Fonction pour s'assurer qu'un array est au format PostgreSQL
       const ensurePostgresArray = (current: string[] | null | undefined, suggested: string[] | null | undefined): string[] => {
         if (!current || current.length === 0) return [];
-        
         const currentArray = Array.isArray(current) ? current : [current];
         const suggestedArray = Array.isArray(suggested) ? suggested : [];
-        
-        // Si nous avons plus de balises actuelles que de suggestions, on garde uniquement les balises qui ont des suggestions
         return suggestedArray.slice(0, currentArray.length);
       };
 
@@ -103,12 +155,11 @@ export function URLForm() {
       addSEOData(insertedData);
       
       toast({
-        title: "Analyse terminée",
+        title: "Analyse avancée terminée",
         description: "Les données SEO ont été extraites et optimisées avec succès.",
       });
     } catch (error) {
       console.error('Erreur détaillée:', error);
-      
       toast({
         title: "Erreur",
         description: error.message || "Une erreur inattendue s'est produite",
@@ -120,7 +171,7 @@ export function URLForm() {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="max-w-3xl mx-auto space-y-4">
+    <form onSubmit={handleSimpleAnalysis} className="max-w-3xl mx-auto space-y-4">
       <h2 className="text-xl font-semibold text-gray-900 mb-2 text-center">
         Entrez une url particulière
       </h2>
@@ -135,14 +186,26 @@ export function URLForm() {
           required
         />
       </div>
-      <Button 
-        type="submit" 
-        disabled={isLoading}
-        className="w-full h-12 rounded-full bg-gradient-to-r from-[#8B5CF6] to-[#EC4899] hover:opacity-90 text-white font-medium"
-      >
-        <Search className="mr-2 h-5 w-5" />
-        {isLoading ? "Analyse..." : "Analyser"}
-      </Button>
+      <div className="space-y-4">
+        <Button 
+          type="submit" 
+          disabled={isLoading}
+          className="w-full h-12 rounded-full bg-gradient-to-r from-[#8B5CF6] to-[#EC4899] hover:opacity-90 text-white font-medium"
+        >
+          <Search className="mr-2 h-5 w-5" />
+          {isLoading ? "Analyse..." : "Analyser"}
+        </Button>
+        
+        <Button 
+          type="button"
+          onClick={handleAdvancedAnalysis}
+          disabled={isLoading}
+          className="w-full h-12 rounded-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:opacity-90 text-white font-medium"
+        >
+          <Search className="mr-2 h-5 w-5" />
+          {isLoading ? "Analyse avancée..." : "Analyse avancée avec IA"}
+        </Button>
+      </div>
     </form>
   );
 }
