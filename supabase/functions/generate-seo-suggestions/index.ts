@@ -26,25 +26,10 @@ serve(async (req) => {
     2. Chaque suggestion doit être unique et spécifique au contenu
     3. Les suggestions doivent respecter la hiérarchie des titres
     4. Éviter les suggestions génériques
-    5. Maintenir le même nombre de suggestions que d'éléments originaux
-    6. Chaque suggestion doit être accompagnée d'une explication pertinente
-    7. Retourner UNIQUEMENT un objet JSON valide sans aucun formatage markdown
-
-    FORMAT DE RÉPONSE REQUIS (EXACTEMENT):
-    {
-      "suggested_title": "string",
-      "title_context": "string",
-      "suggested_description": "string",
-      "description_context": "string",
-      "suggested_h1": "string",
-      "h1_context": "string",
-      "suggested_h2s": ["string"],
-      "h2s_context": ["string"],
-      "suggested_h3s": ["string"],
-      "h3s_context": ["string"],
-      "suggested_h4s": ["string"],
-      "h4s_context": ["string"]
-    }`;
+    5. Pour chaque élément (H2s, H3s, H4s), fournir EXACTEMENT le même nombre de suggestions que d'éléments originaux
+    6. Si un élément est vide ou absent, retourner un tableau vide pour cet élément
+    7. Chaque suggestion doit être accompagnée d'une explication pertinente
+    8. Retourner UNIQUEMENT un objet JSON valide sans aucun formatage markdown`;
 
     const userPrompt = `Analyse et optimise les éléments SEO suivants:
 
@@ -59,6 +44,8 @@ serve(async (req) => {
     - Fournis une suggestion pour CHAQUE élément existant
     - Les suggestions doivent être pertinentes et spécifiques
     - Inclus une explication claire pour chaque suggestion
+    - Pour les tableaux (H2s, H3s, H4s), le nombre de suggestions doit correspondre EXACTEMENT au nombre d'éléments originaux
+    - Si un tableau est vide, retourne un tableau vide
     - Retourne UNIQUEMENT un objet JSON valide sans aucun formatage markdown`;
 
     console.log('Envoi à OpenAI - System Prompt:', systemPrompt);
@@ -71,12 +58,12 @@ serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o',
+        model: 'gpt-4',
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: userPrompt }
         ],
-        temperature: 0.3, // Réduit encore plus pour plus de cohérence
+        temperature: 0.3,
       }),
     });
 
@@ -97,42 +84,41 @@ serve(async (req) => {
     console.log('Contenu à parser:', content);
 
     try {
-      // Tentative de nettoyage si jamais il y a encore du markdown
       const cleanContent = content.replace(/```json\n?|\n?```/g, '').trim();
       console.log('Contenu nettoyé:', cleanContent);
       
       const suggestions = JSON.parse(cleanContent);
       
-      // Validation approfondie de la structure
-      const requiredKeys = [
-        'suggested_title', 'title_context',
-        'suggested_description', 'description_context',
-        'suggested_h1', 'h1_context',
-        'suggested_h2s', 'h2s_context',
-        'suggested_h3s', 'h3s_context',
-        'suggested_h4s', 'h4s_context'
-      ];
+      // Ensure arrays are initialized properly
+      suggestions.suggested_h2s = Array.isArray(currentH2s) ? new Array(currentH2s.length).fill('') : [];
+      suggestions.h2s_context = Array.isArray(currentH2s) ? new Array(currentH2s.length).fill('') : [];
+      suggestions.suggested_h3s = Array.isArray(currentH3s) ? new Array(currentH3s.length).fill('') : [];
+      suggestions.h3s_context = Array.isArray(currentH3s) ? new Array(currentH3s.length).fill('') : [];
+      suggestions.suggested_h4s = Array.isArray(currentH4s) ? new Array(currentH4s.length).fill('') : [];
+      suggestions.h4s_context = Array.isArray(currentH4s) ? new Array(currentH4s.length).fill('') : [];
 
-      for (const key of requiredKeys) {
-        if (!(key in suggestions)) {
-          console.error(`Clé manquante: ${key}`);
-          throw new Error(`Structure JSON invalide: clé manquante "${key}"`);
-        }
+      // Copy over the OpenAI suggestions while maintaining array lengths
+      const openAISuggestions = JSON.parse(cleanContent);
+      if (Array.isArray(openAISuggestions.suggested_h2s)) {
+        suggestions.suggested_h2s = openAISuggestions.suggested_h2s.slice(0, currentH2s?.length || 0);
+        suggestions.h2s_context = openAISuggestions.h2s_context?.slice(0, currentH2s?.length || 0) || [];
+      }
+      if (Array.isArray(openAISuggestions.suggested_h3s)) {
+        suggestions.suggested_h3s = openAISuggestions.suggested_h3s.slice(0, currentH3s?.length || 0);
+        suggestions.h3s_context = openAISuggestions.h3s_context?.slice(0, currentH3s?.length || 0) || [];
+      }
+      if (Array.isArray(openAISuggestions.suggested_h4s)) {
+        suggestions.suggested_h4s = openAISuggestions.suggested_h4s.slice(0, currentH4s?.length || 0);
+        suggestions.h4s_context = openAISuggestions.h4s_context?.slice(0, currentH4s?.length || 0) || [];
       }
 
-      // Validation des tableaux
-      const validateArray = (current: string[] | null | undefined, suggested: string[], context: string[], name: string) => {
-        if (!Array.isArray(suggested) || !Array.isArray(context)) {
-          throw new Error(`Les suggestions ou le contexte pour ${name} ne sont pas des tableaux`);
-        }
-        if (current && (suggested.length !== current.length || context.length !== current.length)) {
-          throw new Error(`Nombre incorrect de suggestions/contextes pour ${name}`);
-        }
-      };
-
-      validateArray(currentH2s, suggestions.suggested_h2s, suggestions.h2s_context, 'H2');
-      validateArray(currentH3s, suggestions.suggested_h3s, suggestions.h3s_context, 'H3');
-      validateArray(currentH4s, suggestions.suggested_h4s, suggestions.h4s_context, 'H4');
+      // Copy non-array suggestions
+      suggestions.suggested_title = openAISuggestions.suggested_title || '';
+      suggestions.title_context = openAISuggestions.title_context || '';
+      suggestions.suggested_description = openAISuggestions.suggested_description || '';
+      suggestions.description_context = openAISuggestions.description_context || '';
+      suggestions.suggested_h1 = openAISuggestions.suggested_h1 || '';
+      suggestions.h1_context = openAISuggestions.h1_context || '';
 
       console.log('Suggestions validées:', suggestions);
 
