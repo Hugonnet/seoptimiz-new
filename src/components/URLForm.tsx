@@ -55,38 +55,29 @@ export function URLForm() {
         throw new Error("Erreur lors de la génération des suggestions");
       }
 
-      // Fonction pour s'assurer qu'un array est au format PostgreSQL et a le même nombre d'éléments
+      // Fonction pour s'assurer qu'un array est au format PostgreSQL
       const ensurePostgresArray = (current: string[] | null | undefined, suggested: string[] | null | undefined): string[] => {
-        const currentArray = current || [];
-        const suggestedArray = suggested || [];
+        if (!current || current.length === 0) return [];
         
-        // Si nous avons plus de balises actuelles que de suggestions
-        while (suggestedArray.length < currentArray.length) {
-          const index = suggestedArray.length;
-          const currentTag = currentArray[index];
-          suggestedArray.push(`Optimisez cette balise : "${currentTag}" pour améliorer le référencement SEO en la rendant plus descriptive et pertinente pour votre contenu.`);
-        }
+        const currentArray = Array.isArray(current) ? current : [current];
+        const suggestedArray = Array.isArray(suggested) ? suggested : [];
         
-        // Si nous avons plus de suggestions que de balises (cas improbable mais géré)
-        while (suggestedArray.length > currentArray.length) {
-          suggestedArray.pop();
-        }
-        
-        return suggestedArray;
+        // Si nous avons plus de balises actuelles que de suggestions, on garde uniquement les balises qui ont des suggestions
+        return suggestedArray.slice(0, currentArray.length);
       };
 
       const seoAnalysis = {
         url: formattedURL,
         company: company.trim(),
         current_title: seoData.title || "",
-        suggested_title: suggestions.suggested_title || "Optimisez le titre pour plus d'impact SEO",
-        title_context: suggestions.title_context || "Analysez le titre actuel et proposez une version optimisée",
+        suggested_title: suggestions.suggested_title || "",
+        title_context: suggestions.title_context || "",
         current_description: seoData.description || "",
-        suggested_description: suggestions.suggested_description || "Optimisez la description pour plus d'impact SEO",
-        description_context: suggestions.description_context || "Analysez la description actuelle et proposez une version optimisée",
+        suggested_description: suggestions.suggested_description || "",
+        description_context: suggestions.description_context || "",
         current_h1: seoData.h1 || "",
-        suggested_h1: suggestions.suggested_h1 || "Optimisez le H1 pour plus d'impact SEO",
-        h1_context: suggestions.h1_context || "Analysez le H1 actuel et proposez une version optimisée",
+        suggested_h1: suggestions.suggested_h1 || "",
+        h1_context: suggestions.h1_context || "",
         current_h2s: seoData.h2s || [],
         suggested_h2s: ensurePostgresArray(seoData.h2s, suggestions.suggested_h2s),
         h2s_context: ensurePostgresArray(seoData.h2s, suggestions.h2s_context),
