@@ -63,9 +63,8 @@ export function URLForm() {
         // Si nous avons plus de balises actuelles que de suggestions
         while (suggestedArray.length < currentArray.length) {
           const index = suggestedArray.length;
-          // Utiliser la balise actuelle comme base pour la suggestion
           const currentTag = currentArray[index];
-          suggestedArray.push(`Optimisez "${currentTag}" pour plus d'impact SEO`);
+          suggestedArray.push(`Optimisez cette balise : "${currentTag}" pour améliorer le référencement SEO en la rendant plus descriptive et pertinente pour votre contenu.`);
         }
         
         // Si nous avons plus de suggestions que de balises (cas improbable mais géré)

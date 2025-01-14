@@ -8,7 +8,6 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -17,9 +16,8 @@ serve(async (req) => {
     const { url } = await req.json();
     console.log('Analyzing URL:', url);
 
-    // Fetch with timeout and additional options
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+    const timeout = setTimeout(() => controller.abort(), 30000);
 
     try {
       const response = await fetch(url, {
@@ -43,18 +41,43 @@ serve(async (req) => {
         throw new Error("Failed to parse HTML");
       }
 
+      // Fonction pour nettoyer le texte des balises
+      const cleanText = (text: string) => {
+        return text?.trim().replace(/\s+/g, ' ') || '';
+      };
+
+      // Fonction pour filtrer les balises vides ou non pertinentes
+      const isValidHeading = (text: string) => {
+        const cleaned = cleanText(text);
+        return cleaned && 
+               cleaned !== 'undefined' && 
+               cleaned !== 'null' && 
+               cleaned.length > 1;
+      };
+
+      // Extraction des balises avec nettoyage
+      const h3Elements = Array.from(doc.querySelectorAll('h3'))
+        .map(el => cleanText(el.textContent))
+        .filter(isValidHeading);
+
+      const h4Elements = Array.from(doc.querySelectorAll('h4'))
+        .map(el => cleanText(el.textContent))
+        .filter(isValidHeading);
+
       // Extract metadata
       const metadata = {
-        title: doc.querySelector('title')?.textContent?.trim() || '',
-        description: doc.querySelector('meta[name="description"]')?.getAttribute('content')?.trim() || '',
-        h1: doc.querySelector('h1')?.textContent?.trim() || '',
-        h2s: Array.from(doc.querySelectorAll('h2')).map(el => el.textContent?.trim()).filter(Boolean),
-        h3s: Array.from(doc.querySelectorAll('h3')).map(el => el.textContent?.trim()).filter(Boolean),
-        h4s: Array.from(doc.querySelectorAll('h4')).map(el => el.textContent?.trim()).filter(Boolean),
-        keywords: doc.querySelector('meta[name="keywords"]')?.getAttribute('content')?.trim(),
+        title: cleanText(doc.querySelector('title')?.textContent),
+        description: cleanText(doc.querySelector('meta[name="description"]')?.getAttribute('content')),
+        h1: cleanText(doc.querySelector('h1')?.textContent),
+        h2s: Array.from(doc.querySelectorAll('h2'))
+          .map(el => cleanText(el.textContent))
+          .filter(isValidHeading),
+        h3s: h3Elements,
+        h4s: h4Elements,
+        keywords: cleanText(doc.querySelector('meta[name="keywords"]')?.getAttribute('content')),
         canonical: doc.querySelector('link[rel="canonical"]')?.getAttribute('href')?.trim(),
-        ogTitle: doc.querySelector('meta[property="og:title"]')?.getAttribute('content')?.trim(),
-        ogDescription: doc.querySelector('meta[property="og:description"]')?.getAttribute('content')?.trim(),
+        ogTitle: cleanText(doc.querySelector('meta[property="og:title"]')?.getAttribute('content')),
+        ogDescription: cleanText(doc.querySelector('meta[property="og:description"]')?.getAttribute('content')),
         ogImage: doc.querySelector('meta[property="og:image"]')?.getAttribute('content')?.trim(),
       };
 
