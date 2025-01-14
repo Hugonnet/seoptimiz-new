@@ -1,4 +1,12 @@
 import React from 'react';
+import { Copy, CopyCheck } from 'lucide-react';
+import { Button } from "@/components/ui/button";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface HeadingComparisonProps {
   current: string;
@@ -7,6 +15,18 @@ interface HeadingComparisonProps {
 }
 
 export function HeadingComparison({ current, suggested, context }: HeadingComparisonProps) {
+  const [copied, setCopied] = React.useState(false);
+
+  const copyToClipboard = async () => {
+    try {
+      await navigator.clipboard.writeText(suggested || '');
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.error('Failed to copy text:', err);
+    }
+  };
+
   return (
     <div className="space-y-3">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-2 sm:gap-3 w-full">
@@ -17,8 +37,33 @@ export function HeadingComparison({ current, suggested, context }: HeadingCompar
           </div>
         </div>
         <div className="p-2 sm:p-3 bg-gradient-to-br from-purple-50 to-pink-50 rounded-lg shadow-sm border border-purple-100 hover:shadow-md transition-shadow duration-300">
-          <div className="font-medium text-purple-800 mb-1.5">Version optimisée :</div>
-          <div className="text-purple-700 break-words text-sm sm:text-base">{suggested || 'Non défini'}</div>
+          <div className="flex justify-between items-center">
+            <div className="font-medium text-purple-800 mb-1.5">Version optimisée :</div>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 w-8 p-0"
+                    onClick={copyToClipboard}
+                  >
+                    {copied ? (
+                      <CopyCheck className="h-4 w-4 text-green-500" />
+                    ) : (
+                      <Copy className="h-4 w-4 text-purple-600 hover:text-purple-800" />
+                    )}
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>{copied ? 'Copié !' : 'Copier le texte'}</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
+          <div className="text-purple-700 break-words text-sm sm:text-base">
+            {suggested || 'Non défini'}
+          </div>
         </div>
       </div>
       {context && (
