@@ -15,21 +15,21 @@ serve(async (req) => {
 
   try {
     const { currentTitle, currentDescription, currentH1, currentH2s, currentH3s, currentH4s } = await req.json();
+    console.log('Données reçues:', { currentTitle, currentDescription, currentH1, currentH2s, currentH3s, currentH4s });
 
     const systemPrompt = `Tu es un expert SEO spécialisé dans l'optimisation de contenu en français.
-    Pour chaque élément HTML (title, description, h1-h4), tu dois :
-    1. Analyser le contenu actuel
-    2. Proposer une version optimisée plus descriptive et pertinente
-    3. Expliquer brièvement pourquoi cette optimisation est meilleure
+    Ta tâche est de générer des suggestions d'optimisation SEO pour chaque élément HTML fourni.
 
-    IMPORTANT: 
-    - Les suggestions doivent être concises, pertinentes et cohérentes avec le contenu existant
-    - Chaque balise doit avoir une suggestion unique et adaptée
-    - Les suggestions doivent respecter la hiérarchie des titres (h1 > h2 > h3 > h4)
-    - Éviter absolument les suggestions génériques ou répétitives
-    - Toujours garder le même nombre de suggestions que de balises existantes
-    
-    Format de réponse STRICT en JSON :
+    RÈGLES STRICTES:
+    1. Toutes les suggestions doivent être en français
+    2. Chaque suggestion doit être unique et spécifique au contenu
+    3. Les suggestions doivent respecter la hiérarchie des titres
+    4. Éviter les suggestions génériques
+    5. Maintenir le même nombre de suggestions que d'éléments originaux
+    6. Chaque suggestion doit être accompagnée d'une explication pertinente
+    7. Format JSON strict requis pour la réponse
+
+    FORMAT DE RÉPONSE REQUIS:
     {
       "suggested_title": "string",
       "title_context": "string",
@@ -43,27 +43,25 @@ serve(async (req) => {
       "h3s_context": ["string"],
       "suggested_h4s": ["string"],
       "h4s_context": ["string"]
-    }
+    }`;
 
-    Les arrays doivent avoir exactement le même nombre d'éléments que les balises d'origine.`
+    const userPrompt = `Analyse et optimise les éléments SEO suivants:
 
-    const userPrompt = `Voici les éléments actuels de la page à optimiser pour une entreprise de chauffage écologique :
+    TITRE ACTUEL: "${currentTitle || 'Non défini'}"
+    DESCRIPTION ACTUELLE: "${currentDescription || 'Non définie'}"
+    H1 ACTUEL: "${currentH1 || 'Non défini'}"
+    H2s ACTUELS: ${JSON.stringify(currentH2s || [])}
+    H3s ACTUELS: ${JSON.stringify(currentH3s || [])}
+    H4s ACTUELS: ${JSON.stringify(currentH4s || [])}
 
-    Titre : ${currentTitle || 'Non défini'}
-    Description : ${currentDescription || 'Non définie'}
-    H1 : ${currentH1 || 'Non défini'}
-    H2s : ${currentH2s?.join(', ') || 'Non définis'}
-    H3s : ${currentH3s?.join(', ') || 'Non définis'}
-    H4s : ${currentH4s?.join(', ') || 'Non définis'}
+    IMPORTANT:
+    - Fournis une suggestion pour CHAQUE élément existant
+    - Les suggestions doivent être pertinentes et spécifiques
+    - Inclus une explication claire pour chaque suggestion
+    - Respecte STRICTEMENT le format JSON demandé`;
 
-    Analyse chaque élément et propose des optimisations SEO pertinentes en suivant STRICTEMENT le format JSON demandé.
-    Les suggestions doivent être en français, adaptées au contexte de chaque balise et cohérentes avec la hiérarchie des titres.
-    
-    IMPORTANT: Assure-toi de générer une suggestion pour CHAQUE balise H3 et H4 existante, sans en omettre.`
-
-    console.log('Envoi de la requête à OpenAI avec les prompts suivants:')
-    console.log('System prompt:', systemPrompt)
-    console.log('User prompt:', userPrompt)
+    console.log('Envoi à OpenAI - System Prompt:', systemPrompt);
+    console.log('Envoi à OpenAI - User Prompt:', userPrompt);
 
     const openAIResponse = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -75,30 +73,32 @@ serve(async (req) => {
         model: 'gpt-4o',
         messages: [
           { role: 'system', content: systemPrompt },
-          { role: 'user', content: userPrompt },
+          { role: 'user', content: userPrompt }
         ],
-        temperature: 0.7,
+        temperature: 0.5, // Réduit pour plus de cohérence
       }),
     });
 
     if (!openAIResponse.ok) {
-      console.error('Erreur OpenAI:', await openAIResponse.text())
-      throw new Error('Erreur lors de la génération des suggestions SEO')
+      const errorText = await openAIResponse.text();
+      console.error('Erreur OpenAI:', errorText);
+      throw new Error(`Erreur OpenAI: ${errorText}`);
     }
 
-    const openAIData = await openAIResponse.json()
-    console.log('Réponse OpenAI brute:', openAIData)
+    const openAIData = await openAIResponse.json();
+    console.log('Réponse OpenAI brute:', openAIData);
 
     if (!openAIData.choices?.[0]?.message?.content) {
-      throw new Error('Réponse OpenAI invalide ou vide')
+      throw new Error('Réponse OpenAI invalide ou vide');
     }
 
+    const content = openAIData.choices[0].message.content.trim();
+    console.log('Contenu à parser:', content);
+
     try {
-      const content = openAIData.choices[0].message.content
-      console.log('Contenu à parser:', content)
-      const suggestions = JSON.parse(content.trim())
+      const suggestions = JSON.parse(content);
       
-      // Validation du format et de la cohérence
+      // Validation approfondie de la structure
       const requiredKeys = [
         'suggested_title', 'title_context',
         'suggested_description', 'description_context',
@@ -106,44 +106,49 @@ serve(async (req) => {
         'suggested_h2s', 'h2s_context',
         'suggested_h3s', 'h3s_context',
         'suggested_h4s', 'h4s_context'
-      ]
+      ];
 
-      // Vérifie que toutes les clés requises sont présentes
       for (const key of requiredKeys) {
         if (!(key in suggestions)) {
-          throw new Error(`Clé manquante dans la réponse JSON: ${key}`)
+          console.error(`Clé manquante: ${key}`);
+          throw new Error(`Structure JSON invalide: clé manquante "${key}"`);
         }
       }
 
-      // Vérifie que les tableaux ont le bon nombre d'éléments
-      if (currentH2s && suggestions.suggested_h2s.length !== currentH2s.length) {
-        throw new Error('Nombre incorrect de suggestions H2')
-      }
-      if (currentH3s && suggestions.suggested_h3s.length !== currentH3s.length) {
-        throw new Error('Nombre incorrect de suggestions H3')
-      }
-      if (currentH4s && suggestions.suggested_h4s.length !== currentH4s.length) {
-        throw new Error('Nombre incorrect de suggestions H4')
-      }
+      // Validation des tableaux
+      const validateArray = (current: string[] | null | undefined, suggested: string[], context: string[], name: string) => {
+        if (!Array.isArray(suggested) || !Array.isArray(context)) {
+          throw new Error(`Les suggestions ou le contexte pour ${name} ne sont pas des tableaux`);
+        }
+        if (current && (suggested.length !== current.length || context.length !== current.length)) {
+          throw new Error(`Nombre incorrect de suggestions/contextes pour ${name}`);
+        }
+      };
+
+      validateArray(currentH2s, suggestions.suggested_h2s, suggestions.h2s_context, 'H2');
+      validateArray(currentH3s, suggestions.suggested_h3s, suggestions.h3s_context, 'H3');
+      validateArray(currentH4s, suggestions.suggested_h4s, suggestions.h4s_context, 'H4');
+
+      console.log('Suggestions validées:', suggestions);
 
       return new Response(JSON.stringify(suggestions), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
+      });
     } catch (error) {
-      console.error('Erreur de parsing JSON:', error)
-      console.error('Contenu qui a causé l\'erreur:', openAIData.choices[0].message.content)
-      throw new Error('Impossible de parser la réponse OpenAI en JSON valide')
+      console.error('Erreur de parsing ou validation:', error);
+      throw new Error(`Impossible de parser ou valider la réponse: ${error.message}`);
     }
   } catch (error) {
-    console.error('Erreur complète:', error)
+    console.error('Erreur complète:', error);
     return new Response(
       JSON.stringify({
-        error: error.message || 'Une erreur est survenue lors de la génération des suggestions SEO',
+        error: `Erreur lors du traitement: ${error.message}`,
+        details: error.stack
       }),
       {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       }
-    )
+    );
   }
 });
