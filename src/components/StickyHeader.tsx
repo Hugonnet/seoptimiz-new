@@ -17,7 +17,7 @@ export function StickyHeader() {
   const navigationItems = [
     { path: "/", icon: Home, tooltip: "Accueil" },
     { path: "/historique", icon: History, tooltip: "Historique" },
-    { path: "/exports", icon: FileSpreadsheet, tooltip: "Exports" },
+    { path: "/export", icon: FileSpreadsheet, tooltip: "Export" },
   ];
 
   return (
