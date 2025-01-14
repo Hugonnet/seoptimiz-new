@@ -21,8 +21,9 @@ serve(async (req) => {
       throw new Error('URL is required');
     }
 
+    // Create an AbortController to handle timeouts
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 30000);
+    const timeout = setTimeout(() => controller.abort(), 30000); // 30 second timeout
 
     try {
       const response = await fetch(url, {
@@ -46,12 +47,12 @@ serve(async (req) => {
         throw new Error("Failed to parse HTML");
       }
 
-      // Fonction pour nettoyer le texte
+      // Function to clean text
       const cleanText = (text: string) => {
         return text?.trim().replace(/\s+/g, ' ') || '';
       };
 
-      // Fonction pour filtrer les balises vides
+      // Function to filter empty headings
       const isValidHeading = (text: string) => {
         const cleaned = cleanText(text);
         return cleaned && 
@@ -60,7 +61,7 @@ serve(async (req) => {
                cleaned.length > 1;
       };
 
-      // Extraction des métadonnées
+      // Extract metadata with proper error handling
       const metadata = {
         title: cleanText(doc.querySelector('title')?.textContent),
         description: cleanText(doc.querySelector('meta[name="description"]')?.getAttribute('content')),
@@ -79,7 +80,7 @@ serve(async (req) => {
           .filter(text => text.length > 0)
       };
 
-      console.log('Extracted metadata:', metadata);
+      console.log('Successfully extracted metadata:', metadata);
 
       return new Response(JSON.stringify(metadata), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
