@@ -26,6 +26,20 @@ export interface SEOAnalysis {
   h4s_context?: string[];
   content_suggestions?: string;
   content_context?: string;
+  keyword_density?: any;
+  readability_score?: number;
+  content_length?: number;
+  keyword_suggestions?: string[];
+  semantic_keywords?: string[];
+  content_structure?: any;
+  meta_robots?: string;
+  canonical_url?: string;
+  internal_links?: string[];
+  external_links?: string[];
+  broken_links?: string[];
+  image_alts?: any;
+  page_load_speed?: number;
+  mobile_friendly?: boolean;
 }
 
 interface SEOStore {

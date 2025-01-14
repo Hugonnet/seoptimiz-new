@@ -60,8 +60,12 @@ export type Database = {
       seo_analyses: {
         Row: {
           archived: boolean | null
+          broken_links: string[] | null
+          canonical_url: string | null
           company: string | null
           content_context: string | null
+          content_length: number | null
+          content_structure: Json | null
           content_suggestions: string | null
           created_at: string | null
           current_description: string | null
@@ -71,11 +75,21 @@ export type Database = {
           current_h4s: string[] | null
           current_title: string | null
           description_context: string | null
+          external_links: string[] | null
           h1_context: string | null
           h2s_context: string[] | null
           h3s_context: string[] | null
           h4s_context: string[] | null
           id: number
+          image_alts: Json | null
+          internal_links: string[] | null
+          keyword_density: Json | null
+          keyword_suggestions: string[] | null
+          meta_robots: string | null
+          mobile_friendly: boolean | null
+          page_load_speed: number | null
+          readability_score: number | null
+          semantic_keywords: string[] | null
           suggested_description: string | null
           suggested_h1: string | null
           suggested_h2s: string[] | null
@@ -88,8 +102,12 @@ export type Database = {
         }
         Insert: {
           archived?: boolean | null
+          broken_links?: string[] | null
+          canonical_url?: string | null
           company?: string | null
           content_context?: string | null
+          content_length?: number | null
+          content_structure?: Json | null
           content_suggestions?: string | null
           created_at?: string | null
           current_description?: string | null
@@ -99,11 +117,21 @@ export type Database = {
           current_h4s?: string[] | null
           current_title?: string | null
           description_context?: string | null
+          external_links?: string[] | null
           h1_context?: string | null
           h2s_context?: string[] | null
           h3s_context?: string[] | null
           h4s_context?: string[] | null
           id?: number
+          image_alts?: Json | null
+          internal_links?: string[] | null
+          keyword_density?: Json | null
+          keyword_suggestions?: string[] | null
+          meta_robots?: string | null
+          mobile_friendly?: boolean | null
+          page_load_speed?: number | null
+          readability_score?: number | null
+          semantic_keywords?: string[] | null
           suggested_description?: string | null
           suggested_h1?: string | null
           suggested_h2s?: string[] | null
@@ -116,8 +144,12 @@ export type Database = {
         }
         Update: {
           archived?: boolean | null
+          broken_links?: string[] | null
+          canonical_url?: string | null
           company?: string | null
           content_context?: string | null
+          content_length?: number | null
+          content_structure?: Json | null
           content_suggestions?: string | null
           created_at?: string | null
           current_description?: string | null
@@ -127,11 +159,21 @@ export type Database = {
           current_h4s?: string[] | null
           current_title?: string | null
           description_context?: string | null
+          external_links?: string[] | null
           h1_context?: string | null
           h2s_context?: string[] | null
           h3s_context?: string[] | null
           h4s_context?: string[] | null
           id?: number
+          image_alts?: Json | null
+          internal_links?: string[] | null
+          keyword_density?: Json | null
+          keyword_suggestions?: string[] | null
+          meta_robots?: string | null
+          mobile_friendly?: boolean | null
+          page_load_speed?: number | null
+          readability_score?: number | null
+          semantic_keywords?: string[] | null
           suggested_description?: string | null
           suggested_h1?: string | null
           suggested_h2s?: string[] | null

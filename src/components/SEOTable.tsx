@@ -3,6 +3,7 @@ import { Download } from "lucide-react";
 import { downloadTableAsCSV } from "@/services/seoService";
 import { useSEOStore } from "@/store/seoStore";
 import { SEOAnalysisSection } from "./seo/SEOAnalysisSection";
+import { AdvancedAnalysisSection } from "./seo/AdvancedAnalysisSection";
 
 export function SEOTable() {
   const seoData = useSEOStore((state) => state.seoData);
@@ -78,6 +79,23 @@ export function SEOTable() {
                   context={item.h4s_context}
                 />
               )}
+
+              <AdvancedAnalysisSection
+                keywordDensity={item.keyword_density}
+                readabilityScore={item.readability_score}
+                contentLength={item.content_length}
+                keywordSuggestions={item.keyword_suggestions}
+                semanticKeywords={item.semantic_keywords}
+                contentStructure={item.content_structure}
+                metaRobots={item.meta_robots}
+                canonicalUrl={item.canonical_url}
+                internalLinks={item.internal_links}
+                externalLinks={item.external_links}
+                brokenLinks={item.broken_links}
+                imageAlts={item.image_alts}
+                pageLoadSpeed={item.page_load_speed}
+                mobileFriendly={item.mobile_friendly}
+              />
             </div>
           </div>
           
