@@ -1,0 +1,4 @@
+project_id = "hfmagokcqjxqyzrriqia"
+
+[functions.extract-seo]
+verify_jwt = false

@@ -8,6 +8,7 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -15,6 +16,10 @@ serve(async (req) => {
   try {
     const { url } = await req.json();
     console.log('Analyzing URL:', url);
+
+    if (!url) {
+      throw new Error('URL is required');
+    }
 
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 30000);
@@ -55,75 +60,6 @@ serve(async (req) => {
                cleaned.length > 1;
       };
 
-      // Extraction du contenu textuel visible
-      const getVisibleText = (node: Element): string[] => {
-        const texts: string[] = [];
-        const walk = document.createTreeWalker(
-          node,
-          NodeFilter.SHOW_TEXT,
-          {
-            acceptNode: (node) => {
-              const text = node.textContent?.trim();
-              return text && text.length > 0
-                ? NodeFilter.FILTER_ACCEPT
-                : NodeFilter.FILTER_REJECT;
-            }
-          }
-        );
-
-        let node;
-        while (node = walk.nextNode()) {
-          texts.push(node.textContent?.trim() || '');
-        }
-        return texts;
-      };
-
-      // Analyse des liens
-      const links = Array.from(doc.querySelectorAll('a'));
-      const internalLinks = links
-        .filter(link => {
-          const href = link.getAttribute('href');
-          return href && (href.startsWith('/') || href.includes(url));
-        })
-        .map(link => link.getAttribute('href'))
-        .filter(Boolean) as string[];
-
-      const externalLinks = links
-        .filter(link => {
-          const href = link.getAttribute('href');
-          return href && !href.startsWith('/') && !href.includes(url);
-        })
-        .map(link => link.getAttribute('href'))
-        .filter(Boolean) as string[];
-
-      // Analyse des images
-      const images = Array.from(doc.querySelectorAll('img'));
-      const imageAlts: Record<string, string> = {};
-      images.forEach(img => {
-        const src = img.getAttribute('src');
-        const alt = img.getAttribute('alt');
-        if (src && alt) {
-          imageAlts[src] = alt;
-        }
-      });
-
-      // Calcul de la longueur du contenu
-      const visibleText = Array.from(doc.querySelectorAll('p, h1, h2, h3, h4, h5, h6'))
-        .map(el => cleanText(el.textContent))
-        .filter(text => text.length > 0);
-      const contentLength = visibleText.join(' ').split(' ').length;
-
-      // Calcul du score de lisibilité (simplifié)
-      const calculateReadabilityScore = (text: string): number => {
-        const words = text.split(' ').length;
-        const sentences = text.split(/[.!?]+/).length;
-        const avgWordsPerSentence = words / sentences;
-        // Score basé sur la longueur moyenne des phrases (plus simple = meilleur score)
-        return Math.max(0, Math.min(100, 100 - (avgWordsPerSentence - 15) * 5));
-      };
-
-      const readabilityScore = calculateReadabilityScore(visibleText.join(' '));
-
       // Extraction des métadonnées
       const metadata = {
         title: cleanText(doc.querySelector('title')?.textContent),
@@ -138,16 +74,9 @@ serve(async (req) => {
         h4s: Array.from(doc.querySelectorAll('h4'))
           .map(el => cleanText(el.textContent))
           .filter(isValidHeading),
-        keywords: cleanText(doc.querySelector('meta[name="keywords"]')?.getAttribute('content')),
-        canonical: doc.querySelector('link[rel="canonical"]')?.getAttribute('href')?.trim(),
-        metaRobots: doc.querySelector('meta[name="robots"]')?.getAttribute('content')?.trim(),
-        readabilityScore,
-        contentLength,
-        internalLinks,
-        externalLinks,
-        imageAlts,
-        mobileFriendly: true, // Par défaut à true, à améliorer avec une véritable détection
-        pageLoadSpeed: response.status === 200 ? 1.5 : 3.0, // Simulation basique
+        visibleText: Array.from(doc.querySelectorAll('p, h1, h2, h3, h4, h5, h6'))
+          .map(el => cleanText(el.textContent))
+          .filter(text => text.length > 0)
       };
 
       console.log('Extracted metadata:', metadata);
