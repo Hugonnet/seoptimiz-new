@@ -56,8 +56,7 @@ const Index = () => {
               </div>
               <h3 className="text-lg md:text-xl font-semibold mb-2 text-gray-900">Analyse SEO Avancée</h3>
               <p className="text-sm md:text-base text-gray-600 mb-4">
-                Analyse complète incluant la densité des mots-clés, la lisibilité, 
-                les liens et la performance mobile
+                Densité des mots-clés, lisibilité, liens et performance mobile
               </p>
               <button 
                 onClick={() => navigate('/')}
