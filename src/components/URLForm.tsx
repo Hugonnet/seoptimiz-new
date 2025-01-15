@@ -6,7 +6,6 @@ import { CompanyAutocomplete } from "./CompanyAutocomplete";
 import { extractSEOMetadata } from "@/services/seoService";
 import { useSEOStore } from "@/store/seoStore";
 import { useToast } from "@/hooks/use-toast";
-import { formatURL } from "@/utils/urlUtils";
 import { supabase } from "@/integrations/supabase/client";
 
 export function URLForm() {
@@ -16,7 +15,7 @@ export function URLForm() {
   const addSEOData = useSEOStore((state) => state.addSEOData);
   const { toast } = useToast();
 
-  const handleSimpleAnalysis = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!company) {
@@ -28,7 +27,7 @@ export function URLForm() {
       return;
     }
 
-    if (!domain.trim()) {
+    if (!domain) {
       toast({
         title: "Erreur",
         description: "L'URL est obligatoire",
@@ -40,17 +39,25 @@ export function URLForm() {
     setIsLoading(true);
 
     try {
-      const formattedURL = formatURL(domain);
-      console.log('URL formatée:', formattedURL);
+      // Formatage basique de l'URL
+      let url = domain.trim();
+      if (!url.startsWith('http://') && !url.startsWith('https://')) {
+        url = 'https://' + url;
+      }
 
-      const seoData = await extractSEOMetadata(formattedURL);
-      console.log('Données SEO extraites:', seoData);
+      console.log('Analyse de l\'URL:', url);
+      
+      const seoData = await extractSEOMetadata(url);
+      
+      if (!seoData) {
+        throw new Error("Impossible d'extraire les données SEO");
+      }
 
       const { data: analysisData, error: insertError } = await supabase
         .from('seo_analyses')
         .insert([
           {
-            url: formattedURL,
+            url: url,
             company: company,
             current_title: seoData.title,
             current_description: seoData.description,
@@ -70,17 +77,15 @@ export function URLForm() {
 
       if (analysisData) {
         addSEOData(analysisData);
+        toast({
+          title: "Succès",
+          description: "L'analyse SEO a été effectuée avec succès.",
+        });
+        setDomain("");
       }
 
-      toast({
-        title: "Analyse terminée",
-        description: "Les données SEO ont été extraites avec succès.",
-      });
-
-      setDomain("");
     } catch (error) {
-      console.error('Erreur détaillée:', error);
-      
+      console.error('Erreur lors de l\'analyse:', error);
       toast({
         title: "Erreur",
         description: error instanceof Error ? error.message : "Une erreur est survenue lors de l'analyse",
@@ -92,7 +97,7 @@ export function URLForm() {
   };
 
   return (
-    <form onSubmit={handleSimpleAnalysis} className="max-w-3xl mx-auto space-y-4">
+    <form onSubmit={handleSubmit} className="max-w-3xl mx-auto space-y-4">
       <h2 className="text-xl font-semibold text-gray-900 mb-2 text-center">
         Entrez une URL à analyser
       </h2>

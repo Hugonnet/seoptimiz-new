@@ -1,12 +1,14 @@
 import { Button } from "@/components/ui/button";
-import { Download } from "lucide-react";
+import { Download, Copy } from "lucide-react";
 import { downloadTableAsCSV } from "@/services/seoService";
 import { useSEOStore } from "@/store/seoStore";
-import { SEOAnalysisSection } from "./seo/SEOAnalysisSection";
-import { AdvancedAnalysisSection } from "./seo/AdvancedAnalysisSection";
+import { useState } from "react";
+import { useToast } from "@/hooks/use-toast";
 
 export function SEOTable() {
   const seoData = useSEOStore((state) => state.seoData);
+  const [copiedField, setCopiedField] = useState<string | null>(null);
+  const { toast } = useToast();
 
   if (seoData.length === 0) {
     return (
@@ -16,98 +18,77 @@ export function SEOTable() {
     );
   }
 
-  return (
-    <div className="space-y-4">
-      {seoData.map((item) => (
-        <div key={item.id} className="space-y-3 sm:space-y-4">
-          <h2 className="text-base sm:text-lg font-semibold text-purple-600 mb-2 break-words">
-            Analyse SEO pour : <span className="text-gray-700">{item.url}</span>
-          </h2>
-          
-          <div className="rounded-lg bg-white shadow-sm border border-gray-100 overflow-hidden">
-            <div className="p-2 sm:p-4 space-y-4 sm:space-y-6">
-              <SEOAnalysisSection
-                title="Balise Title"
-                type="single"
-                current={item.current_title}
-                suggested={item.suggested_title}
-                context={item.title_context}
-              />
+  const copyToClipboard = async (text: string, field: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopiedField(field);
+      toast({
+        title: "Copié !",
+        description: "Le texte a été copié dans le presse-papier.",
+      });
+      setTimeout(() => setCopiedField(null), 2000);
+    } catch (err) {
+      toast({
+        title: "Erreur",
+        description: "Impossible de copier le texte.",
+        variant: "destructive",
+      });
+    }
+  };
 
-              <SEOAnalysisSection
-                title="Meta Description"
-                type="single"
-                current={item.current_description}
-                suggested={item.suggested_description}
-                context={item.description_context}
-              />
-
-              <SEOAnalysisSection
-                title="H1"
-                type="single"
-                current={item.current_h1}
-                suggested={item.suggested_h1}
-                context={item.h1_context}
-              />
-
-              {item.current_h2s && item.current_h2s.length > 0 && (
-                <SEOAnalysisSection
-                  title="H2"
-                  type="array"
-                  current={item.current_h2s}
-                  suggested={item.suggested_h2s}
-                  context={item.h2s_context}
-                />
+  const renderField = (title: string, content: string | string[] | null | undefined, fieldId: string) => {
+    if (!content) return null;
+    const displayContent = Array.isArray(content) ? content : [content];
+    
+    return (
+      <div className="space-y-2">
+        <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
+        {displayContent.map((item, index) => (
+          <div key={index} className="flex items-start justify-between gap-4 p-4 bg-white rounded-lg border border-gray-200">
+            <p className="text-gray-700 flex-grow">{item}</p>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => copyToClipboard(item, `${fieldId}-${index}`)}
+              className="shrink-0"
+            >
+              {copiedField === `${fieldId}-${index}` ? (
+                <Copy className="h-4 w-4 text-green-500" />
+              ) : (
+                <Copy className="h-4 w-4 text-gray-500" />
               )}
-
-              {item.current_h3s && item.current_h3s.length > 0 && (
-                <SEOAnalysisSection
-                  title="H3"
-                  type="array"
-                  current={item.current_h3s}
-                  suggested={item.suggested_h3s}
-                  context={item.h3s_context}
-                />
-              )}
-
-              {item.current_h4s && item.current_h4s.length > 0 && (
-                <SEOAnalysisSection
-                  title="H4"
-                  type="array"
-                  current={item.current_h4s}
-                  suggested={item.suggested_h4s}
-                  context={item.h4s_context}
-                />
-              )}
-
-              <AdvancedAnalysisSection
-                keywordDensity={item.keyword_density}
-                readabilityScore={item.readability_score}
-                contentLength={item.content_length}
-                keywordSuggestions={item.keyword_suggestions}
-                semanticKeywords={item.semantic_keywords}
-                contentStructure={item.content_structure}
-                metaRobots={item.meta_robots}
-                canonicalUrl={item.canonical_url}
-                internalLinks={item.internal_links}
-                externalLinks={item.external_links}
-                brokenLinks={item.broken_links}
-                imageAlts={item.image_alts}
-                pageLoadSpeed={item.page_load_speed}
-                mobileFriendly={item.mobile_friendly}
-              />
-            </div>
+            </Button>
           </div>
-          
-          <div className="flex justify-end">
+        ))}
+      </div>
+    );
+  };
+
+  return (
+    <div className="space-y-6">
+      {seoData.map((item) => (
+        <div key={item.id} className="space-y-6 bg-gray-50 p-6 rounded-xl border border-gray-200">
+          <div className="flex items-center justify-between">
+            <h2 className="text-xl font-semibold text-purple-600">
+              Analyse SEO pour : <span className="text-gray-700 break-all">{item.url}</span>
+            </h2>
             <Button 
               onClick={() => downloadTableAsCSV(seoData)} 
               variant="outline" 
-              className="gap-2 gradient-button text-sm"
+              className="gap-2"
             >
               <Download className="h-4 w-4" />
               Exporter
             </Button>
+          </div>
+          
+          <div className="space-y-6">
+            {renderField("Meta Title", item.current_title, "title")}
+            {renderField("Meta Description", item.current_description, "description")}
+            {renderField("H1", item.current_h1, "h1")}
+            {renderField("H2", item.current_h2s, "h2")}
+            {renderField("H3", item.current_h3s, "h3")}
+            {renderField("H4", item.current_h4s, "h4")}
           </div>
         </div>
       ))}
