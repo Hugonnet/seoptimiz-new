@@ -25,6 +25,8 @@ export function SEOTable() {
     );
   }
 
+  console.log("SEO Data for debugging:", seoData);
+
   return (
     <div className="space-y-6">
       {seoData.map((item) => (
@@ -99,14 +101,14 @@ export function SEOTable() {
 
             {showAdvanced[item.id] && (
               <AdvancedAnalysisSection
-                readabilityScore={item.readability_score}
-                contentLength={item.content_length}
-                internalLinks={item.internal_links}
-                externalLinks={item.external_links}
-                brokenLinks={item.broken_links}
-                imageAlts={item.image_alts}
-                pageLoadSpeed={item.page_load_speed}
-                mobileFriendly={item.mobile_friendly}
+                readabilityScore={item.readability_score || 0}
+                contentLength={item.content_length || 0}
+                internalLinks={item.internal_links || []}
+                externalLinks={item.external_links || []}
+                brokenLinks={item.broken_links || []}
+                imageAlts={item.image_alts || {}}
+                pageLoadSpeed={item.page_load_speed || 0}
+                mobileFriendly={item.mobile_friendly !== false}
               />
             )}
           </div>
