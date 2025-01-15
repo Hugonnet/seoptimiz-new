@@ -1,5 +1,5 @@
 import { SEOTable } from "@/components/SEOTable";
-import { StickyHeader } from "@/components/StickyHeader";
+import { Navigation } from "@/components/Navigation";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Trash2 } from "lucide-react";
@@ -28,6 +28,7 @@ const History = () => {
   useEffect(() => {
     const loadSEOData = async () => {
       try {
+        console.log('Fetching SEO data from Supabase...');
         const { data, error } = await supabase
           .from('seo_analyses')
           .select('*')
@@ -38,6 +39,7 @@ const History = () => {
           throw error;
         }
 
+        console.log('SEO Data for debugging:', data);
         setSEOData(data || []);
       } catch (error) {
         console.error('Erreur lors du chargement des données:', error);
@@ -54,19 +56,36 @@ const History = () => {
     loadSEOData();
   }, [setSEOData, toast]);
 
-  const handleReset = () => {
-    clearSEOData();
-    toast({
-      title: "Historique réinitialisé",
-      description: "L'historique des analyses SEO a été effacé avec succès.",
-    });
+  const handleReset = async () => {
+    try {
+      // Mark all analyses as archived instead of deleting them
+      const { error } = await supabase
+        .from('seo_analyses')
+        .update({ archived: true })
+        .eq('archived', false);
+
+      if (error) throw error;
+
+      clearSEOData();
+      toast({
+        title: "Historique réinitialisé",
+        description: "L'historique des analyses SEO a été effacé avec succès.",
+      });
+    } catch (error) {
+      console.error('Erreur lors de la réinitialisation:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de réinitialiser l'historique",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#F8F9FF] to-[#FFFFFF]">
-      <StickyHeader />
+      <Navigation />
       
-      <div className="mx-auto max-w-7xl px-2 sm:px-4 lg:px-6 py-2 sm:py-4 lg:py-6">
+      <div className="mx-auto max-w-7xl px-2 sm:px-4 lg:px-6 py-2 sm:py-4 lg:py-6 mt-16">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
