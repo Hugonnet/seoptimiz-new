@@ -7,39 +7,20 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    console.log('Début de l\'analyse SEO');
+    console.log('Starting SEO suggestions generation...');
     const { currentTitle, currentDescription, currentH1, currentH2s, currentH3s, currentH4s, visibleText } = await req.json();
     
-    console.log('Données reçues:', {
-      currentTitle,
-      currentDescription,
-      currentH1,
-      currentH2s,
-      currentH3s,
-      currentH4s,
-      visibleText
-    });
-
-    // Calculer les métriques de base
-    const readabilityScore = calculateReadabilityScore(visibleText || []);
-    const contentLength = calculateContentLength(visibleText || []);
-    const { internalLinks, externalLinks, brokenLinks } = analyzeLinks(visibleText || []);
-    const imageAlts = analyzeImageAlts(visibleText || []);
-    const pageLoadSpeed = 2.5; // Valeur par défaut
-
-    // Configuration OpenAI
     const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
     if (!openAIApiKey) {
       throw new Error('OpenAI API key not found');
     }
 
-    console.log('Appel à OpenAI pour les suggestions');
+    console.log('Generating suggestions with OpenAI...');
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -51,11 +32,11 @@ serve(async (req) => {
         messages: [
           {
             role: 'system',
-            content: 'You are an SEO expert. Analyze the provided content and suggest improvements.'
+            content: 'You are an SEO expert. Analyze the provided content and suggest improvements in French. Focus on making titles and descriptions more engaging and keyword-rich while maintaining readability.'
           },
           {
             role: 'user',
-            content: `Please analyze and suggest improvements for:
+            content: `Please analyze and suggest improvements for this website content in French:
               Title: ${currentTitle}
               Description: ${currentDescription}
               H1: ${currentH1}
@@ -69,16 +50,24 @@ serve(async (req) => {
     });
 
     const data = await response.json();
-    console.log('Réponse OpenAI reçue');
+    console.log('OpenAI response received');
+
+    if (!data.choices?.[0]?.message?.content) {
+      throw new Error('Invalid response from OpenAI');
+    }
 
     const suggestions = data.choices[0].message.content;
-    const lines = suggestions.split('\n');
-
-    // Extraire les suggestions de manière plus robuste
-    const suggestedTitle = lines.find(l => l.includes('Title'))?.replace('Title:', '').trim() || currentTitle;
-    const suggestedDescription = lines.find(l => l.includes('Description'))?.replace('Description:', '').trim() || currentDescription;
-    const suggestedH1 = lines.find(l => l.includes('H1'))?.replace('H1:', '').trim() || currentH1;
-
+    
+    // Parse suggestions into structured format
+    const suggestedTitle = suggestions.match(/Title:([^\n]*)/)?.[1]?.trim() || currentTitle;
+    const suggestedDescription = suggestions.match(/Description:([^\n]*)/)?.[1]?.trim() || currentDescription;
+    const suggestedH1 = suggestions.match(/H1:([^\n]*)/)?.[1]?.trim() || currentH1;
+    
+    // Calculate metrics
+    const readabilityScore = calculateReadabilityScore(visibleText || []);
+    const contentLength = calculateContentLength(visibleText || []);
+    
+    console.log('Preparing final response');
     const finalResponse = {
       suggested_title: suggestedTitle,
       suggested_description: suggestedDescription,
@@ -86,59 +75,55 @@ serve(async (req) => {
       suggested_h2s: currentH2s || [],
       suggested_h3s: currentH3s || [],
       suggested_h4s: currentH4s || [],
-      title_context: "Suggestion d'amélioration pour le titre",
-      description_context: "Suggestion d'amélioration pour la description",
-      h1_context: "Suggestion d'amélioration pour le H1",
+      title_context: "Suggestion d'amélioration pour optimiser le référencement",
+      description_context: "Suggestion d'amélioration pour une meilleure visibilité",
+      h1_context: "Suggestion d'amélioration pour renforcer le message principal",
       h2s_context: [],
       h3s_context: [],
       h4s_context: [],
       readability_score: readabilityScore,
       content_length: contentLength,
-      internal_links: internalLinks,
-      external_links: externalLinks,
-      broken_links: brokenLinks,
-      image_alts: imageAlts,
-      page_load_speed: pageLoadSpeed,
+      internal_links: [],
+      external_links: [],
+      broken_links: [],
+      image_alts: {},
+      page_load_speed: 2.5,
       mobile_friendly: true,
     };
 
-    console.log('Réponse finale préparée');
     return new Response(JSON.stringify(finalResponse), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
+
   } catch (error) {
-    console.error('Erreur dans la fonction generate-seo-suggestions:', error);
-    return new Response(JSON.stringify({ error: error.message }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    console.error('Error in generate-seo-suggestions function:', error);
+    return new Response(
+      JSON.stringify({ error: error.message }),
+      { 
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      }
+    );
   }
 });
 
-// Fonctions utilitaires
+// Utility functions
 function calculateReadabilityScore(text: string[]): number {
   if (!text || text.length === 0) return 0;
   const words = text.join(' ').split(/\s+/);
-  return Math.min(100, Math.round((words.length / 100) * 50));
+  const sentences = text.join(' ').split(/[.!?]+/).filter(s => s.trim().length > 0);
+  const avgWordsPerSentence = words.length / (sentences.length || 1);
+  const syllables = words.reduce((count, word) => {
+    return count + (word.match(/[aeiouy]+/gi)?.length || 1);
+  }, 0);
+  const avgSyllablesPerWord = syllables / (words.length || 1);
+  
+  return Math.max(0, Math.min(100, Math.round(
+    206.835 - (1.015 * avgWordsPerSentence) - (84.6 * avgSyllablesPerWord)
+  )));
 }
 
 function calculateContentLength(text: string[]): number {
   if (!text || text.length === 0) return 0;
   return text.join(' ').split(/\s+/).length;
-}
-
-function analyzeLinks(text: string[]): {
-  internalLinks: string[];
-  externalLinks: string[];
-  brokenLinks: string[];
-} {
-  return {
-    internalLinks: [],
-    externalLinks: [],
-    brokenLinks: [],
-  };
-}
-
-function analyzeImageAlts(text: string[]): Record<string, string> {
-  return {};
 }
