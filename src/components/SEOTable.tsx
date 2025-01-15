@@ -1,9 +1,7 @@
-import { Button } from "@/components/ui/button";
-import { Download, BarChart2 } from "lucide-react";
-import { downloadTableAsCSV } from "@/services/seoService";
 import { useSEOStore } from "@/store/seoStore";
 import { SEOAnalysisSection } from "./seo/SEOAnalysisSection";
 import { AdvancedAnalysisSection } from "./seo/AdvancedAnalysisSection";
+import { SEOTableHeader } from "./seo/SEOTableHeader";
 import { useState } from "react";
 
 export function SEOTable() {
@@ -31,29 +29,12 @@ export function SEOTable() {
     <div className="space-y-6">
       {seoData.map((item) => (
         <div key={item.id} className="space-y-6 bg-gray-50 p-6 rounded-xl border border-gray-200">
-          <div className="flex items-center justify-between">
-            <h2 className="text-xl font-semibold text-purple-600">
-              Analyse SEO pour : <span className="text-gray-700 break-all">{item.url}</span>
-            </h2>
-            <div className="flex gap-2">
-              <Button 
-                onClick={() => toggleAdvanced(item.id)} 
-                variant="outline" 
-                className="gap-2"
-              >
-                <BarChart2 className="h-4 w-4" />
-                {showAdvanced[item.id] ? 'Masquer l\'analyse avancée' : 'Analyse avancée'}
-              </Button>
-              <Button 
-                onClick={() => downloadTableAsCSV(seoData)} 
-                variant="outline" 
-                className="gap-2"
-              >
-                <Download className="h-4 w-4" />
-                Exporter
-              </Button>
-            </div>
-          </div>
+          <SEOTableHeader 
+            url={item.url}
+            seoData={seoData}
+            showAdvanced={showAdvanced[item.id]}
+            onToggleAdvanced={() => toggleAdvanced(item.id)}
+          />
           
           <div className="space-y-6">
             <SEOAnalysisSection

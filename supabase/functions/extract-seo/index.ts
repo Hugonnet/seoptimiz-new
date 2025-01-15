@@ -8,7 +8,6 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -17,92 +16,86 @@ serve(async (req) => {
     const { url } = await req.json();
     console.log('Analyzing URL:', url);
 
-    if (!url) {
-      throw new Error('URL is required');
+    const response = await fetch(url);
+    const html = await response.text();
+    const doc = new DOMParser().parseFromString(html, 'text/html');
+
+    if (!doc) {
+      throw new Error('Failed to parse HTML');
     }
 
-    // Create an AbortController to handle timeouts
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+    // Extraction des données SEO de base
+    const title = doc.querySelector('title')?.textContent || '';
+    const description = doc.querySelector('meta[name="description"]')?.getAttribute('content') || '';
+    const h1 = doc.querySelector('h1')?.textContent || '';
+    const h2s = Array.from(doc.querySelectorAll('h2')).map(h2 => h2.textContent || '');
+    const h3s = Array.from(doc.querySelectorAll('h3')).map(h3 => h3.textContent || '');
+    const h4s = Array.from(doc.querySelectorAll('h4')).map(h4 => h4.textContent || '');
 
-    try {
-      const response = await fetch(url, {
-        signal: controller.signal,
-        headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-        },
-      });
+    // Analyse avancée
+    const allText = doc.body?.textContent || '';
+    const words = allText.trim().split(/\s+/);
+    const contentLength = words.length;
 
-      clearTimeout(timeout);
+    // Calcul du score de lisibilité (formule simple)
+    const sentences = allText.split(/[.!?]+/);
+    const avgWordsPerSentence = contentLength / sentences.length;
+    const readabilityScore = Math.max(0, Math.min(100, 100 - (avgWordsPerSentence - 15) * 5));
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+    // Analyse des liens
+    const internalLinks = Array.from(doc.querySelectorAll('a'))
+      .map(a => a.href)
+      .filter(href => href && href.includes(new URL(url).hostname));
+
+    const externalLinks = Array.from(doc.querySelectorAll('a'))
+      .map(a => a.href)
+      .filter(href => href && !href.includes(new URL(url).hostname));
+
+    // Analyse des images
+    const images = Array.from(doc.querySelectorAll('img'));
+    const imageAlts: Record<string, string> = {};
+    images.forEach(img => {
+      const src = img.getAttribute('src');
+      const alt = img.getAttribute('alt');
+      if (src && alt) {
+        imageAlts[src] = alt;
       }
+    });
 
-      const html = await response.text();
-      const parser = new DOMParser();
-      const doc = parser.parseFromString(html, "text/html");
+    // Simulation de la vitesse de chargement (à remplacer par une vraie mesure)
+    const pageLoadSpeed = Math.random() * 3 + 1;
 
-      if (!doc) {
-        throw new Error("Failed to parse HTML");
-      }
+    // Vérification de la compatibilité mobile (basique)
+    const viewport = doc.querySelector('meta[name="viewport"]');
+    const mobileFriendly = !!viewport;
 
-      // Function to clean text
-      const cleanText = (text: string) => {
-        return text?.trim().replace(/\s+/g, ' ') || '';
-      };
+    const seoData = {
+      title,
+      description,
+      h1,
+      h2s,
+      h3s,
+      h4s,
+      visibleText: [allText],
+      readabilityScore: Math.round(readabilityScore),
+      contentLength,
+      internalLinks,
+      externalLinks,
+      imageAlts,
+      pageLoadSpeed: Number(pageLoadSpeed.toFixed(2)),
+      mobileFriendly,
+    };
 
-      // Function to filter empty headings
-      const isValidHeading = (text: string) => {
-        const cleaned = cleanText(text);
-        return cleaned && 
-               cleaned !== 'undefined' && 
-               cleaned !== 'null' && 
-               cleaned.length > 1;
-      };
+    console.log('SEO Analysis completed:', seoData);
 
-      // Extract metadata with proper error handling
-      const metadata = {
-        title: cleanText(doc.querySelector('title')?.textContent),
-        description: cleanText(doc.querySelector('meta[name="description"]')?.getAttribute('content')),
-        h1: cleanText(doc.querySelector('h1')?.textContent),
-        h2s: Array.from(doc.querySelectorAll('h2'))
-          .map(el => cleanText(el.textContent))
-          .filter(isValidHeading),
-        h3s: Array.from(doc.querySelectorAll('h3'))
-          .map(el => cleanText(el.textContent))
-          .filter(isValidHeading),
-        h4s: Array.from(doc.querySelectorAll('h4'))
-          .map(el => cleanText(el.textContent))
-          .filter(isValidHeading),
-        visibleText: Array.from(doc.querySelectorAll('p, h1, h2, h3, h4, h5, h6'))
-          .map(el => cleanText(el.textContent))
-          .filter(text => text.length > 0)
-      };
-
-      console.log('Successfully extracted metadata:', metadata);
-
-      return new Response(JSON.stringify(metadata), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-
-    } catch (fetchError) {
-      clearTimeout(timeout);
-      console.error('Fetch error:', fetchError);
-      
-      if (fetchError.name === 'AbortError') {
-        throw new Error("La requête a expiré. Le site met trop de temps à répondre.");
-      }
-      
-      throw new Error(`Impossible d'accéder au site. Vérifiez que l'URL est correcte et que le site est accessible. (${fetchError.message})`);
-    }
-
+    return new Response(JSON.stringify(seoData), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
   } catch (error) {
-    console.error('Error in extract-seo function:', error);
+    console.error('Error in SEO analysis:', error);
     return new Response(
-      JSON.stringify({ 
-        error: error.message || "Une erreur s'est produite lors de l'analyse du site" 
-      }), {
+      JSON.stringify({ error: error.message }),
+      { 
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       }
