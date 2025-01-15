@@ -33,23 +33,35 @@ serve(async (req) => {
     const h4s = Array.from(doc.querySelectorAll('h4')).map(h4 => h4.textContent || '');
 
     // Analyse avancée
-    const allText = doc.body?.textContent || '';
-    const words = allText.trim().split(/\s+/);
+    const allText = doc.body?.textContent?.trim() || '';
+    const words = allText.split(/\s+/);
     const contentLength = words.length;
 
-    // Calcul du score de lisibilité (formule simple)
-    const sentences = allText.split(/[.!?]+/);
-    const avgWordsPerSentence = contentLength / sentences.length;
-    const readabilityScore = Math.max(0, Math.min(100, 100 - (avgWordsPerSentence - 15) * 5));
+    // Calcul du score de lisibilité (formule de Flesch-Kincaid adaptée)
+    const sentences = allText.split(/[.!?]+/).filter(s => s.trim().length > 0);
+    const avgWordsPerSentence = contentLength / (sentences.length || 1);
+    const syllables = words.reduce((count, word) => {
+      return count + (word.match(/[aeiouy]+/gi)?.length || 1);
+    }, 0);
+    const avgSyllablesPerWord = syllables / (words.length || 1);
+    
+    // Score de lisibilité adapté (0-100)
+    const readabilityScore = Math.max(0, Math.min(100, Math.round(
+      206.835 - (1.015 * avgWordsPerSentence) - (84.6 * avgSyllablesPerWord)
+    )));
 
     // Analyse des liens
-    const internalLinks = Array.from(doc.querySelectorAll('a'))
+    const allLinks = Array.from(doc.querySelectorAll('a'));
+    const internalLinks = allLinks
       .map(a => a.href)
       .filter(href => href && href.includes(new URL(url).hostname));
 
-    const externalLinks = Array.from(doc.querySelectorAll('a'))
+    const externalLinks = allLinks
       .map(a => a.href)
-      .filter(href => href && !href.includes(new URL(url).hostname));
+      .filter(href => href && !href.includes(new URL(url).hostname) && href.startsWith('http'));
+
+    // Vérification des liens cassés (simulation)
+    const brokenLinks = [];
 
     // Analyse des images
     const images = Array.from(doc.querySelectorAll('img'));
@@ -62,12 +74,22 @@ serve(async (req) => {
       }
     });
 
-    // Simulation de la vitesse de chargement (à remplacer par une vraie mesure)
-    const pageLoadSpeed = Math.random() * 3 + 1;
+    // Simulation de la vitesse de chargement basée sur la taille du contenu
+    const pageLoadSpeed = Math.min(5, Math.max(0.5, contentLength / 10000));
 
-    // Vérification de la compatibilité mobile (basique)
+    // Vérification de la compatibilité mobile
     const viewport = doc.querySelector('meta[name="viewport"]');
-    const mobileFriendly = !!viewport;
+    const responsiveElements = doc.querySelectorAll('[class*="responsive"],[class*="mobile"],[class*="sm:"],[class*="md:"],[class*="lg:"]');
+    const mobileFriendly = !!viewport || responsiveElements.length > 0;
+
+    console.log('Metrics calculated:', {
+      readabilityScore,
+      contentLength,
+      internalLinks: internalLinks.length,
+      externalLinks: externalLinks.length,
+      pageLoadSpeed,
+      mobileFriendly
+    });
 
     const seoData = {
       title,
@@ -76,17 +98,16 @@ serve(async (req) => {
       h2s,
       h3s,
       h4s,
-      visibleText: [allText],
-      readabilityScore: Math.round(readabilityScore),
+      readabilityScore,
       contentLength,
       internalLinks,
       externalLinks,
+      brokenLinks,
       imageAlts,
       pageLoadSpeed: Number(pageLoadSpeed.toFixed(2)),
       mobileFriendly,
+      visibleText: [allText],
     };
-
-    console.log('SEO Analysis completed:', seoData);
 
     return new Response(JSON.stringify(seoData), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
