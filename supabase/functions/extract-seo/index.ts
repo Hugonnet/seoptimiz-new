@@ -8,14 +8,20 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
+    console.log('Starting SEO extraction...');
     const { url } = await req.json();
-    console.log('Analyzing URL:', url);
+    
+    if (!url) {
+      throw new Error('URL is required');
+    }
 
+    console.log('Fetching URL:', url);
     const response = await fetch(url);
     const html = await response.text();
     const doc = new DOMParser().parseFromString(html, 'text/html');
@@ -24,7 +30,7 @@ serve(async (req) => {
       throw new Error('Failed to parse HTML');
     }
 
-    // Extraction des données SEO de base
+    // Extract basic SEO data
     const title = doc.querySelector('title')?.textContent || '';
     const description = doc.querySelector('meta[name="description"]')?.getAttribute('content') || '';
     const h1 = doc.querySelector('h1')?.textContent || '';
@@ -32,38 +38,32 @@ serve(async (req) => {
     const h3s = Array.from(doc.querySelectorAll('h3')).map(h3 => h3.textContent || '');
     const h4s = Array.from(doc.querySelectorAll('h4')).map(h4 => h4.textContent || '');
 
-    // Analyse avancée
-    const allText = doc.body?.textContent?.trim() || '';
-    const words = allText.split(/\s+/);
+    // Extract visible text for content analysis
+    const visibleText = doc.body?.textContent?.trim() || '';
+    const words = visibleText.split(/\s+/);
     const contentLength = words.length;
 
-    // Calcul du score de lisibilité (formule de Flesch-Kincaid adaptée)
-    const sentences = allText.split(/[.!?]+/).filter(s => s.trim().length > 0);
+    // Calculate readability score
+    const sentences = visibleText.split(/[.!?]+/).filter(s => s.trim().length > 0);
     const avgWordsPerSentence = contentLength / (sentences.length || 1);
     const syllables = words.reduce((count, word) => {
       return count + (word.match(/[aeiouy]+/gi)?.length || 1);
     }, 0);
     const avgSyllablesPerWord = syllables / (words.length || 1);
-    
-    // Score de lisibilité adapté (0-100)
     const readabilityScore = Math.max(0, Math.min(100, Math.round(
       206.835 - (1.015 * avgWordsPerSentence) - (84.6 * avgSyllablesPerWord)
     )));
 
-    // Analyse des liens
+    // Analyze links
     const allLinks = Array.from(doc.querySelectorAll('a'));
     const internalLinks = allLinks
       .map(a => a.href)
       .filter(href => href && href.includes(new URL(url).hostname));
-
     const externalLinks = allLinks
       .map(a => a.href)
       .filter(href => href && !href.includes(new URL(url).hostname) && href.startsWith('http'));
 
-    // Vérification des liens cassés (simulation)
-    const brokenLinks = [];
-
-    // Analyse des images
+    // Analyze images
     const images = Array.from(doc.querySelectorAll('img'));
     const imageAlts: Record<string, string> = {};
     images.forEach(img => {
@@ -74,22 +74,15 @@ serve(async (req) => {
       }
     });
 
-    // Simulation de la vitesse de chargement basée sur la taille du contenu
+    // Simulate page load speed based on content size
     const pageLoadSpeed = Math.min(5, Math.max(0.5, contentLength / 10000));
 
-    // Vérification de la compatibilité mobile
+    // Check mobile friendliness
     const viewport = doc.querySelector('meta[name="viewport"]');
     const responsiveElements = doc.querySelectorAll('[class*="responsive"],[class*="mobile"],[class*="sm:"],[class*="md:"],[class*="lg:"]');
     const mobileFriendly = !!viewport || responsiveElements.length > 0;
 
-    console.log('Metrics calculated:', {
-      readabilityScore,
-      contentLength,
-      internalLinks: internalLinks.length,
-      externalLinks: externalLinks.length,
-      pageLoadSpeed,
-      mobileFriendly
-    });
+    console.log('SEO data extracted successfully');
 
     const seoData = {
       title,
@@ -102,18 +95,19 @@ serve(async (req) => {
       contentLength,
       internalLinks,
       externalLinks,
-      brokenLinks,
+      brokenLinks: [],
       imageAlts,
       pageLoadSpeed: Number(pageLoadSpeed.toFixed(2)),
       mobileFriendly,
-      visibleText: [allText],
+      visibleText: [visibleText],
     };
 
     return new Response(JSON.stringify(seoData), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
+
   } catch (error) {
-    console.error('Error in SEO analysis:', error);
+    console.error('Error in SEO extraction:', error);
     return new Response(
       JSON.stringify({ error: error.message }),
       { 
