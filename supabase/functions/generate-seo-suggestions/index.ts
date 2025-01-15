@@ -1,91 +1,15 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { Configuration, OpenAIApi } from 'https://esm.sh/openai@3.1.0';
+import OpenAI from 'https://esm.sh/openai@4.20.1';
 
-const openAIConfig = new Configuration({
+const openai = new OpenAI({
   apiKey: Deno.env.get('OPENAI_API_KEY')
 });
-const openai = new OpenAIApi(openAIConfig);
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
-
-interface SEOData {
-  currentTitle?: string;
-  currentDescription?: string;
-  currentH1?: string;
-  currentH2s?: string[];
-  currentH3s?: string[];
-  currentH4s?: string[];
-  visibleText?: string[];
-  url: string;
-}
-
-serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
-  }
-
-  try {
-    const { url, currentTitle, currentDescription, currentH1, currentH2s, currentH3s, currentH4s, visibleText } = await req.json() as SEOData;
-
-    // Analyze internal and external links
-    const internalLinks = await analyzeInternalLinks(url, visibleText?.join(' ') || '');
-    const externalLinks = await analyzeExternalLinks(url, visibleText?.join(' ') || '');
-    const brokenLinks = await analyzeBrokenLinks([...internalLinks, ...externalLinks]);
-
-    // Analyze images and their alt texts
-    const imageAlts = await analyzeImageAlts(visibleText?.join(' ') || '');
-
-    // Calculate readability metrics
-    const readabilityScore = calculateReadabilityScore(visibleText || []);
-    const contentLength = calculateContentLength(visibleText || []);
-
-    // Generate SEO suggestions using GPT-4
-    const suggestions = await generateSEOSuggestions({
-      title: currentTitle,
-      description: currentDescription,
-      h1: currentH1,
-      h2s: currentH2s,
-      url,
-    });
-
-    // Simulate page load speed (based on content size and complexity)
-    const pageLoadSpeed = calculatePageLoadSpeed(contentLength, internalLinks.length + externalLinks.length);
-
-    // Check mobile friendliness based on content structure
-    const mobileFriendly = checkMobileFriendliness(visibleText || []);
-
-    return new Response(
-      JSON.stringify({
-        ...suggestions,
-        readability_score: readabilityScore,
-        content_length: contentLength,
-        internal_links: internalLinks,
-        external_links: externalLinks,
-        broken_links: brokenLinks,
-        image_alts: imageAlts,
-        page_load_speed: pageLoadSpeed,
-        mobile_friendly: mobileFriendly,
-      }),
-      {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 200,
-      },
-    );
-  } catch (error) {
-    console.error('Error generating SEO suggestions:', error);
-    return new Response(
-      JSON.stringify({ error: error.message }),
-      {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 500,
-      },
-    );
-  }
-});
 
 async function generateSEOSuggestions({ title, description, h1, h2s, url }: {
   title?: string;
@@ -103,22 +27,22 @@ async function generateSEOSuggestions({ title, description, h1, h2s, url }: {
   - Inclut si possible le nom de la marque
   Réponds uniquement avec le titre optimisé, sans explications.`;
 
-  const titleCompletion = await openai.createChatCompletion({
-    model: "gpt-3.5-turbo",
+  const titleCompletion = await openai.chat.completions.create({
+    model: "gpt-4o-mini",
     messages: [{ role: "user", content: titlePrompt }]
   });
 
-  const suggestedTitle = titleCompletion.data.choices[0]?.message?.content || '';
+  const suggestedTitle = titleCompletion.choices[0]?.message?.content || '';
 
   // Generate title context
   const titleContextPrompt = `Explique brièvement pourquoi ce nouveau titre "${suggestedTitle}" est meilleur que l'original "${title}" en termes de SEO.`;
 
-  const titleContextCompletion = await openai.createChatCompletion({
-    model: "gpt-3.5-turbo",
+  const titleContextCompletion = await openai.chat.completions.create({
+    model: "gpt-4o-mini",
     messages: [{ role: "user", content: titleContextPrompt }]
   });
 
-  const titleContext = titleContextCompletion.data.choices[0]?.message?.content || '';
+  const titleContext = titleContextCompletion.choices[0]?.message?.content || '';
 
   // Generate description suggestion
   const descriptionPrompt = `En tant qu'expert SEO, analyse cette meta description : "${description}" pour le site ${url}.
@@ -129,22 +53,22 @@ async function generateSEOSuggestions({ title, description, h1, h2s, url }: {
   - Fait entre 150-160 caractères
   Réponds uniquement avec la description optimisée, sans explications.`;
 
-  const descriptionCompletion = await openai.createChatCompletion({
-    model: "gpt-3.5-turbo",
+  const descriptionCompletion = await openai.chat.completions.create({
+    model: "gpt-4o-mini",
     messages: [{ role: "user", content: descriptionPrompt }]
   });
 
-  const suggestedDescription = descriptionCompletion.data.choices[0]?.message?.content || '';
+  const suggestedDescription = descriptionCompletion.choices[0]?.message?.content || '';
 
   // Generate description context
   const descriptionContextPrompt = `Explique brièvement pourquoi cette nouvelle meta description "${suggestedDescription}" est meilleure que l'originale "${description}" en termes de SEO.`;
 
-  const descriptionContextCompletion = await openai.createChatCompletion({
-    model: "gpt-3.5-turbo",
+  const descriptionContextCompletion = await openai.chat.completions.create({
+    model: "gpt-4o-mini",
     messages: [{ role: "user", content: descriptionContextPrompt }]
   });
 
-  const descriptionContext = descriptionContextCompletion.data.choices[0]?.message?.content || '';
+  const descriptionContext = descriptionContextCompletion.choices[0]?.message?.content || '';
 
   // Generate H1 suggestion
   const h1Prompt = `En tant qu'expert SEO, analyse ce H1 : "${h1}" pour le site ${url}.
@@ -155,26 +79,26 @@ async function generateSEOSuggestions({ title, description, h1, h2s, url }: {
   - A une longueur optimale (20-70 caractères)
   Réponds uniquement avec le H1 optimisé, sans explications.`;
 
-  const h1Completion = await openai.createChatCompletion({
-    model: "gpt-3.5-turbo",
+  const h1Completion = await openai.chat.completions.create({
+    model: "gpt-4o-mini",
     messages: [{ role: "user", content: h1Prompt }]
   });
 
-  const suggestedH1 = h1Completion.data.choices[0]?.message?.content || '';
+  const suggestedH1 = h1Completion.choices[0]?.message?.content || '';
 
   // Generate H1 context
   const h1ContextPrompt = `Explique brièvement pourquoi ce nouveau H1 "${suggestedH1}" est meilleur que l'original "${h1}" en termes de SEO.`;
 
-  const h1ContextCompletion = await openai.createChatCompletion({
-    model: "gpt-3.5-turbo",
+  const h1ContextCompletion = await openai.chat.completions.create({
+    model: "gpt-4o-mini",
     messages: [{ role: "user", content: h1ContextPrompt }]
   });
 
-  const h1Context = h1ContextCompletion.data.choices[0]?.message?.content || '';
+  const h1Context = h1ContextCompletion.choices[0]?.message?.content || '';
 
   // Generate H2s suggestions
   const suggestedH2s = await Promise.all(
-    h2s.map(async (h2) => {
+    (h2s || []).map(async (h2) => {
       const h2Prompt = `En tant qu'expert SEO, analyse ce H2 : "${h2}" pour le site ${url}.
       Propose un nouveau H2 qui :
       - Structure clairement la section
@@ -182,26 +106,26 @@ async function generateSEOSuggestions({ title, description, h1, h2s, url }: {
       - Est informatif et engageant
       Réponds uniquement avec le H2 optimisé, sans explications.`;
 
-      const h2Completion = await openai.createChatCompletion({
-        model: "gpt-3.5-turbo",
+      const h2Completion = await openai.chat.completions.create({
+        model: "gpt-4o-mini",
         messages: [{ role: "user", content: h2Prompt }]
       });
 
-      return h2Completion.data.choices[0]?.message?.content || h2;
+      return h2Completion.choices[0]?.message?.content || h2;
     })
   );
 
   // Generate H2s context
   const h2sContextPrompt = `Explique brièvement pourquoi la nouvelle structure des H2 est meilleure en termes de SEO et de hiérarchie de contenu.
-  Originaux : ${h2s.join(' | ')}
+  Originaux : ${(h2s || []).join(' | ')}
   Optimisés : ${suggestedH2s.join(' | ')}`;
 
-  const h2sContextCompletion = await openai.createChatCompletion({
-    model: "gpt-3.5-turbo",
+  const h2sContextCompletion = await openai.chat.completions.create({
+    model: "gpt-4o-mini",
     messages: [{ role: "user", content: h2sContextPrompt }]
   });
 
-  const h2sContext = h2sContextCompletion.data.choices[0]?.message?.content || '';
+  const h2sContext = h2sContextCompletion.choices[0]?.message?.content || '';
 
   return {
     suggested_title: suggestedTitle,
@@ -309,3 +233,67 @@ function checkMobileFriendliness(text: string[]): boolean {
   
   return !hasLongParagraphs && !hasLargeImages && !hasHorizontalScroll;
 }
+
+serve(async (req) => {
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { headers: corsHeaders });
+  }
+
+  try {
+    const { url, currentTitle, currentDescription, currentH1, currentH2s, currentH3s, currentH4s, visibleText } = await req.json();
+
+    // Analyze internal and external links
+    const internalLinks = await analyzeInternalLinks(url, visibleText?.join(' ') || '');
+    const externalLinks = await analyzeExternalLinks(url, visibleText?.join(' ') || '');
+    const brokenLinks = await analyzeBrokenLinks([...internalLinks, ...externalLinks]);
+
+    // Analyze images and their alt texts
+    const imageAlts = await analyzeImageAlts(visibleText?.join(' ') || '');
+
+    // Calculate readability metrics
+    const readabilityScore = calculateReadabilityScore(visibleText || []);
+    const contentLength = calculateContentLength(visibleText || []);
+
+    // Generate SEO suggestions using GPT-4
+    const suggestions = await generateSEOSuggestions({
+      title: currentTitle,
+      description: currentDescription,
+      h1: currentH1,
+      h2s: currentH2s,
+      url,
+    });
+
+    // Simulate page load speed (based on content size and complexity)
+    const pageLoadSpeed = calculatePageLoadSpeed(contentLength, internalLinks.length + externalLinks.length);
+
+    // Check mobile friendliness based on content structure
+    const mobileFriendly = checkMobileFriendliness(visibleText || []);
+
+    return new Response(
+      JSON.stringify({
+        ...suggestions,
+        readability_score: readabilityScore,
+        content_length: contentLength,
+        internal_links: internalLinks,
+        external_links: externalLinks,
+        broken_links: brokenLinks,
+        image_alts: imageAlts,
+        page_load_speed: pageLoadSpeed,
+        mobile_friendly: mobileFriendly,
+      }),
+      {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 200,
+      },
+    );
+  } catch (error) {
+    console.error('Error generating SEO suggestions:', error);
+    return new Response(
+      JSON.stringify({ error: error.message }),
+      {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 500,
+      },
+    );
+  }
+});
