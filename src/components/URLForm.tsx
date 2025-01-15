@@ -39,19 +39,22 @@ export function URLForm() {
   };
 
   const formatURL = (url: string): string => {
-    let formattedURL = url.trim();
+    // Remove whitespace and convert to lowercase
+    let formattedURL = url.trim().toLowerCase();
     
-    // Remove any trailing slashes
-    formattedURL = formattedURL.replace(/\/+$/, '');
-    
-    // Ensure URL has protocol
-    if (!formattedURL.startsWith('http://') && !formattedURL.startsWith('https://')) {
-      formattedURL = 'https://' + formattedURL;
-    }
+    // Remove trailing slashes and colons
+    formattedURL = formattedURL.replace(/[/:]+$/, '');
     
     // Remove any port numbers if present
     formattedURL = formattedURL.replace(/:\d+/, '');
     
+    // Remove protocol if present
+    formattedURL = formattedURL.replace(/^(https?:\/\/)?(www\.)?/, '');
+    
+    // Add https:// protocol
+    formattedURL = 'https://' + formattedURL;
+    
+    console.log('Formatted URL:', formattedURL); // Debug log
     return formattedURL;
   };
 
@@ -64,7 +67,7 @@ export function URLForm() {
 
     try {
       const formattedURL = formatURL(domain);
-      console.log('Formatted URL:', formattedURL); // Debug log
+      console.log('Sending URL for analysis:', formattedURL);
       
       const analysisData = await analyzeSEO(formattedURL, company);
       

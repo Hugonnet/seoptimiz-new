@@ -21,8 +21,28 @@ serve(async (req) => {
       throw new Error('URL is required');
     }
 
-    console.log('Fetching URL:', url);
-    const response = await fetch(url);
+    // Validate and clean the URL
+    let cleanUrl = url.trim();
+    if (cleanUrl.endsWith(':')) {
+      cleanUrl = cleanUrl.slice(0, -1);
+    }
+    if (cleanUrl.endsWith(':/')) {
+      cleanUrl = cleanUrl.slice(0, -2);
+    }
+
+    console.log('Attempting to fetch URL:', cleanUrl);
+    
+    try {
+      new URL(cleanUrl);
+    } catch (e) {
+      throw new Error('Invalid URL format');
+    }
+
+    const response = await fetch(cleanUrl);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch URL: ${response.status} ${response.statusText}`);
+    }
+    
     const html = await response.text();
     const doc = new DOMParser().parseFromString(html, 'text/html');
 
@@ -58,10 +78,10 @@ serve(async (req) => {
     const allLinks = Array.from(doc.querySelectorAll('a'));
     const internalLinks = allLinks
       .map(a => a.href)
-      .filter(href => href && href.includes(new URL(url).hostname));
+      .filter(href => href && href.includes(new URL(cleanUrl).hostname));
     const externalLinks = allLinks
       .map(a => a.href)
-      .filter(href => href && !href.includes(new URL(url).hostname) && href.startsWith('http'));
+      .filter(href => href && !href.includes(new URL(cleanUrl).hostname) && href.startsWith('http'));
 
     // Analyze images
     const images = Array.from(doc.querySelectorAll('img'));
@@ -109,7 +129,10 @@ serve(async (req) => {
   } catch (error) {
     console.error('Error in SEO extraction:', error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ 
+        error: error.message,
+        details: error instanceof Error ? error.stack : undefined
+      }),
       { 
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
