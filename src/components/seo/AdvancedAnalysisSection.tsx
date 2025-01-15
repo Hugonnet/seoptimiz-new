@@ -31,6 +31,16 @@ export function AdvancedAnalysisSection({
   pageLoadSpeed = 0,
   mobileFriendly = true,
 }: AdvancedAnalysisSectionProps) {
+  // Fonction pour formater le score de lisibilité
+  const formatReadabilityScore = (score: number) => {
+    return Math.round(score);
+  };
+
+  // Fonction pour formater la vitesse de chargement
+  const formatLoadSpeed = (speed: number) => {
+    return speed.toFixed(1);
+  };
+
   return (
     <div className="space-y-6">
       <h3 className="text-lg font-semibold text-purple-800">Analyse technique avancée</h3>
@@ -45,7 +55,7 @@ export function AdvancedAnalysisSection({
           <CardContent>
             <div className="space-y-2">
               <Progress value={readabilityScore} className="h-2" />
-              <p className="text-sm text-gray-600">{readabilityScore}/100</p>
+              <p className="text-sm text-gray-600">{formatReadabilityScore(readabilityScore)}/100</p>
             </div>
           </CardContent>
         </Card>
@@ -57,7 +67,7 @@ export function AdvancedAnalysisSection({
             <CardDescription>Nombre de mots</CardDescription>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-semibold">{contentLength}</p>
+            <p className="text-2xl font-semibold">{contentLength.toLocaleString()}</p>
           </CardContent>
         </Card>
 
@@ -106,8 +116,8 @@ export function AdvancedAnalysisSection({
             <div className="flex items-center gap-4">
               <Gauge className="h-5 w-5 text-purple-600" />
               <div className="space-y-1">
-                <Progress value={pageLoadSpeed} className="h-2" />
-                <p className="text-sm text-gray-600">{pageLoadSpeed}s</p>
+                <Progress value={pageLoadSpeed ? (1 / pageLoadSpeed) * 100 : 0} className="h-2" />
+                <p className="text-sm text-gray-600">{formatLoadSpeed(pageLoadSpeed)}s</p>
               </div>
             </div>
           </CardContent>
