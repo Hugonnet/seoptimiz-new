@@ -5,6 +5,17 @@ import { SEOAnalysis } from "@/store/seoStore";
 export const analyzeSEO = async (url: string, company: string): Promise<SEOAnalysis> => {
   console.log('Analyse de l\'URL:', url);
   
+  if (!url) {
+    throw new Error("URL invalide");
+  }
+
+  try {
+    // Validate URL format
+    new URL(url);
+  } catch (error) {
+    throw new Error("Format d'URL invalide");
+  }
+  
   const seoData = await extractSEOMetadata(url);
   
   if (!seoData) {
@@ -21,6 +32,7 @@ export const analyzeSEO = async (url: string, company: string): Promise<SEOAnaly
       currentH3s: seoData.h3s,
       currentH4s: seoData.h4s,
       visibleText: seoData.visibleText,
+      url: url,
     },
   });
 

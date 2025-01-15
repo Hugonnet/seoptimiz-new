@@ -38,6 +38,23 @@ export function URLForm() {
     return true;
   };
 
+  const formatURL = (url: string): string => {
+    let formattedURL = url.trim();
+    
+    // Remove any trailing slashes
+    formattedURL = formattedURL.replace(/\/+$/, '');
+    
+    // Ensure URL has protocol
+    if (!formattedURL.startsWith('http://') && !formattedURL.startsWith('https://')) {
+      formattedURL = 'https://' + formattedURL;
+    }
+    
+    // Remove any port numbers if present
+    formattedURL = formattedURL.replace(/:\d+/, '');
+    
+    return formattedURL;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -46,12 +63,10 @@ export function URLForm() {
     setIsLoading(true);
 
     try {
-      let url = domain.trim();
-      if (!url.startsWith('http://') && !url.startsWith('https://')) {
-        url = 'https://' + url;
-      }
-
-      const analysisData = await analyzeSEO(url, company);
+      const formattedURL = formatURL(domain);
+      console.log('Formatted URL:', formattedURL); // Debug log
+      
+      const analysisData = await analyzeSEO(formattedURL, company);
       
       addSEOData(analysisData);
       toast({
@@ -59,7 +74,6 @@ export function URLForm() {
         description: "L'analyse SEO a été effectuée avec succès.",
       });
       setDomain("");
-      // Redirection vers la page Historique après l'analyse
       navigate('/historique');
     } catch (error) {
       console.error('Erreur lors de l\'analyse:', error);
