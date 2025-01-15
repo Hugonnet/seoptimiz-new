@@ -9,7 +9,6 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -25,24 +24,28 @@ serve(async (req) => {
 
     const systemPrompt = `Tu es un expert SEO spécialisé dans l'optimisation de contenu en français.
     Ta tâche est de générer des suggestions d'optimisation SEO pour chaque élément HTML fourni.
-    Tu dois UNIQUEMENT répondre avec un objet JSON valide, sans aucun texte avant ou après, sans délimiteurs markdown.
+    IMPORTANT: Pour chaque élément actuel, tu dois proposer une version optimisée qui reste cohérente avec le contenu original.
+    Pour les H3 et H4, tu DOIS générer EXACTEMENT 14 suggestions pour chaque niveau, même si moins d'éléments sont fournis en entrée.
+    Les suggestions doivent être organisées de manière logique et hiérarchique.
+    
+    Tu dois répondre UNIQUEMENT avec un objet JSON valide, sans aucun texte avant ou après, sans délimiteurs markdown.
     L'objet JSON doit contenir exactement ces propriétés :
     {
-      "suggested_title": "suggestion pour le titre",
-      "suggested_description": "suggestion pour la description",
-      "suggested_h1": "suggestion pour le h1",
-      "suggested_h2s": ["suggestion h2 1", "suggestion h2 2", ...],
-      "suggested_h3s": ["suggestion h3 1", "suggestion h3 2", ...],
-      "suggested_h4s": ["suggestion h4 1", "suggestion h4 2", ...],
-      "title_context": "explication pour le titre",
-      "description_context": "explication pour la description",
-      "h1_context": "explication pour le h1",
-      "h2s_context": ["explication h2 1", "explication h2 2", ...],
-      "h3s_context": ["explication h3 1", "explication h3 2", ...],
-      "h4s_context": ["explication h4 1", "explication h4 2", ...]
+      "suggested_title": "string",
+      "suggested_description": "string",
+      "suggested_h1": "string",
+      "suggested_h2s": ["string"],
+      "suggested_h3s": ["14 strings exactement"],
+      "suggested_h4s": ["14 strings exactement"],
+      "title_context": "string",
+      "description_context": "string",
+      "h1_context": "string",
+      "h2s_context": ["string"],
+      "h3s_context": ["14 strings exactement"],
+      "h4s_context": ["14 strings exactement"]
     }`;
 
-    const userPrompt = `Analyse et optimise ces éléments SEO :
+    const userPrompt = `Analyse et optimise ces éléments SEO en gardant une cohérence avec le contenu original :
     
     Titre actuel: "${currentTitle || ''}"
     Description actuelle: "${currentDescription || ''}"
@@ -51,8 +54,11 @@ serve(async (req) => {
     H3s actuels: ${JSON.stringify(currentH3s || [])}
     H4s actuels: ${JSON.stringify(currentH4s || [])}
     
-    Génère des suggestions pertinentes pour chaque élément en français.
-    Réponds UNIQUEMENT avec l'objet JSON demandé, sans aucun texte avant ou après.`;
+    IMPORTANT:
+    - Génère EXACTEMENT 14 H3s et 14 H4s cohérents
+    - Les suggestions doivent être pertinentes par rapport aux versions actuelles
+    - Assure-toi que la hiérarchie des titres est logique
+    - Réponds UNIQUEMENT avec l'objet JSON demandé, sans texte avant ou après`;
 
     console.log('Envoi de la requête à OpenAI...');
 
@@ -85,7 +91,7 @@ serve(async (req) => {
       throw new Error('Réponse OpenAI invalide ou vide');
     }
 
-    // Nettoyer la réponse de tout délimiteur markdown potentiel
+    // Nettoyer la réponse de tout délimiteur markdown
     let cleanedContent = data.choices[0].message.content
       .replace(/```json\n?/g, '')
       .replace(/```\n?/g, '')
@@ -117,6 +123,11 @@ serve(async (req) => {
       if (!(prop in suggestions)) {
         throw new Error(`Propriété manquante dans la réponse: ${prop}`);
       }
+    }
+
+    // Vérifier qu'il y a exactement 14 H3s et H4s
+    if (suggestions.suggested_h3s.length !== 14 || suggestions.suggested_h4s.length !== 14) {
+      throw new Error('Le nombre de H3s ou H4s n\'est pas égal à 14');
     }
 
     return new Response(JSON.stringify(suggestions), {
