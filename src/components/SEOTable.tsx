@@ -36,30 +36,75 @@ export function SEOTable() {
     }
   };
 
-  const renderField = (title: string, content: string | string[] | null | undefined, fieldId: string) => {
-    if (!content) return null;
-    const displayContent = Array.isArray(content) ? content : [content];
+  const renderFieldPair = (
+    title: string, 
+    currentContent: string | string[] | null | undefined,
+    suggestedContent: string | string[] | null | undefined,
+    fieldId: string,
+    context?: string
+  ) => {
+    if (!currentContent && !suggestedContent) return null;
+    
+    const currentArray = Array.isArray(currentContent) ? currentContent : [currentContent];
+    const suggestedArray = Array.isArray(suggestedContent) ? suggestedContent : [suggestedContent];
     
     return (
       <div className="space-y-2">
         <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
-        {displayContent.map((item, index) => (
-          <div key={index} className="flex items-start justify-between gap-4 p-4 bg-white rounded-lg border border-gray-200">
-            <p className="text-gray-700 flex-grow">{item}</p>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => copyToClipboard(item, `${fieldId}-${index}`)}
-              className="shrink-0"
-            >
-              {copiedField === `${fieldId}-${index}` ? (
-                <Copy className="h-4 w-4 text-green-500" />
-              ) : (
-                <Copy className="h-4 w-4 text-gray-500" />
-              )}
-            </Button>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Colonne valeur actuelle */}
+          <div className="space-y-2">
+            <h4 className="text-sm font-medium text-gray-700">Valeur actuelle</h4>
+            {currentArray.map((item, index) => (
+              item && (
+                <div key={`current-${index}`} className="flex items-start justify-between gap-4 p-4 bg-white rounded-lg border border-gray-200">
+                  <p className="text-gray-700 flex-grow">{item}</p>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => copyToClipboard(item, `${fieldId}-current-${index}`)}
+                    className="shrink-0"
+                  >
+                    {copiedField === `${fieldId}-current-${index}` ? (
+                      <Copy className="h-4 w-4 text-green-500" />
+                    ) : (
+                      <Copy className="h-4 w-4 text-gray-500" />
+                    )}
+                  </Button>
+                </div>
+              )
+            ))}
           </div>
-        ))}
+
+          {/* Colonne suggestion */}
+          <div className="space-y-2">
+            <h4 className="text-sm font-medium text-gray-700">Suggestion</h4>
+            {suggestedArray.map((item, index) => (
+              item && (
+                <div key={`suggested-${index}`} className="flex items-start justify-between gap-4 p-4 bg-white rounded-lg border border-gray-200">
+                  <p className="text-gray-700 flex-grow">{item}</p>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => copyToClipboard(item, `${fieldId}-suggested-${index}`)}
+                    className="shrink-0"
+                  >
+                    {copiedField === `${fieldId}-suggested-${index}` ? (
+                      <Copy className="h-4 w-4 text-green-500" />
+                    ) : (
+                      <Copy className="h-4 w-4 text-gray-500" />
+                    )}
+                  </Button>
+                </div>
+              )
+            ))}
+          </div>
+        </div>
+        {context && (
+          <p className="text-sm text-gray-600 mt-2 p-3 bg-gray-50 rounded-lg">
+            {context}
+          </p>
+        )}
       </div>
     );
   };
@@ -83,12 +128,48 @@ export function SEOTable() {
           </div>
           
           <div className="space-y-6">
-            {renderField("Meta Title", item.current_title, "title")}
-            {renderField("Meta Description", item.current_description, "description")}
-            {renderField("H1", item.current_h1, "h1")}
-            {renderField("H2", item.current_h2s, "h2")}
-            {renderField("H3", item.current_h3s, "h3")}
-            {renderField("H4", item.current_h4s, "h4")}
+            {renderFieldPair(
+              "Meta Title",
+              item.current_title,
+              item.suggested_title,
+              "title",
+              item.title_context
+            )}
+            {renderFieldPair(
+              "Meta Description",
+              item.current_description,
+              item.suggested_description,
+              "description",
+              item.description_context
+            )}
+            {renderFieldPair(
+              "H1",
+              item.current_h1,
+              item.suggested_h1,
+              "h1",
+              item.h1_context
+            )}
+            {renderFieldPair(
+              "H2",
+              item.current_h2s,
+              item.suggested_h2s,
+              "h2",
+              Array.isArray(item.h2s_context) ? item.h2s_context.join(" ") : item.h2s_context
+            )}
+            {renderFieldPair(
+              "H3",
+              item.current_h3s,
+              item.suggested_h3s,
+              "h3",
+              Array.isArray(item.h3s_context) ? item.h3s_context.join(" ") : item.h3s_context
+            )}
+            {renderFieldPair(
+              "H4",
+              item.current_h4s,
+              item.suggested_h4s,
+              "h4",
+              Array.isArray(item.h4s_context) ? item.h4s_context.join(" ") : item.h4s_context
+            )}
           </div>
         </div>
       ))}
