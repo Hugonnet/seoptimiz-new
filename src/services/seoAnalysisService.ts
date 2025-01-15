@@ -20,6 +20,7 @@ export const analyzeSEO = async (url: string, company: string): Promise<SEOAnaly
       currentH2s: seoData.h2s,
       currentH3s: seoData.h3s,
       currentH4s: seoData.h4s,
+      visibleText: seoData.visibleText,
     },
   });
 
@@ -55,12 +56,21 @@ export const analyzeSEO = async (url: string, company: string): Promise<SEOAnaly
         h2s_context: suggestions.h2s_context,
         h3s_context: suggestions.h3s_context,
         h4s_context: suggestions.h4s_context,
+        readability_score: suggestions.readability_score,
+        content_length: suggestions.content_length,
+        internal_links: suggestions.internal_links,
+        external_links: suggestions.external_links,
+        broken_links: suggestions.broken_links,
+        image_alts: suggestions.image_alts,
+        page_load_speed: suggestions.page_load_speed,
+        mobile_friendly: suggestions.mobile_friendly,
       },
     ])
     .select()
     .single();
 
   if (insertError) {
+    console.error('Erreur lors de l\'insertion des données:', insertError);
     throw insertError;
   }
 
@@ -68,5 +78,6 @@ export const analyzeSEO = async (url: string, company: string): Promise<SEOAnaly
     throw new Error("Aucune donnée d'analyse n'a été retournée");
   }
 
+  console.log('Données d\'analyse insérées:', analysisData);
   return analysisData;
 };

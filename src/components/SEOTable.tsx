@@ -15,7 +15,10 @@ export function SEOTable() {
     }));
   };
 
+  console.log("SEO Data in SEOTable:", seoData);
+
   if (!seoData || seoData.length === 0) {
+    console.log("No SEO data available");
     return (
       <div className="text-center py-3 sm:py-4 text-gray-600 bg-white rounded-lg shadow-sm border border-gray-100">
         Aucune donnée SEO disponible. Analysez une URL pour commencer.
@@ -23,12 +26,21 @@ export function SEOTable() {
     );
   }
 
-  console.log("SEO Data in SEOTable:", seoData);
-
   return (
     <div className="space-y-6">
       {seoData.map((item) => {
         console.log("Processing item:", item);
+        console.log("Advanced metrics:", {
+          readabilityScore: item.readability_score,
+          contentLength: item.content_length,
+          internalLinks: item.internal_links,
+          externalLinks: item.external_links,
+          brokenLinks: item.broken_links,
+          imageAlts: item.image_alts,
+          pageLoadSpeed: item.page_load_speed,
+          mobileFriendly: item.mobile_friendly
+        });
+        
         return (
           <div key={item.id} className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
             <SEOTableHeader 
