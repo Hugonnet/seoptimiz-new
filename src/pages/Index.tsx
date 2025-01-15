@@ -37,7 +37,7 @@ const Index = () => {
           
           <p className="text-base md:text-lg text-gray-600 max-w-2xl mx-auto px-4">
             Optimisez votre référencement naturel avec notre outil d'analyse SEO avancé.
-            Obtenez des insights détaillés sur la performance de votre site.
+            Densité des mots-clés, lisibilité, liens et performance mobile.
           </p>
         </motion.div>
 
