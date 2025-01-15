@@ -37,7 +37,7 @@ const Index = () => {
           
           <p className="text-base md:text-lg text-gray-600 max-w-2xl mx-auto px-4">
             Optimisez votre référencement naturel avec notre outil d'analyse SEO avancé.
-            Densité des mots-clés, lisibilité, liens et performance mobile.
+            Obtenez des insights détaillés sur la performance de votre site.
           </p>
         </motion.div>
 
@@ -56,7 +56,8 @@ const Index = () => {
               </div>
               <h3 className="text-lg md:text-xl font-semibold mb-2 text-gray-900">Analyse SEO Avancée</h3>
               <p className="text-sm md:text-base text-gray-600 mb-4">
-                Densité des mots-clés, lisibilité, liens et performance mobile
+                Analyse complète incluant la densité des mots-clés, la lisibilité, 
+                les liens et la performance mobile
               </p>
               <button 
                 onClick={() => navigate('/')}

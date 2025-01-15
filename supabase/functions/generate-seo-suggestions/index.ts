@@ -1,11 +1,7 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import OpenAI from "https://deno.land/x/openai@v4.20.1/mod.ts";
 
 const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
-const openai = new OpenAI({
-  apiKey: openAIApiKey,
-});
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -13,210 +9,141 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { currentTitle, currentDescription, currentH1, currentH2s, currentH3s, currentH4s, visibleText, url } = await req.json();
+    const { currentTitle, currentDescription, currentH1, currentH2s, currentH3s, currentH4s } = await req.json();
+    
+    console.log('Données reçues:', { currentTitle, currentDescription, currentH1, currentH2s, currentH3s, currentH4s });
 
-    console.log('Processing URL:', url);
-    console.log('Current title:', currentTitle);
+    if (!openAIApiKey) {
+      throw new Error('La clé API OpenAI n\'est pas configurée');
+    }
 
-    // Title analysis
-    const titleResponse = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
-      messages: [
-        {
-          role: "system",
-          content: "You are an SEO expert. Analyze the current title and suggest an optimized version with explanation."
-        },
-        {
-          role: "user",
-          content: `Current title: "${currentTitle}". URL: ${url}`
-        }
-      ]
+    const systemPrompt = `Tu es un expert SEO spécialisé dans l'optimisation de contenu en français.
+    Ta tâche est de générer des suggestions d'optimisation SEO pour chaque élément HTML fourni.
+    IMPORTANT: Pour chaque élément actuel, tu dois proposer une version optimisée qui reste cohérente avec le contenu original.
+    Pour les H3 et H4, tu DOIS générer EXACTEMENT 14 suggestions pour chaque niveau, même si moins d'éléments sont fournis en entrée.
+    Les suggestions doivent être organisées de manière logique et hiérarchique.
+    
+    Tu dois répondre UNIQUEMENT avec un objet JSON valide, sans aucun texte avant ou après, sans délimiteurs markdown.
+    L'objet JSON doit contenir exactement ces propriétés :
+    {
+      "suggested_title": "string",
+      "suggested_description": "string",
+      "suggested_h1": "string",
+      "suggested_h2s": ["string"],
+      "suggested_h3s": ["14 strings exactement"],
+      "suggested_h4s": ["14 strings exactement"],
+      "title_context": "string",
+      "description_context": "string",
+      "h1_context": "string",
+      "h2s_context": ["string"],
+      "h3s_context": ["14 strings exactement"],
+      "h4s_context": ["14 strings exactement"]
+    }`;
+
+    const userPrompt = `Analyse et optimise ces éléments SEO en gardant une cohérence avec le contenu original :
+    
+    Titre actuel: "${currentTitle || ''}"
+    Description actuelle: "${currentDescription || ''}"
+    H1 actuel: "${currentH1 || ''}"
+    H2s actuels: ${JSON.stringify(currentH2s || [])}
+    H3s actuels: ${JSON.stringify(currentH3s || [])}
+    H4s actuels: ${JSON.stringify(currentH4s || [])}
+    
+    IMPORTANT:
+    - Génère EXACTEMENT 14 H3s et 14 H4s cohérents
+    - Les suggestions doivent être pertinentes par rapport aux versions actuelles
+    - Assure-toi que la hiérarchie des titres est logique
+    - Réponds UNIQUEMENT avec l'objet JSON demandé, sans texte avant ou après`;
+
+    console.log('Envoi de la requête à OpenAI...');
+
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${openAIApiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'gpt-4',
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: userPrompt }
+        ],
+        temperature: 0.7,
+      }),
     });
 
-    // Description analysis
-    const descriptionResponse = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
-      messages: [
-        {
-          role: "system",
-          content: "You are an SEO expert. Analyze the current meta description and suggest an optimized version with explanation."
-        },
-        {
-          role: "user",
-          content: `Current description: "${currentDescription}". URL: ${url}`
-        }
-      ]
-    });
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Erreur OpenAI:', errorText);
+      throw new Error(`Erreur OpenAI: ${errorText}`);
+    }
 
-    // H1 analysis
-    const h1Response = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
-      messages: [
-        {
-          role: "system",
-          content: "You are an SEO expert. Analyze the current H1 heading and suggest an optimized version with explanation."
-        },
-        {
-          role: "user",
-          content: `Current H1: "${currentH1}". URL: ${url}`
-        }
-      ]
-    });
+    const data = await response.json();
+    console.log('Réponse OpenAI brute:', data);
 
-    // H2s analysis
-    const h2Response = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
-      messages: [
-        {
-          role: "system",
-          content: "You are an SEO expert. Analyze the current H2 headings structure and provide recommendations for improvement."
-        },
-        {
-          role: "user",
-          content: `Current H2s: ${JSON.stringify(currentH2s)}. URL: ${url}`
-        }
-      ]
-    });
+    if (!data.choices?.[0]?.message?.content) {
+      throw new Error('Réponse OpenAI invalide ou vide');
+    }
 
-    // H3s analysis
-    const h3Response = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
-      messages: [
-        {
-          role: "system",
-          content: "You are an SEO expert. Analyze the current H3 headings structure and provide recommendations for improvement."
-        },
-        {
-          role: "user",
-          content: `Current H3s: ${JSON.stringify(currentH3s)}. URL: ${url}`
-        }
-      ]
-    });
+    // Nettoyer la réponse de tout délimiteur markdown
+    let cleanedContent = data.choices[0].message.content
+      .replace(/```json\n?/g, '')
+      .replace(/```\n?/g, '')
+      .trim();
 
-    // H4s analysis
-    const h4Response = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
-      messages: [
-        {
-          role: "system",
-          content: "You are an SEO expert. Analyze the current H4 headings structure and provide recommendations for improvement."
-        },
-        {
-          role: "user",
-          content: `Current H4s: ${JSON.stringify(currentH4s)}. URL: ${url}`
-        }
-      ]
-    });
+    console.log('Contenu nettoyé:', cleanedContent);
 
-    // Extract responses
-    const suggestions = {
-      suggested_title: titleResponse.choices[0]?.message?.content?.split('\n')[0] || '',
-      title_context: titleResponse.choices[0]?.message?.content?.split('\n').slice(1).join('\n') || '',
-      suggested_description: descriptionResponse.choices[0]?.message?.content?.split('\n')[0] || '',
-      description_context: descriptionResponse.choices[0]?.message?.content?.split('\n').slice(1).join('\n') || '',
-      suggested_h1: h1Response.choices[0]?.message?.content?.split('\n')[0] || '',
-      h1_context: h1Response.choices[0]?.message?.content?.split('\n').slice(1).join('\n') || '',
-      suggested_h2s: currentH2s || [],
-      h2s_context: [h2Response.choices[0]?.message?.content || ''],
-      suggested_h3s: currentH3s || [],
-      h3s_context: [h3Response.choices[0]?.message?.content || ''],
-      suggested_h4s: currentH4s || [],
-      h4s_context: [h4Response.choices[0]?.message?.content || ''],
-      readability_score: calculateReadabilityScore(visibleText),
-      content_length: calculateContentLength(visibleText),
-      internal_links: extractInternalLinks(visibleText, url),
-      external_links: extractExternalLinks(visibleText, url),
-      broken_links: [],  // We'll check broken links asynchronously
-      image_alts: extractImageAlts(visibleText),
-      page_load_speed: calculatePageLoadSpeed(),
-      mobile_friendly: true
-    };
+    // Parser la réponse JSON
+    const suggestions = JSON.parse(cleanedContent);
+    console.log('Suggestions parsées:', suggestions);
+
+    // Vérifier que toutes les propriétés requises sont présentes
+    const requiredProps = [
+      'suggested_title',
+      'suggested_description',
+      'suggested_h1',
+      'suggested_h2s',
+      'suggested_h3s',
+      'suggested_h4s',
+      'title_context',
+      'description_context',
+      'h1_context',
+      'h2s_context',
+      'h3s_context',
+      'h4s_context'
+    ];
+
+    for (const prop of requiredProps) {
+      if (!(prop in suggestions)) {
+        throw new Error(`Propriété manquante dans la réponse: ${prop}`);
+      }
+    }
+
+    // Vérifier qu'il y a exactement 14 H3s et H4s
+    if (suggestions.suggested_h3s.length !== 14 || suggestions.suggested_h4s.length !== 14) {
+      throw new Error('Le nombre de H3s ou H4s n\'est pas égal à 14');
+    }
 
     return new Response(JSON.stringify(suggestions), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
-
   } catch (error) {
-    console.error('Error in generate-seo-suggestions function:', error);
+    console.error('Erreur dans la fonction generate-seo-suggestions:', error);
     return new Response(
-      JSON.stringify({ error: error.message }),
-      { 
+      JSON.stringify({ 
+        error: `Erreur lors du traitement: ${error.message}`,
+        details: error.stack
+      }),
+      {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      },
+      }
     );
   }
 });
-
-// Utility functions
-function calculateReadabilityScore(text: string[]): number {
-  const content = text.join(' ');
-  const words = content.split(/\s+/).length;
-  const sentences = content.split(/[.!?]+/).length;
-  const syllables = countSyllables(content);
-  
-  // Flesch Reading Ease score
-  return 206.835 - 1.015 * (words / sentences) - 84.6 * (syllables / words);
-}
-
-function countSyllables(text: string): number {
-  return text.toLowerCase()
-    .replace(/[^a-z]/g, '')
-    .replace(/[^aeiou]+/g, ' ')
-    .trim()
-    .split(/\s+/).length;
-}
-
-function calculateContentLength(text: string[]): number {
-  return text.join(' ').length;
-}
-
-function extractInternalLinks(text: string[], baseUrl: string): string[] {
-  try {
-    const hostname = new URL(baseUrl).hostname;
-    const urlPattern = /https?:\/\/[^\s]+/g;
-    const allUrls = text.join(' ').match(urlPattern) || [];
-    return allUrls.filter(url => url.includes(hostname));
-  } catch {
-    return [];
-  }
-}
-
-function extractExternalLinks(text: string[], baseUrl: string): string[] {
-  try {
-    const hostname = new URL(baseUrl).hostname;
-    const urlPattern = /https?:\/\/[^\s]+/g;
-    const allUrls = text.join(' ').match(urlPattern) || [];
-    return allUrls.filter(url => !url.includes(hostname));
-  } catch {
-    return [];
-  }
-}
-
-function extractImageAlts(text: string[]): Record<string, string> {
-  const imgPattern = /<img[^>]+alt=["']([^"']+)["'][^>]*>/g;
-  const srcPattern = /src=["']([^"']+)["']/;
-  const alts: Record<string, string> = {};
-  
-  text.forEach(content => {
-    let match;
-    while ((match = imgPattern.exec(content)) !== null) {
-      const srcMatch = content.slice(match.index).match(srcPattern);
-      if (srcMatch) {
-        alts[srcMatch[1]] = match[1];
-      }
-    }
-  });
-  
-  return alts;
-}
-
-function calculatePageLoadSpeed(): number {
-  return Math.floor(Math.random() * 4) + 1; // Returns a number between 1 and 5
-}

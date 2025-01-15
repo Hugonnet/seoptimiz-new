@@ -14,126 +14,95 @@ serve(async (req) => {
   }
 
   try {
-    console.log('Starting SEO extraction...');
     const { url } = await req.json();
-    
+    console.log('Analyzing URL:', url);
+
     if (!url) {
       throw new Error('URL is required');
     }
 
-    // Validate and clean the URL
-    let cleanUrl = url.trim();
-    if (cleanUrl.endsWith(':')) {
-      cleanUrl = cleanUrl.slice(0, -1);
-    }
-    if (cleanUrl.endsWith(':/')) {
-      cleanUrl = cleanUrl.slice(0, -2);
-    }
+    // Create an AbortController to handle timeouts
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 30000); // 30 second timeout
 
-    console.log('Attempting to fetch URL:', cleanUrl);
-    
     try {
-      new URL(cleanUrl);
-    } catch (e) {
-      throw new Error('Invalid URL format');
-    }
+      const response = await fetch(url, {
+        signal: controller.signal,
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+        },
+      });
 
-    const response = await fetch(cleanUrl);
-    if (!response.ok) {
-      throw new Error(`Failed to fetch URL: ${response.status} ${response.statusText}`);
-    }
-    
-    const html = await response.text();
-    const doc = new DOMParser().parseFromString(html, 'text/html');
+      clearTimeout(timeout);
 
-    if (!doc) {
-      throw new Error('Failed to parse HTML');
-    }
-
-    // Extract basic SEO data
-    const title = doc.querySelector('title')?.textContent || '';
-    const description = doc.querySelector('meta[name="description"]')?.getAttribute('content') || '';
-    const h1 = doc.querySelector('h1')?.textContent || '';
-    const h2s = Array.from(doc.querySelectorAll('h2')).map(h2 => h2.textContent || '');
-    const h3s = Array.from(doc.querySelectorAll('h3')).map(h3 => h3.textContent || '');
-    const h4s = Array.from(doc.querySelectorAll('h4')).map(h4 => h4.textContent || '');
-
-    // Extract visible text for content analysis
-    const visibleText = doc.body?.textContent?.trim() || '';
-    const words = visibleText.split(/\s+/);
-    const contentLength = words.length;
-
-    // Calculate readability score
-    const sentences = visibleText.split(/[.!?]+/).filter(s => s.trim().length > 0);
-    const avgWordsPerSentence = contentLength / (sentences.length || 1);
-    const syllables = words.reduce((count, word) => {
-      return count + (word.match(/[aeiouy]+/gi)?.length || 1);
-    }, 0);
-    const avgSyllablesPerWord = syllables / (words.length || 1);
-    const readabilityScore = Math.max(0, Math.min(100, Math.round(
-      206.835 - (1.015 * avgWordsPerSentence) - (84.6 * avgSyllablesPerWord)
-    )));
-
-    // Analyze links
-    const allLinks = Array.from(doc.querySelectorAll('a'));
-    const internalLinks = allLinks
-      .map(a => a.href)
-      .filter(href => href && href.includes(new URL(cleanUrl).hostname));
-    const externalLinks = allLinks
-      .map(a => a.href)
-      .filter(href => href && !href.includes(new URL(cleanUrl).hostname) && href.startsWith('http'));
-
-    // Analyze images
-    const images = Array.from(doc.querySelectorAll('img'));
-    const imageAlts: Record<string, string> = {};
-    images.forEach(img => {
-      const src = img.getAttribute('src');
-      const alt = img.getAttribute('alt');
-      if (src && alt) {
-        imageAlts[src] = alt;
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
-    });
 
-    // Simulate page load speed based on content size
-    const pageLoadSpeed = Math.min(5, Math.max(0.5, contentLength / 10000));
+      const html = await response.text();
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(html, "text/html");
 
-    // Check mobile friendliness
-    const viewport = doc.querySelector('meta[name="viewport"]');
-    const responsiveElements = doc.querySelectorAll('[class*="responsive"],[class*="mobile"],[class*="sm:"],[class*="md:"],[class*="lg:"]');
-    const mobileFriendly = !!viewport || responsiveElements.length > 0;
+      if (!doc) {
+        throw new Error("Failed to parse HTML");
+      }
 
-    console.log('SEO data extracted successfully');
+      // Function to clean text
+      const cleanText = (text: string) => {
+        return text?.trim().replace(/\s+/g, ' ') || '';
+      };
 
-    const seoData = {
-      title,
-      description,
-      h1,
-      h2s,
-      h3s,
-      h4s,
-      readabilityScore,
-      contentLength,
-      internalLinks,
-      externalLinks,
-      brokenLinks: [],
-      imageAlts,
-      pageLoadSpeed: Number(pageLoadSpeed.toFixed(2)),
-      mobileFriendly,
-      visibleText: [visibleText],
-    };
+      // Function to filter empty headings
+      const isValidHeading = (text: string) => {
+        const cleaned = cleanText(text);
+        return cleaned && 
+               cleaned !== 'undefined' && 
+               cleaned !== 'null' && 
+               cleaned.length > 1;
+      };
 
-    return new Response(JSON.stringify(seoData), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+      // Extract metadata with proper error handling
+      const metadata = {
+        title: cleanText(doc.querySelector('title')?.textContent),
+        description: cleanText(doc.querySelector('meta[name="description"]')?.getAttribute('content')),
+        h1: cleanText(doc.querySelector('h1')?.textContent),
+        h2s: Array.from(doc.querySelectorAll('h2'))
+          .map(el => cleanText(el.textContent))
+          .filter(isValidHeading),
+        h3s: Array.from(doc.querySelectorAll('h3'))
+          .map(el => cleanText(el.textContent))
+          .filter(isValidHeading),
+        h4s: Array.from(doc.querySelectorAll('h4'))
+          .map(el => cleanText(el.textContent))
+          .filter(isValidHeading),
+        visibleText: Array.from(doc.querySelectorAll('p, h1, h2, h3, h4, h5, h6'))
+          .map(el => cleanText(el.textContent))
+          .filter(text => text.length > 0)
+      };
+
+      console.log('Successfully extracted metadata:', metadata);
+
+      return new Response(JSON.stringify(metadata), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+
+    } catch (fetchError) {
+      clearTimeout(timeout);
+      console.error('Fetch error:', fetchError);
+      
+      if (fetchError.name === 'AbortError') {
+        throw new Error("La requête a expiré. Le site met trop de temps à répondre.");
+      }
+      
+      throw new Error(`Impossible d'accéder au site. Vérifiez que l'URL est correcte et que le site est accessible. (${fetchError.message})`);
+    }
 
   } catch (error) {
-    console.error('Error in SEO extraction:', error);
+    console.error('Error in extract-seo function:', error);
     return new Response(
       JSON.stringify({ 
-        error: error.message,
-        details: error instanceof Error ? error.stack : undefined
-      }),
-      { 
+        error: error.message || "Une erreur s'est produite lors de l'analyse du site" 
+      }), {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       }

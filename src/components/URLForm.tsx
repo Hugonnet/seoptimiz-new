@@ -6,7 +6,6 @@ import { CompanyAutocomplete } from "./CompanyAutocomplete";
 import { useSEOStore } from "@/store/seoStore";
 import { useToast } from "@/hooks/use-toast";
 import { analyzeSEO } from "@/services/seoAnalysisService";
-import { useNavigate } from "react-router-dom";
 
 export function URLForm() {
   const [domain, setDomain] = useState("");
@@ -14,7 +13,6 @@ export function URLForm() {
   const [isLoading, setIsLoading] = useState(false);
   const addSEOData = useSEOStore((state) => state.addSEOData);
   const { toast } = useToast();
-  const navigate = useNavigate();
 
   const validateForm = () => {
     if (!company) {
@@ -38,26 +36,6 @@ export function URLForm() {
     return true;
   };
 
-  const formatURL = (url: string): string => {
-    // Remove whitespace and convert to lowercase
-    let formattedURL = url.trim().toLowerCase();
-    
-    // Remove trailing slashes and colons
-    formattedURL = formattedURL.replace(/[/:]+$/, '');
-    
-    // Remove any port numbers if present
-    formattedURL = formattedURL.replace(/:\d+/, '');
-    
-    // Remove protocol if present
-    formattedURL = formattedURL.replace(/^(https?:\/\/)?(www\.)?/, '');
-    
-    // Add https:// protocol
-    formattedURL = 'https://' + formattedURL;
-    
-    console.log('Formatted URL:', formattedURL); // Debug log
-    return formattedURL;
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -66,10 +44,12 @@ export function URLForm() {
     setIsLoading(true);
 
     try {
-      const formattedURL = formatURL(domain);
-      console.log('Sending URL for analysis:', formattedURL);
-      
-      const analysisData = await analyzeSEO(formattedURL, company);
+      let url = domain.trim();
+      if (!url.startsWith('http://') && !url.startsWith('https://')) {
+        url = 'https://' + url;
+      }
+
+      const analysisData = await analyzeSEO(url, company);
       
       addSEOData(analysisData);
       toast({
@@ -77,7 +57,6 @@ export function URLForm() {
         description: "L'analyse SEO a été effectuée avec succès.",
       });
       setDomain("");
-      navigate('/historique');
     } catch (error) {
       console.error('Erreur lors de l\'analyse:', error);
       toast({
