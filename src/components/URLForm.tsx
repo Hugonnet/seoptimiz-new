@@ -35,7 +35,7 @@ export function URLForm() {
       const seoData = await extractSEOMetadata(formattedURL);
       console.log('Données SEO extraites:', seoData);
       
-      if (!seoData.title && !seoData.description) {
+      if (!seoData.title && !seoData.description && !seoData.h1) {
         throw new Error("Aucune donnée SEO n'a pu être extraite de cette URL");
       }
 
