@@ -1,24 +1,25 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useState } from "react";
-import { extractSEOMetadata } from "@/services/seoService";
-import { useToast } from "@/hooks/use-toast";
 import { Search } from "lucide-react";
-import { useSEOStore } from "@/store/seoStore";
-import { supabase } from "@/integrations/supabase/client";
+import { useState } from "react";
 import { CompanyAutocomplete } from "./CompanyAutocomplete";
+import { extractSEOMetadata } from "@/services/seoService";
+import { useSEOStore } from "@/store/seoStore";
+import { useToast } from "@/hooks/use-toast";
 import { formatURL } from "@/utils/urlUtils";
+import { supabase } from "@/integrations/supabase/client";
 
 export function URLForm() {
   const [domain, setDomain] = useState("");
   const [company, setCompany] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const { toast } = useToast();
   const addSEOData = useSEOStore((state) => state.addSEOData);
+  const { toast } = useToast();
 
   const handleSimpleAnalysis = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!company.trim()) {
+
+    if (!company) {
       toast({
         title: "Erreur",
         description: "Le nom de l'entreprise est obligatoire",
@@ -39,61 +40,50 @@ export function URLForm() {
     setIsLoading(true);
 
     try {
-      // Format the URL properly
-      let formattedURL = formatURL(domain);
+      const formattedURL = formatURL(domain);
       console.log('URL formatée:', formattedURL);
-      
-      // Validate URL format
-      try {
-        new URL(formattedURL);
-      } catch (error) {
-        throw new Error("Format d'URL invalide. Assurez-vous d'entrer une URL valide (ex: www.example.com)");
-      }
-      
+
       const seoData = await extractSEOMetadata(formattedURL);
       console.log('Données SEO extraites:', seoData);
-      
-      if (!seoData.title && !seoData.description && !seoData.h1) {
-        throw new Error("Aucune donnée SEO n'a pu être extraite de cette URL");
-      }
 
-      const seoAnalysis = {
-        url: formattedURL,
-        company: company.trim(),
-        current_title: seoData.title || "",
-        current_description: seoData.description || "",
-        current_h1: seoData.h1 || "",
-        current_h2s: seoData.h2s || [],
-        current_h3s: seoData.h3s || [],
-        current_h4s: seoData.h4s || [],
-      };
-
-      const { data: insertedData, error: supabaseError } = await supabase
+      const { data: analysisData, error: insertError } = await supabase
         .from('seo_analyses')
-        .insert([seoAnalysis])
+        .insert([
+          {
+            url: formattedURL,
+            company: company,
+            current_title: seoData.title,
+            current_description: seoData.description,
+            current_h1: seoData.h1,
+            current_h2s: seoData.h2s,
+            current_h3s: seoData.h3s,
+            current_h4s: seoData.h4s,
+            visible_text: seoData.visibleText,
+          },
+        ])
         .select()
         .single();
 
-      if (supabaseError) {
-        console.error('Erreur Supabase:', supabaseError);
-        throw new Error("Erreur lors de la sauvegarde des données");
+      if (insertError) {
+        throw insertError;
       }
 
-      addSEOData(insertedData);
-      
+      if (analysisData) {
+        addSEOData(analysisData);
+      }
+
       toast({
         title: "Analyse terminée",
         description: "Les données SEO ont été extraites avec succès.",
       });
 
-      // Reset form
       setDomain("");
     } catch (error) {
       console.error('Erreur détaillée:', error);
       
       toast({
         title: "Erreur",
-        description: error.message || "Une erreur inattendue s'est produite",
+        description: error instanceof Error ? error.message : "Une erreur est survenue lors de l'analyse",
         variant: "destructive",
       });
     } finally {
@@ -114,12 +104,9 @@ export function URLForm() {
           value={domain}
           onChange={(e) => setDomain(e.target.value)}
           className="h-14 pl-6 text-lg rounded-full border-gray-200 focus-visible:ring-[#6366F1] bg-white shadow-sm w-full"
-          required
         />
-      </div>
-      <div className="space-y-4">
-        <Button 
-          type="submit" 
+        <Button
+          type="submit"
           disabled={isLoading}
           className="w-full h-12 rounded-full bg-gradient-to-r from-[#8B5CF6] to-[#EC4899] hover:opacity-90 text-white font-medium"
         >

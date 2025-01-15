@@ -1,21 +1,11 @@
-export const formatURL = (domain: string): string => {
-  let formattedURL = domain.toLowerCase().trim();
+export const formatURL = (url: string): string => {
+  let formattedURL = url.trim().toLowerCase();
   
-  // Remove any trailing slashes
-  formattedURL = formattedURL.replace(/\/$/, '');
+  // Remove any existing protocol
+  formattedURL = formattedURL.replace(/^(https?:\/\/)?(www\.)?/, '');
   
-  // Remove consecutive dots
-  formattedURL = formattedURL.replace(/\.{2,}/g, '.');
-  
-  // If the URL doesn't start with http:// or https://, add https://
-  if (!formattedURL.match(/^https?:\/\//)) {
-    formattedURL = `https://${formattedURL}`;
-  }
-  
-  // If www. is not present after the protocol, add it
-  if (!formattedURL.match(/^https?:\/\/www\./)) {
-    formattedURL = formattedURL.replace(/^(https?:\/\/)/, '$1www.');
-  }
+  // Add https:// if no protocol is present
+  formattedURL = `https://${formattedURL}`;
   
   return formattedURL;
 };
