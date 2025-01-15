@@ -9,17 +9,52 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
     const { currentTitle, currentDescription, currentH1, currentH2s, currentH3s, currentH4s } = await req.json();
+    
     console.log('Données reçues:', { currentTitle, currentDescription, currentH1, currentH2s, currentH3s, currentH4s });
 
     if (!openAIApiKey) {
       throw new Error('La clé API OpenAI n\'est pas configurée');
     }
+
+    const systemPrompt = `Tu es un expert SEO spécialisé dans l'optimisation de contenu en français.
+    Ta tâche est de générer des suggestions d'optimisation SEO pour chaque élément HTML fourni.
+    Tu dois UNIQUEMENT répondre avec un objet JSON valide, sans aucun texte avant ou après, sans délimiteurs markdown.
+    L'objet JSON doit contenir exactement ces propriétés :
+    {
+      "suggested_title": "suggestion pour le titre",
+      "suggested_description": "suggestion pour la description",
+      "suggested_h1": "suggestion pour le h1",
+      "suggested_h2s": ["suggestion h2 1", "suggestion h2 2", ...],
+      "suggested_h3s": ["suggestion h3 1", "suggestion h3 2", ...],
+      "suggested_h4s": ["suggestion h4 1", "suggestion h4 2", ...],
+      "title_context": "explication pour le titre",
+      "description_context": "explication pour la description",
+      "h1_context": "explication pour le h1",
+      "h2s_context": ["explication h2 1", "explication h2 2", ...],
+      "h3s_context": ["explication h3 1", "explication h3 2", ...],
+      "h4s_context": ["explication h4 1", "explication h4 2", ...]
+    }`;
+
+    const userPrompt = `Analyse et optimise ces éléments SEO :
+    
+    Titre actuel: "${currentTitle || ''}"
+    Description actuelle: "${currentDescription || ''}"
+    H1 actuel: "${currentH1 || ''}"
+    H2s actuels: ${JSON.stringify(currentH2s || [])}
+    H3s actuels: ${JSON.stringify(currentH3s || [])}
+    H4s actuels: ${JSON.stringify(currentH4s || [])}
+    
+    Génère des suggestions pertinentes pour chaque élément en français.
+    Réponds UNIQUEMENT avec l'objet JSON demandé, sans aucun texte avant ou après.`;
+
+    console.log('Envoi de la requête à OpenAI...');
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -30,43 +65,8 @@ serve(async (req) => {
       body: JSON.stringify({
         model: 'gpt-4o-mini',
         messages: [
-          {
-            role: 'system',
-            content: `Tu es un expert SEO spécialisé dans l'optimisation de contenu en français.
-            Ta tâche est de générer des suggestions d'optimisation SEO pour chaque élément HTML fourni.
-            Tu dois TOUJOURS répondre avec un objet JSON valide contenant les suggestions et le contexte pour chaque élément.
-            Format de réponse attendu:
-            {
-              "suggested_title": "suggestion pour le titre",
-              "suggested_description": "suggestion pour la description",
-              "suggested_h1": "suggestion pour le h1",
-              "suggested_h2s": ["suggestion h2 1", "suggestion h2 2", ...],
-              "suggested_h3s": ["suggestion h3 1", "suggestion h3 2", ...],
-              "suggested_h4s": ["suggestion h4 1", "suggestion h4 2", ...],
-              "title_context": "explication pour le titre",
-              "description_context": "explication pour la description",
-              "h1_context": "explication pour le h1",
-              "h2s_context": ["explication h2 1", "explication h2 2", ...],
-              "h3s_context": ["explication h3 1", "explication h3 2", ...],
-              "h4s_context": ["explication h4 1", "explication h4 2", ...]
-            }`
-          },
-          {
-            role: 'user',
-            content: `Analyse et optimise les éléments SEO suivants en JSON:
-            
-            Titre actuel: "${currentTitle || ''}"
-            Description actuelle: "${currentDescription || ''}"
-            H1 actuel: "${currentH1 || ''}"
-            H2s actuels: ${JSON.stringify(currentH2s || [])}
-            H3s actuels: ${JSON.stringify(currentH3s || [])}
-            H4s actuels: ${JSON.stringify(currentH4s || [])}
-            
-            Pour chaque élément :
-            1. Suggère une version optimisée
-            2. Explique pourquoi cette optimisation est meilleure
-            3. Retourne le résultat au format JSON spécifié dans les instructions système`
-          }
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: userPrompt }
         ],
         temperature: 0.7,
       }),
@@ -85,11 +85,19 @@ serve(async (req) => {
       throw new Error('Réponse OpenAI invalide ou vide');
     }
 
-    // Parse la réponse JSON d'OpenAI
-    const suggestions = JSON.parse(data.choices[0].message.content);
+    // Nettoyer la réponse de tout délimiteur markdown potentiel
+    let cleanedContent = data.choices[0].message.content
+      .replace(/```json\n?/g, '')
+      .replace(/```\n?/g, '')
+      .trim();
+
+    console.log('Contenu nettoyé:', cleanedContent);
+
+    // Parser la réponse JSON
+    const suggestions = JSON.parse(cleanedContent);
     console.log('Suggestions parsées:', suggestions);
 
-    // Vérifie que toutes les propriétés requises sont présentes
+    // Vérifier que toutes les propriétés requises sont présentes
     const requiredProps = [
       'suggested_title',
       'suggested_description',
