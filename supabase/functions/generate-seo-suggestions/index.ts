@@ -28,29 +28,44 @@ serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4',
+        model: 'gpt-4o-mini',
         messages: [
           {
             role: 'system',
             content: `Tu es un expert SEO spécialisé dans l'optimisation de contenu en français.
             Ta tâche est de générer des suggestions d'optimisation SEO pour chaque élément HTML fourni.
-            Fournis des suggestions pertinentes et spécifiques pour améliorer le référencement.`
+            Tu dois TOUJOURS répondre avec un objet JSON valide contenant les suggestions et le contexte pour chaque élément.
+            Format de réponse attendu:
+            {
+              "suggested_title": "suggestion pour le titre",
+              "suggested_description": "suggestion pour la description",
+              "suggested_h1": "suggestion pour le h1",
+              "suggested_h2s": ["suggestion h2 1", "suggestion h2 2", ...],
+              "suggested_h3s": ["suggestion h3 1", "suggestion h3 2", ...],
+              "suggested_h4s": ["suggestion h4 1", "suggestion h4 2", ...],
+              "title_context": "explication pour le titre",
+              "description_context": "explication pour la description",
+              "h1_context": "explication pour le h1",
+              "h2s_context": ["explication h2 1", "explication h2 2", ...],
+              "h3s_context": ["explication h3 1", "explication h3 2", ...],
+              "h4s_context": ["explication h4 1", "explication h4 2", ...]
+            }`
           },
           {
             role: 'user',
-            content: `Analyse et optimise les éléments SEO suivants :
+            content: `Analyse et optimise les éléments SEO suivants en JSON:
             
-            TITRE : "${currentTitle || ''}"
-            DESCRIPTION : "${currentDescription || ''}"
-            H1 : "${currentH1 || ''}"
-            H2s : ${JSON.stringify(currentH2s || [])}
-            H3s : ${JSON.stringify(currentH3s || [])}
-            H4s : ${JSON.stringify(currentH4s || [])}
+            Titre actuel: "${currentTitle || ''}"
+            Description actuelle: "${currentDescription || ''}"
+            H1 actuel: "${currentH1 || ''}"
+            H2s actuels: ${JSON.stringify(currentH2s || [])}
+            H3s actuels: ${JSON.stringify(currentH3s || [])}
+            H4s actuels: ${JSON.stringify(currentH4s || [])}
             
             Pour chaque élément :
-            1. Analyse sa pertinence SEO
-            2. Suggère une version optimisée
-            3. Explique pourquoi cette optimisation est meilleure`
+            1. Suggère une version optimisée
+            2. Explique pourquoi cette optimisation est meilleure
+            3. Retourne le résultat au format JSON spécifié dans les instructions système`
           }
         ],
         temperature: 0.7,
@@ -64,51 +79,45 @@ serve(async (req) => {
     }
 
     const data = await response.json();
-    console.log('Réponse OpenAI:', data);
+    console.log('Réponse OpenAI brute:', data);
 
     if (!data.choices?.[0]?.message?.content) {
       throw new Error('Réponse OpenAI invalide ou vide');
     }
 
-    const suggestions = {
-      suggested_title: "Suggestion en cours de génération...",
-      suggested_description: "Suggestion en cours de génération...",
-      suggested_h1: "Suggestion en cours de génération...",
-      suggested_h2s: currentH2s?.map(() => "Suggestion en cours de génération...") || [],
-      suggested_h3s: currentH3s?.map(() => "Suggestion en cours de génération...") || [],
-      suggested_h4s: currentH4s?.map(() => "Suggestion en cours de génération...") || [],
-      title_context: "Analyse en cours...",
-      description_context: "Analyse en cours...",
-      h1_context: "Analyse en cours...",
-      h2s_context: currentH2s?.map(() => "Analyse en cours...") || [],
-      h3s_context: currentH3s?.map(() => "Analyse en cours...") || [],
-      h4s_context: currentH4s?.map(() => "Analyse en cours...") || [],
-    };
+    // Parse la réponse JSON d'OpenAI
+    const suggestions = JSON.parse(data.choices[0].message.content);
+    console.log('Suggestions parsées:', suggestions);
 
-    // Parse la réponse d'OpenAI pour extraire les suggestions
-    const content = data.choices[0].message.content;
-    const parsedSuggestions = JSON.parse(content);
+    // Vérifie que toutes les propriétés requises sont présentes
+    const requiredProps = [
+      'suggested_title',
+      'suggested_description',
+      'suggested_h1',
+      'suggested_h2s',
+      'suggested_h3s',
+      'suggested_h4s',
+      'title_context',
+      'description_context',
+      'h1_context',
+      'h2s_context',
+      'h3s_context',
+      'h4s_context'
+    ];
 
-    suggestions.suggested_title = parsedSuggestions.suggested_title || suggestions.suggested_title;
-    suggestions.suggested_description = parsedSuggestions.suggested_description || suggestions.suggested_description;
-    suggestions.suggested_h1 = parsedSuggestions.suggested_h1 || suggestions.suggested_h1;
-    suggestions.suggested_h2s = parsedSuggestions.suggested_h2s || suggestions.suggested_h2s;
-    suggestions.suggested_h3s = parsedSuggestions.suggested_h3s || suggestions.suggested_h3s;
-    suggestions.suggested_h4s = parsedSuggestions.suggested_h4s || suggestions.suggested_h4s;
-    suggestions.title_context = parsedSuggestions.title_context || suggestions.title_context;
-    suggestions.description_context = parsedSuggestions.description_context || suggestions.description_context;
-    suggestions.h1_context = parsedSuggestions.h1_context || suggestions.h1_context;
-    suggestions.h2s_context = parsedSuggestions.h2s_context || suggestions.h2s_context;
-    suggestions.h3s_context = parsedSuggestions.h3s_context || suggestions.h3s_context;
-    suggestions.h4s_context = parsedSuggestions.h4s_context || suggestions.h4s_context;
+    for (const prop of requiredProps) {
+      if (!(prop in suggestions)) {
+        throw new Error(`Propriété manquante dans la réponse: ${prop}`);
+      }
+    }
 
     return new Response(JSON.stringify(suggestions), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (error) {
-    console.error('Erreur complète:', error);
+    console.error('Erreur dans la fonction generate-seo-suggestions:', error);
     return new Response(
-      JSON.stringify({
+      JSON.stringify({ 
         error: `Erreur lors du traitement: ${error.message}`,
         details: error.stack
       }),
