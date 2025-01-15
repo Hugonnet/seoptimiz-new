@@ -11,14 +11,8 @@ import { Badge } from "@/components/ui/badge";
 import { Link2, AlertTriangle, Image, Smartphone, Gauge } from "lucide-react";
 
 interface AdvancedAnalysisSectionProps {
-  keywordDensity?: any;
   readabilityScore?: number;
   contentLength?: number;
-  keywordSuggestions?: string[];
-  semanticKeywords?: string[];
-  contentStructure?: any;
-  metaRobots?: string;
-  canonicalUrl?: string;
   internalLinks?: string[];
   externalLinks?: string[];
   brokenLinks?: string[];
@@ -28,14 +22,8 @@ interface AdvancedAnalysisSectionProps {
 }
 
 export function AdvancedAnalysisSection({
-  keywordDensity,
   readabilityScore = 0,
   contentLength = 0,
-  keywordSuggestions = [],
-  semanticKeywords = [],
-  contentStructure,
-  metaRobots,
-  canonicalUrl,
   internalLinks = [],
   externalLinks = [],
   brokenLinks = [],
@@ -45,7 +33,7 @@ export function AdvancedAnalysisSection({
 }: AdvancedAnalysisSectionProps) {
   return (
     <div className="space-y-6">
-      <h3 className="text-lg font-semibold text-purple-800">Analyse avancée du contenu</h3>
+      <h3 className="text-lg font-semibold text-purple-800">Analyse technique avancée</h3>
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Score de lisibilité */}
@@ -72,23 +60,6 @@ export function AdvancedAnalysisSection({
             <p className="text-2xl font-semibold">{contentLength}</p>
           </CardContent>
         </Card>
-
-        {/* Mots-clés suggérés */}
-        {keywordSuggestions && keywordSuggestions.length > 0 && (
-          <Card className="md:col-span-2">
-            <CardHeader>
-              <CardTitle className="text-base">Suggestions de mots-clés</CardTitle>
-              <CardDescription>Mots-clés pertinents pour votre contenu</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="flex flex-wrap gap-2">
-                {keywordSuggestions.map((keyword, index) => (
-                  <Badge key={index} variant="secondary">{keyword}</Badge>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        )}
 
         {/* Liens */}
         <Card className="md:col-span-2">
