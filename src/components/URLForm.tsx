@@ -6,6 +6,7 @@ import { CompanyAutocomplete } from "./CompanyAutocomplete";
 import { useSEOStore } from "@/store/seoStore";
 import { useToast } from "@/hooks/use-toast";
 import { analyzeSEO } from "@/services/seoAnalysisService";
+import { useNavigate } from "react-router-dom";
 
 export function URLForm() {
   const [domain, setDomain] = useState("");
@@ -13,6 +14,7 @@ export function URLForm() {
   const [isLoading, setIsLoading] = useState(false);
   const addSEOData = useSEOStore((state) => state.addSEOData);
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const validateForm = () => {
     if (!company) {
@@ -57,6 +59,8 @@ export function URLForm() {
         description: "L'analyse SEO a été effectuée avec succès.",
       });
       setDomain("");
+      // Redirection vers la page Historique après l'analyse
+      navigate('/historique');
     } catch (error) {
       console.error('Erreur lors de l\'analyse:', error);
       toast({
