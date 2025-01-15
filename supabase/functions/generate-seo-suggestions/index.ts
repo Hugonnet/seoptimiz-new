@@ -1,129 +1,204 @@
-import "https://deno.land/x/xhr@0.1.0/mod.ts";
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
+import { Configuration, OpenAIApi } from 'https://esm.sh/openai@3.1.0'
+import { corsHeaders } from '../_shared/cors.ts'
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+const openAIConfig = new Configuration({
+  apiKey: Deno.env.get('OPENAI_API_KEY')
+})
+const openai = new OpenAIApi(openAIConfig)
+
+interface SEOData {
+  currentTitle?: string
+  currentDescription?: string
+  currentH1?: string
+  currentH2s?: string[]
+  currentH3s?: string[]
+  currentH4s?: string[]
+  visibleText?: string[]
+  url: string
+}
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
+    return new Response('ok', { headers: corsHeaders })
   }
 
   try {
-    console.log('Starting SEO suggestions generation...');
-    const { currentTitle, currentDescription, currentH1, currentH2s, currentH3s, currentH4s, visibleText } = await req.json();
-    
-    const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
-    if (!openAIApiKey) {
-      throw new Error('OpenAI API key not found');
+    const { url, currentTitle, currentDescription, currentH1, currentH2s, currentH3s, currentH4s, visibleText } = await req.json() as SEOData
+
+    console.log('Analyzing URL:', url)
+    console.log('Current title:', currentTitle)
+
+    // Prepare content for analysis
+    const content = {
+      title: currentTitle || '',
+      description: currentDescription || '',
+      h1: currentH1 || '',
+      h2s: currentH2s || [],
+      h3s: currentH3s || [],
+      h4s: currentH4s || [],
+      text: visibleText || []
     }
 
-    console.log('Generating suggestions with OpenAI...');
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${openAIApiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'gpt-4o-mini',
-        messages: [
-          {
-            role: 'system',
-            content: 'You are an SEO expert. Analyze the provided content and suggest improvements in French. Focus on making titles and descriptions more engaging and keyword-rich while maintaining readability.'
-          },
-          {
-            role: 'user',
-            content: `Please analyze and suggest improvements for this website content in French:
-              Title: ${currentTitle}
-              Description: ${currentDescription}
-              H1: ${currentH1}
-              H2s: ${currentH2s?.join(', ')}
-              H3s: ${currentH3s?.join(', ')}
-              H4s: ${currentH4s?.join(', ')}
-              Content: ${visibleText?.join(' ')}`
-          }
-        ],
-      }),
-    });
+    // Generate title suggestion
+    const titlePrompt = `En tant qu'expert SEO, analyse ce titre de page web : "${content.title}" pour le site ${url}.
+    Propose un nouveau titre optimisé qui :
+    - Conserve les mots-clés importants
+    - A une longueur idéale (50-60 caractères)
+    - Est accrocheur et pertinent
+    - Inclut si possible le nom de la marque
+    Réponds uniquement avec le titre optimisé, sans explications.`
 
-    const data = await response.json();
-    console.log('OpenAI response received');
+    const titleCompletion = await openai.createChatCompletion({
+      model: "gpt-3.5-turbo",
+      messages: [{ role: "user", content: titlePrompt }]
+    })
 
-    if (!data.choices?.[0]?.message?.content) {
-      throw new Error('Invalid response from OpenAI');
+    const suggestedTitle = titleCompletion.data.choices[0]?.message?.content || ''
+
+    // Generate title context
+    const titleContextPrompt = `Explique brièvement pourquoi ce nouveau titre "${suggestedTitle}" est meilleur que l'original "${content.title}" en termes de SEO.`
+
+    const titleContextCompletion = await openai.createChatCompletion({
+      model: "gpt-3.5-turbo",
+      messages: [{ role: "user", content: titleContextPrompt }]
+    })
+
+    const titleContext = titleContextCompletion.data.choices[0]?.message?.content || ''
+
+    // Generate description suggestion
+    const descriptionPrompt = `En tant qu'expert SEO, analyse cette meta description : "${content.description}" pour le site ${url}.
+    Propose une nouvelle description qui :
+    - Résume clairement le contenu de la page
+    - Inclut les mots-clés principaux naturellement
+    - Est engageante avec un call-to-action
+    - Fait entre 150-160 caractères
+    Réponds uniquement avec la description optimisée, sans explications.`
+
+    const descriptionCompletion = await openai.createChatCompletion({
+      model: "gpt-3.5-turbo",
+      messages: [{ role: "user", content: descriptionPrompt }]
+    })
+
+    const suggestedDescription = descriptionCompletion.data.choices[0]?.message?.content || ''
+
+    // Generate description context
+    const descriptionContextPrompt = `Explique brièvement pourquoi cette nouvelle meta description "${suggestedDescription}" est meilleure que l'originale "${content.description}" en termes de SEO.`
+
+    const descriptionContextCompletion = await openai.createChatCompletion({
+      model: "gpt-3.5-turbo",
+      messages: [{ role: "user", content: descriptionContextPrompt }]
+    })
+
+    const descriptionContext = descriptionContextCompletion.data.choices[0]?.message?.content || ''
+
+    // Generate H1 suggestion
+    const h1Prompt = `En tant qu'expert SEO, analyse ce H1 : "${content.h1}" pour le site ${url}.
+    Propose un nouveau H1 qui :
+    - Reflète précisément le contenu principal
+    - Inclut le mot-clé principal naturellement
+    - Est accrocheur et informatif
+    - A une longueur optimale (20-70 caractères)
+    Réponds uniquement avec le H1 optimisé, sans explications.`
+
+    const h1Completion = await openai.createChatCompletion({
+      model: "gpt-3.5-turbo",
+      messages: [{ role: "user", content: h1Prompt }]
+    })
+
+    const suggestedH1 = h1Completion.data.choices[0]?.message?.content || ''
+
+    // Generate H1 context
+    const h1ContextPrompt = `Explique brièvement pourquoi ce nouveau H1 "${suggestedH1}" est meilleur que l'original "${content.h1}" en termes de SEO.`
+
+    const h1ContextCompletion = await openai.createChatCompletion({
+      model: "gpt-3.5-turbo",
+      messages: [{ role: "user", content: h1ContextPrompt }]
+    })
+
+    const h1Context = h1ContextCompletion.data.choices[0]?.message?.content || ''
+
+    // Generate H2s suggestions
+    const suggestedH2s = await Promise.all(
+      content.h2s.map(async (h2) => {
+        const h2Prompt = `En tant qu'expert SEO, analyse ce H2 : "${h2}" pour le site ${url}.
+        Propose un nouveau H2 qui :
+        - Structure clairement la section
+        - Utilise des mots-clés secondaires pertinents
+        - Est informatif et engageant
+        Réponds uniquement avec le H2 optimisé, sans explications.`
+
+        const h2Completion = await openai.createChatCompletion({
+          model: "gpt-3.5-turbo",
+          messages: [{ role: "user", content: h2Prompt }]
+        })
+
+        return h2Completion.data.choices[0]?.message?.content || h2
+      })
+    )
+
+    // Generate H2s context
+    const h2sContextPrompt = `Explique brièvement pourquoi la nouvelle structure des H2 est meilleure en termes de SEO et de hiérarchie de contenu.
+    Originaux : ${content.h2s.join(' | ')}
+    Optimisés : ${suggestedH2s.join(' | ')}`
+
+    const h2sContextCompletion = await openai.createChatCompletion({
+      model: "gpt-3.5-turbo",
+      messages: [{ role: "user", content: h2sContextPrompt }]
+    })
+
+    const h2sContext = h2sContextCompletion.data.choices[0]?.message?.content || ''
+
+    // Calculate readability score (simple implementation)
+    const calculateReadabilityScore = (text: string[]): number => {
+      const words = text.join(' ').split(/\s+/).length
+      const sentences = text.join(' ').split(/[.!?]+/).length
+      const averageWordsPerSentence = words / sentences
+      
+      // Score based on average words per sentence (15-20 is ideal)
+      let score = 100
+      if (averageWordsPerSentence > 25) score -= 20
+      if (averageWordsPerSentence > 20) score -= 10
+      if (averageWordsPerSentence < 10) score -= 10
+      
+      return Math.max(0, Math.min(100, score))
     }
 
-    const suggestions = data.choices[0].message.content;
-    
-    // Parse suggestions into structured format
-    const suggestedTitle = suggestions.match(/Title:([^\n]*)/)?.[1]?.trim() || currentTitle;
-    const suggestedDescription = suggestions.match(/Description:([^\n]*)/)?.[1]?.trim() || currentDescription;
-    const suggestedH1 = suggestions.match(/H1:([^\n]*)/)?.[1]?.trim() || currentH1;
-    
-    // Calculate metrics
-    const readabilityScore = calculateReadabilityScore(visibleText || []);
-    const contentLength = calculateContentLength(visibleText || []);
-    
-    console.log('Preparing final response');
-    const finalResponse = {
-      suggested_title: suggestedTitle,
-      suggested_description: suggestedDescription,
-      suggested_h1: suggestedH1,
-      suggested_h2s: currentH2s || [],
-      suggested_h3s: currentH3s || [],
-      suggested_h4s: currentH4s || [],
-      title_context: "Suggestion d'amélioration pour optimiser le référencement",
-      description_context: "Suggestion d'amélioration pour une meilleure visibilité",
-      h1_context: "Suggestion d'amélioration pour renforcer le message principal",
-      h2s_context: [],
-      h3s_context: [],
-      h4s_context: [],
-      readability_score: readabilityScore,
-      content_length: contentLength,
-      internal_links: [],
-      external_links: [],
-      broken_links: [],
-      image_alts: {},
-      page_load_speed: 2.5,
-      mobile_friendly: true,
-    };
+    const readabilityScore = calculateReadabilityScore(content.text)
+    const contentLength = content.text.join(' ').split(/\s+/).length
 
-    return new Response(JSON.stringify(finalResponse), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
-
-  } catch (error) {
-    console.error('Error in generate-seo-suggestions function:', error);
+    // Return all suggestions and metrics
     return new Response(
-      JSON.stringify({ error: error.message }),
-      { 
-        status: 500,
+      JSON.stringify({
+        suggested_title: suggestedTitle,
+        suggested_description: suggestedDescription,
+        suggested_h1: suggestedH1,
+        suggested_h2s: suggestedH2s,
+        suggested_h3s: content.h3s, // Keep original for now
+        suggested_h4s: content.h4s, // Keep original for now
+        title_context: titleContext,
+        description_context: descriptionContext,
+        h1_context: h1Context,
+        h2s_context: h2sContext,
+        readability_score: readabilityScore,
+        content_length: contentLength
+      }),
+      {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      }
-    );
+        status: 200,
+      },
+    )
+  } catch (error) {
+    console.error('Error generating SEO suggestions:', error)
+    return new Response(
+      JSON.stringify({
+        error: error.message,
+        details: error instanceof Error ? error.stack : undefined
+      }),
+      {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 500,
+      },
+    )
   }
-});
-
-// Utility functions
-function calculateReadabilityScore(text: string[]): number {
-  if (!text || text.length === 0) return 0;
-  const words = text.join(' ').split(/\s+/);
-  const sentences = text.join(' ').split(/[.!?]+/).filter(s => s.trim().length > 0);
-  const avgWordsPerSentence = words.length / (sentences.length || 1);
-  const syllables = words.reduce((count, word) => {
-    return count + (word.match(/[aeiouy]+/gi)?.length || 1);
-  }, 0);
-  const avgSyllablesPerWord = syllables / (words.length || 1);
-  
-  return Math.max(0, Math.min(100, Math.round(
-    206.835 - (1.015 * avgWordsPerSentence) - (84.6 * avgSyllablesPerWord)
-  )));
-}
-
-function calculateContentLength(text: string[]): number {
-  if (!text || text.length === 0) return 0;
-  return text.join(' ').split(/\s+/).length;
-}
+})
