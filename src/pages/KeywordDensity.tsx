@@ -21,7 +21,7 @@ export default function KeywordDensity() {
 
   useEffect(() => {
     const analyzeLastUrl = async () => {
-      if (seoData.length === 0) {
+      if (!seoData || seoData.length === 0) {
         toast({
           variant: "destructive",
           title: "Erreur",
@@ -31,14 +31,21 @@ export default function KeywordDensity() {
       }
 
       const lastAnalyzedUrl = seoData[0].url;
+      console.log("Analyzing URL:", lastAnalyzedUrl); // Debug log
       setIsLoading(true);
 
       try {
+        console.log("Calling Edge function with URL:", lastAnalyzedUrl); // Debug log
         const { data, error } = await supabase.functions.invoke('analyze-keyword-density', {
-          body: { url: lastAnalyzedUrl }
+          body: JSON.stringify({ url: lastAnalyzedUrl })
         });
 
-        if (error) throw error;
+        console.log("Response from Edge function:", { data, error }); // Debug log
+
+        if (error) {
+          console.error("Edge function error:", error); // Debug log
+          throw error;
+        }
 
         if (data && data.keywordDensity) {
           setKeywordData(data.keywordDensity);
@@ -49,6 +56,7 @@ export default function KeywordDensity() {
             description: "L'analyse de densité des mots clés a été effectuée avec succès.",
           });
         } else {
+          console.error("Invalid data received:", data); // Debug log
           throw new Error("Données invalides reçues de l'API");
         }
       } catch (error) {
