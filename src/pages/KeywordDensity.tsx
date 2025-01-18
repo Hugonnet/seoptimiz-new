@@ -21,7 +21,10 @@ export default function KeywordDensity() {
 
   useEffect(() => {
     const analyzeLastUrl = async () => {
+      console.log("Starting analysis, seoData:", seoData); // Debug log
+
       if (!seoData || seoData.length === 0) {
+        console.log("No SEO data available"); // Debug log
         toast({
           variant: "destructive",
           title: "Erreur",
@@ -31,16 +34,17 @@ export default function KeywordDensity() {
       }
 
       const lastAnalyzedUrl = seoData[0].url;
-      console.log("Analyzing URL:", lastAnalyzedUrl); // Debug log
+      console.log("Last analyzed URL:", lastAnalyzedUrl); // Debug log
       setIsLoading(true);
 
       try {
-        console.log("Calling Edge function with URL:", lastAnalyzedUrl); // Debug log
+        console.log("Invoking Edge function for URL:", lastAnalyzedUrl); // Debug log
+        
         const { data, error } = await supabase.functions.invoke('analyze-keyword-density', {
-          body: JSON.stringify({ url: lastAnalyzedUrl })
+          body: { url: lastAnalyzedUrl }
         });
 
-        console.log("Response from Edge function:", { data, error }); // Debug log
+        console.log("Edge function response:", { data, error }); // Debug log
 
         if (error) {
           console.error("Edge function error:", error); // Debug log
@@ -48,6 +52,7 @@ export default function KeywordDensity() {
         }
 
         if (data && data.keywordDensity) {
+          console.log("Setting keyword data:", data.keywordDensity); // Debug log
           setKeywordData(data.keywordDensity);
           setTotalWords(data.totalWords);
           

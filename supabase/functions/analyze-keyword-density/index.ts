@@ -7,7 +7,11 @@ interface KeywordDensity {
   density: number;
 }
 
+console.log("Edge Function loaded and ready"); // Debug log
+
 serve(async (req) => {
+  console.log("Request received"); // Debug log
+
   // Handle CORS
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
@@ -16,8 +20,12 @@ serve(async (req) => {
   try {
     console.log('Starting keyword density analysis...');
     
-    const { url } = await req.json();
-    console.log('Analyzing URL:', url);
+    // Parse the request body
+    const requestData = await req.json();
+    console.log('Request data:', requestData);
+
+    const { url } = requestData;
+    console.log('URL to analyze:', url);
 
     if (!url) {
       console.error('No URL provided');
