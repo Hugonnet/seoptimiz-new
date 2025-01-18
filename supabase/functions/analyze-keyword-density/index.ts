@@ -1,5 +1,4 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.38.4'
 import { corsHeaders } from '../_shared/cors.ts'
 
 interface KeywordDensity {
@@ -16,8 +15,16 @@ serve(async (req) => {
   try {
     const { url } = await req.json()
 
+    if (!url) {
+      throw new Error('URL is required')
+    }
+
     // Fetch the page content
     const response = await fetch(url)
+    if (!response.ok) {
+      throw new Error(`Failed to fetch URL: ${response.statusText}`)
+    }
+    
     const html = await response.text()
 
     // Extract visible text (basic implementation)
@@ -65,6 +72,7 @@ serve(async (req) => {
       },
     )
   } catch (error) {
+    console.error('Error:', error)
     return new Response(
       JSON.stringify({ error: error.message }),
       {
