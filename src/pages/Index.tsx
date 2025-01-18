@@ -1,6 +1,6 @@
 import { URLForm } from "@/components/URLForm";
 import { motion } from "framer-motion";
-import { Search, Download, History } from "lucide-react";
+import { Search, Download, History, KeyRound } from "lucide-react";
 import { useSEOStore } from "@/store/seoStore";
 import { downloadTableAsCSV } from "@/services/seoService";
 import { useNavigate } from "react-router-dom";
@@ -54,17 +54,16 @@ const Index = () => {
               <div className="w-10 h-10 md:w-12 md:h-12 bg-[#EEF2FF] rounded-lg flex items-center justify-center mb-4">
                 <Search className="w-5 h-5 md:w-6 md:h-6 text-[#6366F1]" />
               </div>
-              <h3 className="text-lg md:text-xl font-semibold mb-2 text-gray-900">Analyse SEO Avancée</h3>
+              <h3 className="text-lg md:text-xl font-semibold mb-2 text-gray-900">Densité mots clés</h3>
               <p className="text-sm md:text-base text-gray-600 mb-4">
-                Analyse complète incluant la densité des mots-clés, la lisibilité, 
-                les liens et la performance mobile
+                Analysez la fréquence et la densité des mots clés de votre contenu pour optimiser votre référencement
               </p>
               <button 
-                onClick={() => navigate('/')}
+                onClick={() => navigate('/keyword-density')}
                 className="w-full flex items-center justify-center gap-2 gradient-button rounded-lg py-2 md:py-3 px-3 md:px-4 text-sm md:text-base"
               >
-                <Search className="w-4 h-4 md:w-5 md:h-5" />
-                Analyse avancée
+                <KeyRound className="w-4 h-4 md:w-5 md:h-5" />
+                Mots clés
               </button>
             </div>
             
