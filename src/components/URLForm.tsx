@@ -36,6 +36,23 @@ export function URLForm() {
     return true;
   };
 
+  const formatURL = (url: string): string => {
+    let formattedUrl = url.trim();
+    
+    // Remove any trailing colons or slashes
+    formattedUrl = formattedUrl.replace(/[:\/]+$/, '');
+    
+    // Add https:// if no protocol is specified
+    if (!formattedUrl.startsWith('http://') && !formattedUrl.startsWith('https://')) {
+      formattedUrl = 'https://' + formattedUrl;
+    }
+    
+    // Remove any double slashes (except after protocol)
+    formattedUrl = formattedUrl.replace(/([^:]\/)\/+/g, '$1');
+    
+    return formattedUrl;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -44,12 +61,10 @@ export function URLForm() {
     setIsLoading(true);
 
     try {
-      let url = domain.trim();
-      if (!url.startsWith('http://') && !url.startsWith('https://')) {
-        url = 'https://' + url;
-      }
-
-      const analysisData = await analyzeSEO(url, company);
+      const formattedUrl = formatURL(domain);
+      console.log('Formatted URL:', formattedUrl); // Debug log
+      
+      const analysisData = await analyzeSEO(formattedUrl, company);
       
       addSEOData(analysisData);
       toast({
