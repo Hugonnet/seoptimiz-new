@@ -40,13 +40,17 @@ export default function KeywordDensity() {
 
         if (error) throw error;
 
-        setKeywordData(data.keywordDensity);
-        setTotalWords(data.totalWords);
-        
-        toast({
-          title: "Analyse terminée",
-          description: "L'analyse de densité des mots clés a été effectuée avec succès.",
-        });
+        if (data && data.keywordDensity) {
+          setKeywordData(data.keywordDensity);
+          setTotalWords(data.totalWords);
+          
+          toast({
+            title: "Analyse terminée",
+            description: "L'analyse de densité des mots clés a été effectuée avec succès.",
+          });
+        } else {
+          throw new Error("Données invalides reçues de l'API");
+        }
       } catch (error) {
         console.error('Error:', error);
         toast({
@@ -60,7 +64,7 @@ export default function KeywordDensity() {
     };
 
     analyzeLastUrl();
-  }, []);
+  }, [seoData, toast]);
 
   if (isLoading) {
     return (
