@@ -1,4 +1,4 @@
 project_id = "hfmagokcqjxqyzrriqia"
 
-[functions.extract-seo]
+[functions.analyze-keyword-density]
 verify_jwt = false
