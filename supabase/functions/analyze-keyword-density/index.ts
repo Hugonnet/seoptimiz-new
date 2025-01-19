@@ -7,45 +7,31 @@ interface KeywordDensity {
   density: number;
 }
 
-console.log("Edge Function loaded and ready"); // Debug log
-
 serve(async (req) => {
-  console.log("Request received"); // Debug log
+  console.log("Function invoked with request:", req.method);
 
-  // Handle CORS
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
   }
 
   try {
-    console.log('Starting keyword density analysis...');
-    
-    // Parse the request body
-    const requestData = await req.json();
-    console.log('Request data:', requestData);
-
-    const { url } = requestData;
-    console.log('URL to analyze:', url);
+    const { url } = await req.json();
+    console.log("Received URL to analyze:", url);
 
     if (!url) {
-      console.error('No URL provided');
       throw new Error('URL is required');
     }
 
-    // Fetch the page content
-    console.log('Fetching page content...');
+    console.log("Fetching content from URL:", url);
     const response = await fetch(url);
     
     if (!response.ok) {
-      console.error('Failed to fetch URL:', response.statusText);
       throw new Error(`Failed to fetch URL: ${response.statusText}`);
     }
     
     const html = await response.text();
-    console.log('Successfully fetched page content');
+    console.log("Successfully fetched HTML content, length:", html.length);
 
-    // Extract visible text
-    console.log('Extracting visible text...');
     const visibleText = html
       .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
       .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
@@ -54,21 +40,17 @@ serve(async (req) => {
       .trim()
       .toLowerCase();
 
-    // Count words
     const words = visibleText.split(/\s+/);
     const totalWords = words.length;
-    console.log('Total words found:', totalWords);
+    console.log("Total words found:", totalWords);
 
-    // Calculate word frequency
-    console.log('Calculating word frequency...');
     const wordFrequency: { [key: string]: number } = {};
     words.forEach(word => {
-      if (word.length > 3) { // Ignore small words
+      if (word.length > 3) {
         wordFrequency[word] = (wordFrequency[word] || 0) + 1;
       }
     });
 
-    // Calculate density and sort by frequency
     const keywordDensity: KeywordDensity[] = Object.entries(wordFrequency)
       .map(([keyword, count]) => ({
         keyword,
@@ -76,9 +58,9 @@ serve(async (req) => {
         density: (count / totalWords) * 100
       }))
       .sort((a, b) => b.count - a.count)
-      .slice(0, 20); // Top 20 keywords
+      .slice(0, 20);
 
-    console.log('Analysis complete. Found', keywordDensity.length, 'keywords');
+    console.log("Analysis complete, returning results");
 
     return new Response(
       JSON.stringify({
@@ -94,11 +76,11 @@ serve(async (req) => {
       },
     )
   } catch (error) {
-    console.error('Error in analyze-keyword-density:', error);
+    console.error("Error in analyze-keyword-density:", error);
+    
     return new Response(
       JSON.stringify({ 
-        error: error.message,
-        details: error instanceof Error ? error.stack : 'Unknown error'
+        error: error.message 
       }),
       {
         headers: {

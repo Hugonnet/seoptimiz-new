@@ -21,10 +21,7 @@ export default function KeywordDensity() {
 
   useEffect(() => {
     const analyzeLastUrl = async () => {
-      console.log("Starting analysis, seoData:", seoData); // Debug log
-
       if (!seoData || seoData.length === 0) {
-        console.log("No SEO data available"); // Debug log
         toast({
           variant: "destructive",
           title: "Erreur",
@@ -34,35 +31,26 @@ export default function KeywordDensity() {
       }
 
       const lastAnalyzedUrl = seoData[0].url;
-      console.log("Last analyzed URL:", lastAnalyzedUrl); // Debug log
       setIsLoading(true);
 
       try {
-        console.log("Invoking Edge function for URL:", lastAnalyzedUrl); // Debug log
-        
-        // Properly format the request body as a JSON string
-        const { data, error } = await supabase.functions.invoke('analyze-keyword-density', {
-          body: JSON.stringify({ url: lastAnalyzedUrl })
+        const response = await supabase.functions.invoke('analyze-keyword-density', {
+          body: { url: lastAnalyzedUrl }
         });
 
-        console.log("Edge function response:", { data, error }); // Debug log
-
-        if (error) {
-          console.error("Edge function error:", error); // Debug log
-          throw error;
+        if (response.error) {
+          throw new Error(response.error.message);
         }
 
-        if (data && data.keywordDensity) {
-          console.log("Setting keyword data:", data.keywordDensity); // Debug log
-          setKeywordData(data.keywordDensity);
-          setTotalWords(data.totalWords);
+        if (response.data && response.data.keywordDensity) {
+          setKeywordData(response.data.keywordDensity);
+          setTotalWords(response.data.totalWords);
           
           toast({
             title: "Analyse terminée",
             description: "L'analyse de densité des mots clés a été effectuée avec succès.",
           });
         } else {
-          console.error("Invalid data received:", data); // Debug log
           throw new Error("Données invalides reçues de l'API");
         }
       } catch (error) {
