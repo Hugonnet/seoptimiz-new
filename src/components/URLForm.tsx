@@ -6,6 +6,7 @@ import { CompanyAutocomplete } from "./CompanyAutocomplete";
 import { useSEOStore } from "@/store/seoStore";
 import { useToast } from "@/hooks/use-toast";
 import { analyzeSEO } from "@/services/seoAnalysisService";
+import { useNavigate } from "react-router-dom";
 
 export function URLForm() {
   const [domain, setDomain] = useState("");
@@ -13,6 +14,7 @@ export function URLForm() {
   const [isLoading, setIsLoading] = useState(false);
   const addSEOData = useSEOStore((state) => state.addSEOData);
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const validateForm = () => {
     if (!company) {
@@ -38,18 +40,11 @@ export function URLForm() {
 
   const formatURL = (url: string): string => {
     let formattedUrl = url.trim();
-    
-    // Remove any trailing colons or slashes
     formattedUrl = formattedUrl.replace(/[:\/]+$/, '');
-    
-    // Add https:// if no protocol is specified
     if (!formattedUrl.startsWith('http://') && !formattedUrl.startsWith('https://')) {
       formattedUrl = 'https://' + formattedUrl;
     }
-    
-    // Remove any double slashes (except after protocol)
     formattedUrl = formattedUrl.replace(/([^:]\/)\/+/g, '$1');
-    
     return formattedUrl;
   };
 
@@ -62,7 +57,7 @@ export function URLForm() {
 
     try {
       const formattedUrl = formatURL(domain);
-      console.log('Formatted URL:', formattedUrl); // Debug log
+      console.log('Formatted URL:', formattedUrl);
       
       const analysisData = await analyzeSEO(formattedUrl, company);
       
@@ -72,6 +67,7 @@ export function URLForm() {
         description: "L'analyse SEO a été effectuée avec succès.",
       });
       setDomain("");
+      navigate('/history');
     } catch (error) {
       console.error('Erreur lors de l\'analyse:', error);
       toast({

@@ -13,6 +13,24 @@ interface KeywordDensity {
   density: number;
 }
 
+const decodeHtmlEntities = (text: string): string => {
+  const entities = {
+    '&nbsp;': ' ',
+    '&#8211;': '–',
+    '&amp;': '&',
+    '&lt;': '<',
+    '&gt;': '>',
+    '&quot;': '"',
+    '&#39;': "'",
+    '&eacute;': 'é',
+    '&egrave;': 'è',
+    '&agrave;': 'à',
+    '&ccedil;': 'ç',
+  };
+  
+  return text.replace(/&[^;]+;/g, (entity) => entities[entity] || entity);
+};
+
 export default function KeywordDensity() {
   const [isLoading, setIsLoading] = useState(false);
   const [keywordData, setKeywordData] = useState<KeywordDensity[]>([]);
@@ -49,7 +67,12 @@ export default function KeywordDensity() {
         console.log('Response:', response);
 
         if (response.data && response.data.keywordDensity) {
-          setKeywordData(response.data.keywordDensity);
+          const cleanedData = response.data.keywordDensity.map((item: KeywordDensity) => ({
+            ...item,
+            keyword: decodeHtmlEntities(item.keyword)
+          }));
+          
+          setKeywordData(cleanedData);
           setTotalWords(response.data.totalWords);
           
           toast({

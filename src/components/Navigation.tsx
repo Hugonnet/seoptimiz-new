@@ -23,7 +23,7 @@ export function Navigation() {
           </NavigationMenuItem>
           <NavigationMenuItem>
             <Link 
-              to="/historique" 
+              to="/history" 
               className={navigationMenuTriggerStyle() + " hover:bg-[#EEF2FF] hover:text-[#6366F1] transition-all duration-300 text-xs md:text-sm whitespace-nowrap"}
             >
               <History className="mr-1 md:mr-2 h-3 w-3 md:h-4 md:w-4" />
@@ -32,7 +32,7 @@ export function Navigation() {
           </NavigationMenuItem>
           <NavigationMenuItem>
             <Link 
-              to="/exports" 
+              to="/export" 
               className={navigationMenuTriggerStyle() + " hover:bg-[#EEF2FF] hover:text-[#6366F1] transition-all duration-300 text-xs md:text-sm whitespace-nowrap"}
             >
               <Download className="mr-1 md:mr-2 h-3 w-3 md:h-4 md:w-4" />
