@@ -5,6 +5,7 @@ import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
 import { useSEOStore } from '@/store/seoStore';
 import { Loader2 } from "lucide-react";
+import { useNavigate } from 'react-router-dom';
 
 interface KeywordDensity {
   keyword: string;
@@ -18,6 +19,7 @@ export default function KeywordDensity() {
   const [totalWords, setTotalWords] = useState(0);
   const { toast } = useToast();
   const seoData = useSEOStore((state) => state.seoData);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const analyzeLastUrl = async () => {
@@ -27,6 +29,7 @@ export default function KeywordDensity() {
           title: "Erreur",
           description: "Aucune URL n'a été analysée. Veuillez d'abord analyser une URL.",
         });
+        navigate('/');
         return;
       }
 
@@ -34,6 +37,7 @@ export default function KeywordDensity() {
       setIsLoading(true);
 
       try {
+        console.log('Analyzing URL:', lastAnalyzedUrl);
         const response = await supabase.functions.invoke('analyze-keyword-density', {
           body: { url: lastAnalyzedUrl }
         });
@@ -41,6 +45,8 @@ export default function KeywordDensity() {
         if (response.error) {
           throw new Error(response.error.message);
         }
+
+        console.log('Response:', response);
 
         if (response.data && response.data.keywordDensity) {
           setKeywordData(response.data.keywordDensity);
@@ -66,7 +72,7 @@ export default function KeywordDensity() {
     };
 
     analyzeLastUrl();
-  }, [seoData, toast]);
+  }, [seoData, toast, navigate]);
 
   if (isLoading) {
     return (

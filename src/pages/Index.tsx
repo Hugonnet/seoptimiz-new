@@ -74,7 +74,7 @@ const Index = () => {
               <h3 className="text-lg md:text-xl font-semibold mb-2 text-gray-900">Exports</h3>
               <p className="text-sm md:text-base text-gray-600 mb-4">Exportez et gérez vos analyses SEO par entreprise</p>
               <button 
-                onClick={() => navigate('/exports')}
+                onClick={() => navigate('/export')}
                 className="w-full flex items-center justify-center gap-2 gradient-button rounded-lg py-2 md:py-3 px-3 md:px-4 text-sm md:text-base"
               >
                 <Download className="w-4 h-4 md:w-5 md:h-5" />
@@ -89,7 +89,7 @@ const Index = () => {
               <h3 className="text-lg md:text-xl font-semibold mb-2 text-gray-900">Historique des analyses</h3>
               <p className="text-sm md:text-base text-gray-600 mb-4">Consultez et exportez l'historique de vos analyses SEO</p>
               <Button 
-                onClick={() => navigate('/historique')}
+                onClick={() => navigate('/history')}
                 className="w-full flex items-center justify-center gap-2 gradient-button rounded-lg py-2 md:py-3 px-3 md:px-4 text-sm md:text-base"
               >
                 <History className="w-4 h-4 md:w-5 md:h-5" />
