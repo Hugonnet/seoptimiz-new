@@ -40,8 +40,9 @@ export default function KeywordDensity() {
       try {
         console.log("Invoking Edge function for URL:", lastAnalyzedUrl); // Debug log
         
+        // Properly format the request body as a JSON string
         const { data, error } = await supabase.functions.invoke('analyze-keyword-density', {
-          body: { url: lastAnalyzedUrl }
+          body: JSON.stringify({ url: lastAnalyzedUrl })
         });
 
         console.log("Edge function response:", { data, error }); // Debug log
