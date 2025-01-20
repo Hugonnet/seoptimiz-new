@@ -12,6 +12,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { Badge } from "@/components/ui/badge";
 
 interface KeywordDensity {
   keyword: string;
@@ -99,7 +100,6 @@ export default function KeywordDensity() {
           setKeywordData(cleanedData);
           setTotalWords(response.data.totalWords);
           
-          // Ne définir les données de liens que si elles existent dans l'analyse
           const internal = lastAnalysis.internal_links?.filter(Boolean) || [];
           const external = lastAnalysis.external_links?.filter(Boolean) || [];
           setLinkData({ internal, external });
@@ -123,6 +123,8 @@ export default function KeywordDensity() {
 
     analyzeLastUrl();
   }, [seoData, toast, navigate]);
+
+  const isBigram = (keyword: string) => keyword.includes(' ');
 
   if (isLoading) {
     return (
@@ -154,7 +156,12 @@ export default function KeywordDensity() {
                     return (
                       <div key={index} className="space-y-2">
                         <div className="flex justify-between items-center">
-                          <span className="font-medium">{item.keyword}</span>
+                          <div className="flex items-center gap-2">
+                            <span className="font-medium">{item.keyword}</span>
+                            {isBigram(item.keyword) && (
+                              <Badge variant="secondary" className="text-xs">Expression</Badge>
+                            )}
+                          </div>
                           <div className="flex items-center gap-4">
                             <span className="text-sm text-gray-500">
                               {item.count} occurrences ({item.density.toFixed(2)}%)

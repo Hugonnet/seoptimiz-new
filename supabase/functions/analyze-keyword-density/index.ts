@@ -7,6 +7,16 @@ interface KeywordDensity {
   density: number;
 }
 
+function getBigrams(words: string[]): string[] {
+  const bigrams: string[] = [];
+  for (let i = 0; i < words.length - 1; i++) {
+    if (words[i].length > 2 && words[i + 1].length > 2) { // Only consider words longer than 2 characters
+      bigrams.push(`${words[i]} ${words[i + 1]}`);
+    }
+  }
+  return bigrams;
+}
+
 serve(async (req) => {
   console.log("Function invoked with request:", req.method);
 
@@ -44,6 +54,14 @@ serve(async (req) => {
     const totalWords = words.length;
     console.log("Total words found:", totalWords);
 
+    // Analyze bigrams
+    const bigrams = getBigrams(words);
+    const bigramFrequency: { [key: string]: number } = {};
+    bigrams.forEach(bigram => {
+      bigramFrequency[bigram] = (bigramFrequency[bigram] || 0) + 1;
+    });
+
+    // Analyze single words
     const wordFrequency: { [key: string]: number } = {};
     words.forEach(word => {
       if (word.length > 3) {
@@ -51,14 +69,26 @@ serve(async (req) => {
       }
     });
 
-    const keywordDensity: KeywordDensity[] = Object.entries(wordFrequency)
+    // Combine and sort results
+    const bigramDensity: KeywordDensity[] = Object.entries(bigramFrequency)
+      .map(([keyword, count]) => ({
+        keyword,
+        count,
+        density: (count / (totalWords - 1)) * 100 // Adjust for bigrams
+      }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 10); // Top 10 bigrams
+
+    const singleWordDensity: KeywordDensity[] = Object.entries(wordFrequency)
       .map(([keyword, count]) => ({
         keyword,
         count,
         density: (count / totalWords) * 100
       }))
       .sort((a, b) => b.count - a.count)
-      .slice(0, 20);
+      .slice(0, 15); // Top 15 single words
+
+    const keywordDensity = [...bigramDensity, ...singleWordDensity];
 
     console.log("Analysis complete, returning results");
 
