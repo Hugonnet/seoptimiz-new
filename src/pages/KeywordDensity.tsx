@@ -6,6 +6,12 @@ import { useToast } from "@/hooks/use-toast";
 import { useSEOStore } from '@/store/seoStore';
 import { Loader2, ArrowUpCircle, ArrowDownCircle } from "lucide-react";
 import { useNavigate } from 'react-router-dom';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface KeywordDensity {
   keyword: string;
@@ -154,16 +160,36 @@ export default function KeywordDensity() {
                               {item.count} occurrences ({item.density.toFixed(2)}%)
                             </span>
                             <div className="flex items-center gap-2">
-                              {item.density < 0.5 && (
-                                <ArrowUpCircle className="h-4 w-4 text-red-500" title="Augmenter la densité" />
-                              )}
-                              {item.density > 4 && (
-                                <ArrowDownCircle className="h-4 w-4 text-red-500" title="Réduire la densité" />
-                              )}
-                              <div 
-                                className={`w-3 h-3 rounded-full ${score.color}`} 
-                                title={`${score.status} - ${score.action}`}
-                              />
+                              <TooltipProvider>
+                                {item.density < 0.5 && (
+                                  <Tooltip>
+                                    <TooltipTrigger>
+                                      <ArrowUpCircle className="h-4 w-4 text-red-500" />
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                      <p>Augmenter la densité</p>
+                                    </TooltipContent>
+                                  </Tooltip>
+                                )}
+                                {item.density > 4 && (
+                                  <Tooltip>
+                                    <TooltipTrigger>
+                                      <ArrowDownCircle className="h-4 w-4 text-red-500" />
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                      <p>Réduire la densité</p>
+                                    </TooltipContent>
+                                  </Tooltip>
+                                )}
+                                <Tooltip>
+                                  <TooltipTrigger>
+                                    <div className={`w-3 h-3 rounded-full ${score.color}`} />
+                                  </TooltipTrigger>
+                                  <TooltipContent>
+                                    <p>{score.status} - {score.action}</p>
+                                  </TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
                             </div>
                           </div>
                         </div>
@@ -184,10 +210,18 @@ export default function KeywordDensity() {
                         <span className="text-sm text-gray-500">
                           {linkData.internal.length} liens
                         </span>
-                        <div 
-                          className={`w-3 h-3 rounded-full ${getLinkScore(linkData.internal).color}`}
-                          title={getLinkScore(linkData.internal).status}
-                        />
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger>
+                              <div 
+                                className={`w-3 h-3 rounded-full ${getLinkScore(linkData.internal).color}`}
+                              />
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>{getLinkScore(linkData.internal).status}</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
                       </div>
                     </div>
                     
@@ -197,10 +231,18 @@ export default function KeywordDensity() {
                         <span className="text-sm text-gray-500">
                           {linkData.external.length} liens
                         </span>
-                        <div 
-                          className={`w-3 h-3 rounded-full ${getLinkScore(linkData.external).color}`}
-                          title={getLinkScore(linkData.external).status}
-                        />
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger>
+                              <div 
+                                className={`w-3 h-3 rounded-full ${getLinkScore(linkData.external).color}`}
+                              />
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>{getLinkScore(linkData.external).status}</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
                       </div>
                     </div>
                   </div>
