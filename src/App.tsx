@@ -6,8 +6,12 @@ import Index from "@/pages/Index";
 import History from "@/pages/History";
 import ExportList from "@/pages/ExportList";
 import KeywordDensity from "@/pages/KeywordDensity";
+import { useSEOStore } from "@/store/seoStore";
 
 function App() {
+  const seoData = useSEOStore((state) => state.seoData);
+  const lastAnalyzedUrl = seoData[0]?.url || '';
+
   return (
     <Router>
       <div className="min-h-screen bg-gray-50">
@@ -19,7 +23,7 @@ function App() {
             <Route path="/export" element={<ExportList />} />
             <Route path="/keyword-density" element={<KeywordDensity />} />
           </Routes>
-          <PerformanceCards />
+          {lastAnalyzedUrl && <PerformanceCards url={lastAnalyzedUrl} />}
         </main>
         <Toaster />
       </div>
