@@ -7,7 +7,7 @@ export interface PerformanceCardsProps {
   url: string;
 }
 
-export default function PerformanceCards({ url }: PerformanceCardsProps) {
+export function PerformanceCards({ url }: PerformanceCardsProps) {
   const navigate = useNavigate()
   const seoData = useSEOStore((state) => state.seoData)
   const lastAnalysis = seoData[0]
