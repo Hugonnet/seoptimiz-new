@@ -31,6 +31,15 @@ const decodeHtmlEntities = (text: string): string => {
   return text.replace(/&[^;]+;/g, (entity) => entities[entity] || entity);
 };
 
+const cleanKeyword = (text: string): string => {
+  // Supprime les caractères HTML et les entités
+  return text
+    .replace(/<[^>]*>/g, '')
+    .replace(/&[^;]+;/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+};
+
 export default function KeywordDensity() {
   const [isLoading, setIsLoading] = useState(false);
   const [keywordData, setKeywordData] = useState<KeywordDensity[]>([]);
@@ -67,10 +76,12 @@ export default function KeywordDensity() {
         console.log('Response:', response);
 
         if (response.data && response.data.keywordDensity) {
-          const cleanedData = response.data.keywordDensity.map((item: KeywordDensity) => ({
-            ...item,
-            keyword: decodeHtmlEntities(item.keyword)
-          }));
+          const cleanedData = response.data.keywordDensity
+            .map((item: KeywordDensity) => ({
+              ...item,
+              keyword: cleanKeyword(item.keyword)
+            }))
+            .filter((item: KeywordDensity) => item.keyword.length > 0);
           
           setKeywordData(cleanedData);
           setTotalWords(response.data.totalWords);

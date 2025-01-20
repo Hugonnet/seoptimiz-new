@@ -1,4 +1,4 @@
-import { Home, History, FileSpreadsheet } from "lucide-react";
+import { Home, History, FileSpreadsheet, Gauge } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import {
   Tooltip,
@@ -16,8 +16,9 @@ export function StickyHeader() {
 
   const navigationItems = [
     { path: "/", icon: Home, tooltip: "Accueil" },
-    { path: "/historique", icon: History, tooltip: "Historique" },
-    { path: "/exports", icon: FileSpreadsheet, tooltip: "Export" },
+    { path: "/history", icon: History, tooltip: "Historique" },
+    { path: "/export", icon: FileSpreadsheet, tooltip: "Export" },
+    { path: "/keyword-density", icon: Gauge, tooltip: "Performance" }
   ];
 
   return (
