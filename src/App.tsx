@@ -12,7 +12,7 @@ function App() {
     <Router>
       <div className="min-h-screen bg-gray-50">
         <StickyHeader />
-        <main className="container mx-auto py-8">
+        <main className="container mx-auto pt-24 pb-8 px-4">
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/history" element={<History />} />
