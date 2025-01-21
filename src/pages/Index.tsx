@@ -1,7 +1,5 @@
 import { useEffect, useState } from 'react';
 import { URLForm } from "@/components/URLForm";
-import { ActionCards } from "@/components/ActionCards";
-import { StickyHeader } from "@/components/StickyHeader";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useSEOStore } from "@/store/seoStore";
@@ -43,8 +41,6 @@ export default function Index() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#F8F9FF] to-[#FFFFFF]">
-      <StickyHeader />
-      
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -62,8 +58,6 @@ export default function Index() {
           </div>
 
           <URLForm />
-          
-          {!isLoading && <ActionCards />}
         </motion.div>
       </div>
     </div>
