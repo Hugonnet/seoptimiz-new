@@ -1,6 +1,5 @@
 import { URLForm } from "@/components/URLForm";
 import { motion } from "framer-motion";
-import { ActionCards } from "@/components/ActionCards";
 
 const Index = () => {
   return (
@@ -33,7 +32,6 @@ const Index = () => {
           className="space-y-6 md:space-y-8"
         >
           <URLForm />
-          <ActionCards />
         </motion.div>
       </div>
     </div>
