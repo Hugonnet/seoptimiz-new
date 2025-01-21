@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Download, Archive, Trash2 } from "lucide-react";
@@ -6,9 +6,42 @@ import { Button } from "@/components/ui/button";
 import { useSEOStore } from '@/store/seoStore';
 import { downloadTableAsCSV } from '@/services/seoService';
 import { archiveCompanyAnalyses, deleteCompanyAnalyses } from '@/services/exportService';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
 export default function ExportList() {
   const { seoData, setSEOData } = useSEOStore();
+  const { toast } = useToast();
+  const [isLoading, setIsLoading] = useState(true);
+  
+  useEffect(() => {
+    const loadSEOData = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('seo_analyses')
+          .select('*')
+          .eq('archived', false)
+          .order('created_at', { ascending: false });
+
+        if (error) {
+          throw error;
+        }
+
+        setSEOData(data || []);
+      } catch (error) {
+        console.error('Erreur lors du chargement des données:', error);
+        toast({
+          title: "Erreur",
+          description: "Impossible de charger les données d'export",
+          variant: "destructive",
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadSEOData();
+  }, [setSEOData, toast]);
   
   // Group data by company, handling empty or undefined company names
   const companiesData = seoData.reduce((acc, item) => {
@@ -28,13 +61,17 @@ export default function ExportList() {
     .filter(([_, data]) => data.length > 0); // Only show companies with non-archived analyses
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto px-4 py-8 mt-16">
       <Card>
         <CardHeader>
           <CardTitle>Exports CSV par entreprise</CardTitle>
         </CardHeader>
         <CardContent>
-          {sortedCompanies.length === 0 ? (
+          {isLoading ? (
+            <div className="text-center py-8 text-gray-500">
+              Chargement des données...
+            </div>
+          ) : sortedCompanies.length === 0 ? (
             <div className="text-center py-8 text-gray-500">
               Aucune analyse SEO active n'est disponible pour le moment.
             </div>
