@@ -14,7 +14,7 @@ export function Navigation() {
         <NavigationMenuItem>
           <Link 
             to="/" 
-            className={navigationMenuTriggerStyle() + " hover:bg-white/20 transition-all duration-300 p-2"}
+            className={navigationMenuTriggerStyle() + " hover:bg-white/20 transition-all duration-300 p-2 bg-transparent"}
             title="Accueil"
           >
             <Home className="h-7 w-7 text-white" strokeWidth={1.5} />
@@ -23,7 +23,7 @@ export function Navigation() {
         <NavigationMenuItem>
           <Link 
             to="/history" 
-            className={navigationMenuTriggerStyle() + " hover:bg-white/20 transition-all duration-300 p-2"}
+            className={navigationMenuTriggerStyle() + " hover:bg-white/20 transition-all duration-300 p-2 bg-transparent"}
             title="Historique"
           >
             <History className="h-7 w-7 text-white" strokeWidth={1.5} />
@@ -32,7 +32,7 @@ export function Navigation() {
         <NavigationMenuItem>
           <Link 
             to="/export" 
-            className={navigationMenuTriggerStyle() + " hover:bg-white/20 transition-all duration-300 p-2"}
+            className={navigationMenuTriggerStyle() + " hover:bg-white/20 transition-all duration-300 p-2 bg-transparent"}
             title="Exports"
           >
             <FileText className="h-7 w-7 text-white" strokeWidth={1.5} />
@@ -41,7 +41,7 @@ export function Navigation() {
         <NavigationMenuItem>
           <Link 
             to="/performance" 
-            className={navigationMenuTriggerStyle() + " hover:bg-white/20 transition-all duration-300 p-2"}
+            className={navigationMenuTriggerStyle() + " hover:bg-white/20 transition-all duration-300 p-2 bg-transparent"}
             title="Vitesse"
           >
             <Gauge className="h-7 w-7 text-white" strokeWidth={1.5} />
