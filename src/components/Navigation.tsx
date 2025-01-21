@@ -4,7 +4,7 @@ import {
   NavigationMenuList,
   navigationMenuTriggerStyle,
 } from "@/components/ui/navigation-menu";
-import { Home, History, FileExport, Gauge } from "lucide-react";
+import { Home, History, FileText, Gauge } from "lucide-react";
 import { Link } from "react-router-dom";
 
 export function Navigation() {
@@ -35,7 +35,7 @@ export function Navigation() {
             className={navigationMenuTriggerStyle() + " hover:bg-[#EEF2FF] hover:text-[#6366F1] transition-all duration-300 p-2"}
             title="Exports"
           >
-            <FileExport className="h-5 w-5" />
+            <FileText className="h-5 w-5" />
           </Link>
         </NavigationMenuItem>
         <NavigationMenuItem>

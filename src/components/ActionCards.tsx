@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { FileExport, History, KeyRound, Gauge } from "lucide-react";
+import { FileText, History, KeyRound, Gauge } from "lucide-react";
 
 export function ActionCards() {
   const navigate = useNavigate();
@@ -17,7 +17,7 @@ export function ActionCards() {
     {
       title: "Exports",
       description: "Exportez et gérez vos analyses SEO par entreprise",
-      icon: FileExport,
+      icon: FileText,
       action: () => navigate("/export"),
       buttonText: "Voir les exports"
     },
