@@ -5,6 +5,7 @@ import { ActionCards } from "@/components/ActionCards";
 import Index from "@/pages/Index";
 import History from "@/pages/History";
 import ExportList from "@/pages/ExportList";
+import Performance from "@/pages/Performance";
 import KeywordDensity from "@/pages/KeywordDensity";
 
 function App() {
@@ -12,17 +13,18 @@ function App() {
     <Router>
       <div className="min-h-screen bg-gray-50">
         <StickyHeader />
-        <main className="container mx-auto pt-24 pb-8 px-4">
+        <div className="container mx-auto px-4 py-8">
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/history" element={<History />} />
             <Route path="/export" element={<ExportList />} />
+            <Route path="/performance" element={<Performance />} />
             <Route path="/keyword-density" element={<KeywordDensity />} />
           </Routes>
-          <div className="mt-8">
-            <ActionCards />
-          </div>
-        </main>
+        </div>
+        <div className="fixed bottom-0 left-0 right-0">
+          <ActionCards />
+        </div>
         <Toaster />
       </div>
     </Router>
