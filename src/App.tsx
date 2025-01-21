@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { Toaster } from "@/components/ui/toaster";
 import { StickyHeader } from "@/components/StickyHeader";
+import { ActionCards } from "@/components/ActionCards";
 import Index from "@/pages/Index";
 import History from "@/pages/History";
 import ExportList from "@/pages/ExportList";
@@ -18,6 +19,9 @@ function App() {
             <Route path="/export" element={<ExportList />} />
             <Route path="/keyword-density" element={<KeywordDensity />} />
           </Routes>
+          <div className="mt-8">
+            <ActionCards />
+          </div>
         </main>
         <Toaster />
       </div>
