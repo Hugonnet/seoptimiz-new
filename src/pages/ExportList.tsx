@@ -5,7 +5,6 @@ import { Download, Archive, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useSEOStore } from '@/store/seoStore';
 import { downloadTableAsCSV } from '@/services/seoService';
-import { StickyHeader } from '@/components/StickyHeader';
 import { archiveCompanyAnalyses, deleteCompanyAnalyses } from '@/services/exportService';
 
 export default function ExportList() {
@@ -29,68 +28,65 @@ export default function ExportList() {
     .filter(([_, data]) => data.length > 0); // Only show companies with non-archived analyses
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#F8F9FF] to-[#FFFFFF]">
-      <StickyHeader />
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-16">
-        <Card>
-          <CardHeader>
-            <CardTitle>Exports CSV par entreprise</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {sortedCompanies.length === 0 ? (
-              <div className="text-center py-8 text-gray-500">
-                Aucune analyse SEO active n'est disponible pour le moment.
-              </div>
-            ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Entreprise</TableHead>
-                    <TableHead>Nombre d'analyses</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
+    <div className="container mx-auto px-4 py-8">
+      <Card>
+        <CardHeader>
+          <CardTitle>Exports CSV par entreprise</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {sortedCompanies.length === 0 ? (
+            <div className="text-center py-8 text-gray-500">
+              Aucune analyse SEO active n'est disponible pour le moment.
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Entreprise</TableHead>
+                  <TableHead>Nombre d'analyses</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {sortedCompanies.map(([company, data]) => (
+                  <TableRow key={company}>
+                    <TableCell className="font-medium">{company}</TableCell>
+                    <TableCell>{data.length}</TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex justify-end gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => downloadTableAsCSV(data)}
+                        >
+                          <Download className="h-4 w-4 mr-1" />
+                          Télécharger
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => archiveCompanyAnalyses(company, setSEOData, seoData)}
+                        >
+                          <Archive className="h-4 w-4 mr-1" />
+                          Archiver
+                        </Button>
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          onClick={() => deleteCompanyAnalyses(company, setSEOData, seoData)}
+                        >
+                          <Trash2 className="h-4 w-4 mr-1" />
+                          Supprimer
+                        </Button>
+                      </div>
+                    </TableCell>
                   </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {sortedCompanies.map(([company, data]) => (
-                    <TableRow key={company}>
-                      <TableCell className="font-medium">{company}</TableCell>
-                      <TableCell>{data.length}</TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex justify-end gap-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => downloadTableAsCSV(data)}
-                          >
-                            <Download className="h-4 w-4 mr-1" />
-                            Télécharger
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => archiveCompanyAnalyses(company, setSEOData, seoData)}
-                          >
-                            <Archive className="h-4 w-4 mr-1" />
-                            Archiver
-                          </Button>
-                          <Button
-                            variant="destructive"
-                            size="sm"
-                            onClick={() => deleteCompanyAnalyses(company, setSEOData, seoData)}
-                          >
-                            <Trash2 className="h-4 w-4 mr-1" />
-                            Supprimer
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            )}
-          </CardContent>
-        </Card>
-      </div>
+                ))}
+              </TableBody>
+            </Table>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }

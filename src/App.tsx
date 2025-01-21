@@ -19,9 +19,6 @@ function App() {
             <Route path="/export" element={<ExportList />} />
             <Route path="/keyword-density" element={<KeywordDensity />} />
           </Routes>
-          <div className="mt-8">
-            <ActionCards />
-          </div>
         </main>
         <Toaster />
       </div>
