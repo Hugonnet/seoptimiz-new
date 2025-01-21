@@ -5,7 +5,6 @@ import { useSEOStore } from "@/store/seoStore";
 import { downloadTableAsCSV } from "@/services/seoService";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { PerformanceCards } from "@/components/PerformanceCards";
 
 const Index = () => {
   const seoData = useSEOStore((state) => state.seoData);
@@ -121,8 +120,6 @@ const Index = () => {
             </div>
           </div>
         </motion.div>
-
-        {lastAnalyzedUrl && <PerformanceCards url={lastAnalyzedUrl} />}
       </div>
     </div>
   );
