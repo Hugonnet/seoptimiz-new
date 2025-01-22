@@ -1,43 +1,97 @@
-import { serve } from "std/server";
-import { chromium } from "playwright";
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { chromium } from "https://deno.land/x/playwright@v1.39.0/mod.ts";
+import { corsHeaders } from "../_shared/cors.ts";
 
 serve(async (req) => {
-  const { url } = await req.json();
+  // Handle CORS preflight requests
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { headers: corsHeaders });
+  }
 
-  const browser = await chromium.launch();
-  const page = await browser.newPage();
-  await page.goto(url);
+  try {
+    const { url } = await req.json();
+    console.log('Analyzing URL:', url);
 
-  const title = await page.title();
-  const description = await page.$eval('meta[name="description"]', (el) => el.content);
-  
-  // Extraction des liens
-  const extractLinks = async (page) => {
-    const links = await page.$$eval('a', (elements) => {
-      return elements.map(el => ({
-        href: el.href,
-        text: el.textContent?.trim(),
-        isInternal: el.href.includes(window.location.hostname)
-      }));
+    if (!url) {
+      throw new Error('URL is required');
+    }
+
+    const browser = await chromium.launch();
+    const page = await browser.newPage();
+    
+    console.log('Navigating to URL...');
+    await page.goto(url, { waitUntil: 'networkidle' });
+
+    console.log('Extracting metadata...');
+    const metadata = await page.evaluate(() => {
+      const getMetaContent = (name: string) => {
+        const meta = document.querySelector(`meta[name="${name}"], meta[property="${name}"]`);
+        return meta ? (meta as HTMLMetaElement).content : '';
+      };
+
+      const getHeadings = (tag: string) => {
+        return Array.from(document.querySelectorAll(tag)).map(h => h.textContent?.trim()).filter(Boolean);
+      };
+
+      const getVisibleText = () => {
+        const walker = document.createTreeWalker(
+          document.body,
+          NodeFilter.SHOW_TEXT,
+          {
+            acceptNode: function(node) {
+              if (node.parentElement?.offsetParent !== null) {
+                return NodeFilter.FILTER_ACCEPT;
+              }
+              return NodeFilter.FILTER_REJECT;
+            }
+          }
+        );
+
+        const textNodes = [];
+        let node;
+        while (node = walker.nextNode()) {
+          const text = node.textContent?.trim();
+          if (text) {
+            textNodes.push(text);
+          }
+        }
+        return textNodes;
+      };
+
+      return {
+        title: document.title,
+        description: getMetaContent('description'),
+        h1: document.querySelector('h1')?.textContent?.trim() || '',
+        h2s: getHeadings('h2'),
+        h3s: getHeadings('h3'),
+        h4s: getHeadings('h4'),
+        visibleText: getVisibleText(),
+        keywords: getMetaContent('keywords'),
+        canonical: document.querySelector('link[rel="canonical"]')?.getAttribute('href') || '',
+        ogTitle: getMetaContent('og:title'),
+        ogDescription: getMetaContent('og:description'),
+        ogImage: getMetaContent('og:image')
+      };
     });
 
-    const internal = links.filter(link => link.isInternal).map(link => link.href);
-    const external = links.filter(link => !link.isInternal).map(link => link.href);
+    console.log('Metadata extracted successfully');
+    await browser.close();
 
-    return { internal, external };
-  };
+    return new Response(JSON.stringify(metadata), {
+      headers: { 
+        ...corsHeaders,
+        'Content-Type': 'application/json'
+      }
+    });
 
-  const { internal, external } = await extractLinks(page);
-
-  const analysisData = {
-    title,
-    description,
-    internal_links: internal,
-    external_links: external,
-  };
-
-  await browser.close();
-  return new Response(JSON.stringify(analysisData), {
-    headers: { "Content-Type": "application/json" },
-  });
+  } catch (error) {
+    console.error('Error in extract-seo function:', error);
+    return new Response(JSON.stringify({ error: error.message }), {
+      status: 500,
+      headers: { 
+        ...corsHeaders,
+        'Content-Type': 'application/json'
+      }
+    });
+  }
 });
