@@ -1,4 +1,3 @@
-import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
@@ -26,7 +25,7 @@ serve(async (req) => {
     Ta tâche est de générer des suggestions d'optimisation SEO pour chaque élément HTML fourni.
     IMPORTANT: 
     - Pour chaque élément actuel, tu dois proposer une version optimisée qui reste cohérente avec le contenu original
-    - La meta description DOIT faire entre 150 et 160 caractères maximum
+    - La meta description DOIT faire EXACTEMENT entre 145 et 155 caractères, pas plus, pas moins
     - Le titre doit faire entre 50 et 60 caractères maximum
     - Pour les H3 et H4, tu DOIS générer EXACTEMENT 14 suggestions pour chaque niveau
     Les suggestions doivent être organisées de manière logique et hiérarchique.
@@ -35,7 +34,7 @@ serve(async (req) => {
     L'objet JSON doit contenir exactement ces propriétés :
     {
       "suggested_title": "string (50-60 caractères)",
-      "suggested_description": "string (150-160 caractères)",
+      "suggested_description": "string (EXACTEMENT entre 145-155 caractères)",
       "suggested_h1": "string",
       "suggested_h2s": ["string"],
       "suggested_h3s": ["14 strings exactement"],

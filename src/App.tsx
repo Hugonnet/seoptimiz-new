@@ -22,7 +22,7 @@ function App() {
             <Route path="/keyword-density" element={<KeywordDensity />} />
           </Routes>
         </div>
-        <div className="fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-sm border-t border-gray-100">
+        <div className="bg-white/80 backdrop-blur-sm border-t border-gray-100">
           <div className="container mx-auto">
             <ActionCards />
           </div>

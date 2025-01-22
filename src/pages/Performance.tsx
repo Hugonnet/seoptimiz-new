@@ -2,9 +2,11 @@ import { useNavigate } from "react-router-dom";
 import { useSEOStore } from "@/store/seoStore";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Link2, ExternalLink, AlertTriangle } from "lucide-react";
+import { useToast } from "@/components/ui/use-toast";
 
 export default function Performance() {
   const navigate = useNavigate();
+  const { toast } = useToast();
   const seoData = useSEOStore((state) => state.seoData);
   const lastAnalysis = seoData[0];
 
@@ -23,6 +25,14 @@ export default function Performance() {
     if (speed <= 2) return "Excellent";
     if (speed <= 4) return "Acceptable";
     return "À améliorer";
+  };
+
+  const handleLinkClick = (url: string) => {
+    window.open(url, '_blank');
+    toast({
+      title: "Ouverture du lien",
+      description: "Le lien s'ouvre dans un nouvel onglet",
+    });
   };
 
   return (
@@ -77,10 +87,14 @@ export default function Performance() {
                       {lastAnalysis.internal_links?.length || 0}
                     </p>
                     <div className="max-h-40 overflow-y-auto space-y-1">
-                      {lastAnalysis.internal_links?.map((link, index) => (
-                        <p key={index} className="text-sm text-gray-600 break-all">
+                      {lastAnalysis.internal_links?.map((link: string, index: number) => (
+                        <button
+                          key={index}
+                          onClick={() => handleLinkClick(link)}
+                          className="text-sm text-blue-600 hover:text-blue-800 break-all text-left w-full hover:bg-gray-50 p-1 rounded"
+                        >
                           {link}
-                        </p>
+                        </button>
                       ))}
                     </div>
                   </div>
@@ -100,10 +114,14 @@ export default function Performance() {
                       {lastAnalysis.external_links?.length || 0}
                     </p>
                     <div className="max-h-40 overflow-y-auto space-y-1">
-                      {lastAnalysis.external_links?.map((link, index) => (
-                        <p key={index} className="text-sm text-gray-600 break-all">
+                      {lastAnalysis.external_links?.map((link: string, index: number) => (
+                        <button
+                          key={index}
+                          onClick={() => handleLinkClick(link)}
+                          className="text-sm text-green-600 hover:text-green-800 break-all text-left w-full hover:bg-gray-50 p-1 rounded"
+                        >
                           {link}
-                        </p>
+                        </button>
                       ))}
                     </div>
                   </div>
@@ -123,10 +141,14 @@ export default function Performance() {
                       {lastAnalysis.broken_links?.length || 0}
                     </p>
                     <div className="max-h-40 overflow-y-auto space-y-1">
-                      {lastAnalysis.broken_links?.map((link, index) => (
-                        <p key={index} className="text-sm text-gray-600 break-all">
+                      {lastAnalysis.broken_links?.map((link: string, index: number) => (
+                        <button
+                          key={index}
+                          onClick={() => handleLinkClick(link)}
+                          className="text-sm text-red-600 hover:text-red-800 break-all text-left w-full hover:bg-gray-50 p-1 rounded"
+                        >
                           {link}
-                        </p>
+                        </button>
                       ))}
                     </div>
                   </div>
