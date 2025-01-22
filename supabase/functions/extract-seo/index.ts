@@ -2,7 +2,6 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { corsHeaders } from "../_shared/cors.ts";
 
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -36,18 +35,24 @@ serve(async (req) => {
       const hostname = new URL(url).hostname;
       
       const linkMatches = content.matchAll(/<a\s+(?:[^>]*?\s+)?href=["'](.*?)["']/gi);
-      for (const match of linkMatches) {
+      for (const match of Array.from(linkMatches)) {
         try {
           const href = match[1];
-          if (href.startsWith('#') || href.startsWith('javascript:')) continue;
+          if (!href || href.startsWith('#') || href.startsWith('javascript:') || href.startsWith('mailto:')) {
+            continue;
+          }
           
           const absoluteUrl = href.startsWith('http') ? href : new URL(href, baseUrl).href;
-          const isInternal = new URL(absoluteUrl).hostname === hostname;
+          const linkHostname = new URL(absoluteUrl).hostname;
           
-          if (isInternal) {
-            links.internal.push(absoluteUrl);
+          if (linkHostname === hostname) {
+            if (!links.internal.includes(absoluteUrl)) {
+              links.internal.push(absoluteUrl);
+            }
           } else {
-            links.external.push(absoluteUrl);
+            if (!links.external.includes(absoluteUrl)) {
+              links.external.push(absoluteUrl);
+            }
           }
         } catch (e) {
           console.warn('Invalid URL found:', match[1]);
@@ -59,10 +64,10 @@ serve(async (req) => {
     // Helper function to extract headings
     const extractHeadings = (content: string, tag: string): string[] => {
       const regex = new RegExp(`<${tag}[^>]*>(.*?)<\/${tag}>`, 'gi');
-      const matches = [...content.matchAll(regex)];
+      const matches = Array.from(content.matchAll(regex));
       return matches.map(match => 
         match[1]
-          .replace(/<[^>]+>/g, '') // Remove any nested HTML tags
+          .replace(/<[^>]+>/g, '')
           .trim()
       ).filter(Boolean);
     };
@@ -81,7 +86,7 @@ serve(async (req) => {
     const brokenLinks: string[] = [];
     const allLinks = [...internal, ...external];
     
-    for (const link of allLinks.slice(0, 10)) { // Limit to first 10 links to avoid rate limiting
+    const checkPromises = allLinks.slice(0, 10).map(async (link) => {
       try {
         const response = await fetch(link, { method: 'HEAD' });
         if (!response.ok) {
@@ -90,7 +95,9 @@ serve(async (req) => {
       } catch (e) {
         brokenLinks.push(link);
       }
-    }
+    });
+
+    await Promise.all(checkPromises);
 
     const metadata = {
       title,
@@ -106,10 +113,16 @@ serve(async (req) => {
       ogImage: getMetaContent(html, 'og:image'),
       internal_links: internal,
       external_links: external,
-      broken_links: brokenLinks
+      broken_links: brokenLinks,
+      page_load_speed: (Date.now() - performance.now()) / 1000 // Approximate load time in seconds
     };
 
     console.log('Metadata extraction complete');
+    console.log('Links found:', {
+      internal: internal.length,
+      external: external.length,
+      broken: brokenLinks.length
+    });
 
     return new Response(JSON.stringify(metadata), {
       headers: { 
