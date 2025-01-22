@@ -21,33 +21,51 @@ serve(async (req) => {
       throw new Error('La clé API OpenAI n\'est pas configurée');
     }
 
-    const systemPrompt = `Tu es un expert SEO spécialisé dans l'optimisation de contenu en français.
-    Ta tâche est de générer des suggestions d'optimisation SEO pour chaque élément HTML fourni.
-    IMPORTANT: 
-    - Pour chaque élément actuel, tu dois proposer une version optimisée qui reste cohérente avec le contenu original
-    - La meta description DOIT faire EXACTEMENT entre 145 et 155 caractères, pas plus, pas moins
-    - Le titre doit faire entre 50 et 60 caractères maximum
-    - Pour les H3 et H4, tu DOIS générer EXACTEMENT 14 suggestions pour chaque niveau
-    Les suggestions doivent être organisées de manière logique et hiérarchique.
+    const systemPrompt = `Tu es un expert SEO francophone spécialisé dans l'optimisation de contenu web.
+    Ta mission est de générer des suggestions d'optimisation SEO pertinentes et détaillées.
 
-    Tu dois répondre UNIQUEMENT avec un objet JSON valide, sans aucun texte avant ou après, sans délimiteurs markdown.
-    L'objet JSON doit contenir exactement ces propriétés :
+    RÈGLES IMPORTANTES:
+    1. Pour la meta description:
+       - EXACTEMENT entre 145 et 155 caractères
+       - Inclure un appel à l'action clair
+       - Utiliser des mots-clés naturellement
+       - Être persuasive et informative
+
+    2. Pour le titre:
+       - Entre 50 et 60 caractères
+       - Placer les mots-clés importants au début
+       - Inclure le nom de l'entreprise
+       - Être accrocheur tout en restant professionnel
+
+    3. Pour les balises H1:
+       - Une seule balise H1 par page
+       - Inclure le mot-clé principal
+       - Être cohérent avec le titre
+       - Être clair et descriptif
+
+    4. Pour chaque suggestion:
+       - Fournir une explication SEO détaillée et technique
+       - Expliquer pourquoi la modification améliore le référencement
+       - Mentionner l'impact sur l'intention de recherche
+       - Inclure des conseils d'optimisation spécifiques
+
+    Réponds UNIQUEMENT avec un objet JSON valide contenant ces propriétés:
     {
       "suggested_title": "string (50-60 caractères)",
-      "suggested_description": "string (EXACTEMENT entre 145-155 caractères)",
+      "suggested_description": "string (EXACTEMENT 145-155 caractères)",
       "suggested_h1": "string",
       "suggested_h2s": ["string"],
-      "suggested_h3s": ["14 strings exactement"],
-      "suggested_h4s": ["14 strings exactement"],
-      "title_context": "string",
-      "description_context": "string",
-      "h1_context": "string",
+      "suggested_h3s": ["string"],
+      "suggested_h4s": ["string"],
+      "title_context": "string (explication technique SEO)",
+      "description_context": "string (explication technique SEO)",
+      "h1_context": "string (explication technique SEO)",
       "h2s_context": ["string"],
-      "h3s_context": ["14 strings exactement"],
-      "h4s_context": ["14 strings exactement"]
+      "h3s_context": ["string"],
+      "h4s_context": ["string"]
     }`;
 
-    const userPrompt = `Analyse et optimise ces éléments SEO en gardant une cohérence avec le contenu original :
+    const userPrompt = `Analyse et optimise ces éléments SEO en suivant les règles strictes:
     
     Titre actuel: "${currentTitle || ''}"
     Description actuelle: "${currentDescription || ''}"
@@ -56,11 +74,11 @@ serve(async (req) => {
     H3s actuels: ${JSON.stringify(currentH3s || [])}
     H4s actuels: ${JSON.stringify(currentH4s || [])}
     
-    IMPORTANT:
-    - Génère EXACTEMENT 14 H3s et 14 H4s cohérents
-    - Les suggestions doivent être pertinentes par rapport aux versions actuelles
-    - Assure-toi que la hiérarchie des titres est logique
-    - Réponds UNIQUEMENT avec l'objet JSON demandé, sans texte avant ou après`;
+    Pour chaque élément:
+    1. Analyse l'existant d'un point de vue SEO
+    2. Propose une version optimisée
+    3. Explique techniquement pourquoi c'est mieux
+    4. Fournis des métriques SEO spécifiques`;
 
     console.log('Envoi de la requête à OpenAI...');
 
@@ -71,7 +89,7 @@ serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4',
+        model: 'gpt-4o',
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: userPrompt }
@@ -93,7 +111,6 @@ serve(async (req) => {
       throw new Error('Réponse OpenAI invalide ou vide');
     }
 
-    // Nettoyer la réponse de tout délimiteur markdown
     let cleanedContent = data.choices[0].message.content
       .replace(/```json\n?/g, '')
       .replace(/```\n?/g, '')
@@ -101,11 +118,9 @@ serve(async (req) => {
 
     console.log('Contenu nettoyé:', cleanedContent);
 
-    // Parser la réponse JSON
     const suggestions = JSON.parse(cleanedContent);
     console.log('Suggestions parsées:', suggestions);
 
-    // Vérifier que toutes les propriétés requises sont présentes
     const requiredProps = [
       'suggested_title',
       'suggested_description',
@@ -127,9 +142,11 @@ serve(async (req) => {
       }
     }
 
-    // Vérifier qu'il y a exactement 14 H3s et H4s
-    if (suggestions.suggested_h3s.length !== 14 || suggestions.suggested_h4s.length !== 14) {
-      throw new Error('Le nombre de H3s ou H4s n\'est pas égal à 14');
+    // Vérification de la longueur de la meta description
+    const descriptionLength = suggestions.suggested_description.length;
+    if (descriptionLength < 145 || descriptionLength > 155) {
+      console.warn(`La meta description fait ${descriptionLength} caractères, ajustement nécessaire`);
+      // On pourrait ajouter ici une logique d'ajustement automatique
     }
 
     return new Response(JSON.stringify(suggestions), {
