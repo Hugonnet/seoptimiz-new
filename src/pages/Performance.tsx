@@ -3,6 +3,7 @@ import { useSEOStore } from "@/store/seoStore";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Link2, ExternalLink, AlertTriangle } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
+import { useEffect } from "react";
 
 export default function Performance() {
   const navigate = useNavigate();
@@ -10,24 +11,39 @@ export default function Performance() {
   const seoData = useSEOStore((state) => state.seoData);
   const lastAnalysis = seoData[0];
 
-  if (!lastAnalysis) {
-    navigate("/");
-    return null;
-  }
+  useEffect(() => {
+    if (!lastAnalysis) {
+      navigate("/");
+      return;
+    }
+
+    // Log data to help debug
+    console.log("SEO Analysis Data:", lastAnalysis);
+    console.log("Load Speed:", lastAnalysis?.page_load_speed);
+    console.log("Internal Links:", lastAnalysis?.internal_links);
+    console.log("External Links:", lastAnalysis?.external_links);
+    console.log("Broken Links:", lastAnalysis?.broken_links);
+  }, [lastAnalysis, navigate]);
+
+  if (!lastAnalysis) return null;
 
   const getSpeedColor = (speed: number) => {
+    if (!speed || isNaN(speed)) return "text-gray-600";
     if (speed <= 2) return "text-green-600";
     if (speed <= 4) return "text-yellow-600";
     return "text-red-600";
   };
 
   const getSpeedText = (speed: number) => {
+    if (!speed || isNaN(speed)) return "Non mesuré";
     if (speed <= 2) return "Excellent";
     if (speed <= 4) return "Acceptable";
     return "À améliorer";
   };
 
   const handleLinkClick = (url: string) => {
+    if (!url) return;
+    
     if (!url.startsWith('http')) {
       url = `https://${url}`;
     }
@@ -44,7 +60,7 @@ export default function Performance() {
   const brokenLinks = lastAnalysis.broken_links?.filter(link => link && link.trim() !== '') || [];
 
   return (
-    <div className="space-y-8 pb-8">
+    <div className="space-y-8">
       <h1 className="text-3xl font-bold">Performance de la page</h1>
       
       <Card className="bg-white">
@@ -68,25 +84,27 @@ export default function Performance() {
                 {getSpeedText(lastAnalysis.page_load_speed)}
               </span>
               <span className="text-gray-600">
-                {lastAnalysis.page_load_speed}s
+                {lastAnalysis.page_load_speed ? `${lastAnalysis.page_load_speed}s` : 'Non mesuré'}
               </span>
             </div>
-            <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
-              <div 
-                className={`h-full transition-all duration-300 ${
-                  lastAnalysis.page_load_speed <= 2 ? 'bg-green-500' :
-                  lastAnalysis.page_load_speed <= 4 ? 'bg-yellow-500' : 'bg-red-500'
-                }`}
-                style={{ width: `${Math.min((lastAnalysis.page_load_speed / 6) * 100, 100)}%` }}
-              />
-            </div>
+            {lastAnalysis.page_load_speed && (
+              <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
+                <div 
+                  className={`h-full transition-all duration-300 ${
+                    lastAnalysis.page_load_speed <= 2 ? 'bg-green-500' :
+                    lastAnalysis.page_load_speed <= 4 ? 'bg-yellow-500' : 'bg-red-500'
+                  }`}
+                  style={{ width: `${Math.min((lastAnalysis.page_load_speed / 6) * 100, 100)}%` }}
+                />
+              </div>
+            )}
           </div>
 
           <div className="space-y-4">
             <h3 className="text-lg font-semibold">Analyse des liens</h3>
             
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              <Card className="bg-white shadow-md hover:shadow-lg transition-shadow">
+              <Card className="bg-white shadow-sm hover:shadow-md transition-shadow">
                 <CardHeader>
                   <CardTitle className="text-base flex items-center gap-2">
                     <Link2 className="h-5 w-5 text-blue-500" />
@@ -98,23 +116,25 @@ export default function Performance() {
                     <p className="text-2xl font-bold">
                       {internalLinks.length}
                     </p>
-                    <div className="max-h-40 overflow-y-auto space-y-1">
-                      {internalLinks.map((link: string, index: number) => (
-                        <button
-                          key={index}
-                          onClick={() => handleLinkClick(link)}
-                          className="text-sm text-blue-600 hover:text-blue-800 break-all text-left w-full hover:bg-gray-50 p-1 rounded flex items-center gap-2"
-                        >
-                          <Link2 className="h-4 w-4 shrink-0" />
-                          <span>{link}</span>
-                        </button>
-                      ))}
-                    </div>
+                    {internalLinks.length > 0 && (
+                      <div className="max-h-40 overflow-y-auto space-y-1">
+                        {internalLinks.map((link: string, index: number) => (
+                          <button
+                            key={index}
+                            onClick={() => handleLinkClick(link)}
+                            className="text-sm text-blue-600 hover:text-blue-800 break-all text-left w-full hover:bg-gray-50 p-1 rounded flex items-center gap-2"
+                          >
+                            <Link2 className="h-4 w-4 shrink-0" />
+                            <span>{link}</span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </CardContent>
               </Card>
 
-              <Card className="bg-white shadow-md hover:shadow-lg transition-shadow">
+              <Card className="bg-white shadow-sm hover:shadow-md transition-shadow">
                 <CardHeader>
                   <CardTitle className="text-base flex items-center gap-2">
                     <ExternalLink className="h-5 w-5 text-green-500" />
@@ -126,23 +146,25 @@ export default function Performance() {
                     <p className="text-2xl font-bold">
                       {externalLinks.length}
                     </p>
-                    <div className="max-h-40 overflow-y-auto space-y-1">
-                      {externalLinks.map((link: string, index: number) => (
-                        <button
-                          key={index}
-                          onClick={() => handleLinkClick(link)}
-                          className="text-sm text-green-600 hover:text-green-800 break-all text-left w-full hover:bg-gray-50 p-1 rounded flex items-center gap-2"
-                        >
-                          <ExternalLink className="h-4 w-4 shrink-0" />
-                          <span>{link}</span>
-                        </button>
-                      ))}
-                    </div>
+                    {externalLinks.length > 0 && (
+                      <div className="max-h-40 overflow-y-auto space-y-1">
+                        {externalLinks.map((link: string, index: number) => (
+                          <button
+                            key={index}
+                            onClick={() => handleLinkClick(link)}
+                            className="text-sm text-green-600 hover:text-green-800 break-all text-left w-full hover:bg-gray-50 p-1 rounded flex items-center gap-2"
+                          >
+                            <ExternalLink className="h-4 w-4 shrink-0" />
+                            <span>{link}</span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </CardContent>
               </Card>
 
-              <Card className="bg-white shadow-md hover:shadow-lg transition-shadow">
+              <Card className="bg-white shadow-sm hover:shadow-md transition-shadow">
                 <CardHeader>
                   <CardTitle className="text-base flex items-center gap-2">
                     <AlertTriangle className="h-5 w-5 text-red-500" />
@@ -154,18 +176,20 @@ export default function Performance() {
                     <p className="text-2xl font-bold">
                       {brokenLinks.length}
                     </p>
-                    <div className="max-h-40 overflow-y-auto space-y-1">
-                      {brokenLinks.map((link: string, index: number) => (
-                        <button
-                          key={index}
-                          onClick={() => handleLinkClick(link)}
-                          className="text-sm text-red-600 hover:text-red-800 break-all text-left w-full hover:bg-gray-50 p-1 rounded flex items-center gap-2"
-                        >
-                          <AlertTriangle className="h-4 w-4 shrink-0" />
-                          <span>{link}</span>
-                        </button>
-                      ))}
-                    </div>
+                    {brokenLinks.length > 0 && (
+                      <div className="max-h-40 overflow-y-auto space-y-1">
+                        {brokenLinks.map((link: string, index: number) => (
+                          <button
+                            key={index}
+                            onClick={() => handleLinkClick(link)}
+                            className="text-sm text-red-600 hover:text-red-800 break-all text-left w-full hover:bg-gray-50 p-1 rounded flex items-center gap-2"
+                          >
+                            <AlertTriangle className="h-4 w-4 shrink-0" />
+                            <span>{link}</span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </CardContent>
               </Card>
