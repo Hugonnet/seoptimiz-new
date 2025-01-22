@@ -13,7 +13,7 @@ function App() {
     <Router>
       <div className="min-h-screen bg-gray-50">
         <StickyHeader />
-        <div className="container mx-auto px-4 py-8">
+        <div className="container mx-auto px-4 pt-24 pb-32">
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/history" element={<History />} />
@@ -22,8 +22,10 @@ function App() {
             <Route path="/keyword-density" element={<KeywordDensity />} />
           </Routes>
         </div>
-        <div className="fixed bottom-0 left-0 right-0">
-          <ActionCards />
+        <div className="fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-sm border-t border-gray-100">
+          <div className="container mx-auto">
+            <ActionCards />
+          </div>
         </div>
         <Toaster />
       </div>

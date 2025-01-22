@@ -24,15 +24,18 @@ serve(async (req) => {
 
     const systemPrompt = `Tu es un expert SEO spécialisé dans l'optimisation de contenu en français.
     Ta tâche est de générer des suggestions d'optimisation SEO pour chaque élément HTML fourni.
-    IMPORTANT: Pour chaque élément actuel, tu dois proposer une version optimisée qui reste cohérente avec le contenu original.
-    Pour les H3 et H4, tu DOIS générer EXACTEMENT 14 suggestions pour chaque niveau, même si moins d'éléments sont fournis en entrée.
+    IMPORTANT: 
+    - Pour chaque élément actuel, tu dois proposer une version optimisée qui reste cohérente avec le contenu original
+    - La meta description DOIT faire entre 150 et 160 caractères maximum
+    - Le titre doit faire entre 50 et 60 caractères maximum
+    - Pour les H3 et H4, tu DOIS générer EXACTEMENT 14 suggestions pour chaque niveau
     Les suggestions doivent être organisées de manière logique et hiérarchique.
-    
+
     Tu dois répondre UNIQUEMENT avec un objet JSON valide, sans aucun texte avant ou après, sans délimiteurs markdown.
     L'objet JSON doit contenir exactement ces propriétés :
     {
-      "suggested_title": "string",
-      "suggested_description": "string",
+      "suggested_title": "string (50-60 caractères)",
+      "suggested_description": "string (150-160 caractères)",
       "suggested_h1": "string",
       "suggested_h2s": ["string"],
       "suggested_h3s": ["14 strings exactement"],

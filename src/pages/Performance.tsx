@@ -1,138 +1,141 @@
-import { useState, useEffect } from 'react';
+import { useNavigate } from "react-router-dom";
+import { useSEOStore } from "@/store/seoStore";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
-import { Badge } from "@/components/ui/badge";
-import { Link2, AlertTriangle } from "lucide-react";
-import { useSEOStore } from '@/store/seoStore';
-import { useNavigate } from 'react-router-dom';
-import { useToast } from "@/hooks/use-toast";
+import { Link2, ExternalLink, AlertTriangle } from "lucide-react";
 
 export default function Performance() {
-  const seoData = useSEOStore((state) => state.seoData);
   const navigate = useNavigate();
-  const { toast } = useToast();
-  const [lastAnalysis, setLastAnalysis] = useState<any>(null);
-
-  useEffect(() => {
-    if (!seoData || seoData.length === 0) {
-      toast({
-        variant: "destructive",
-        title: "Erreur",
-        description: "Aucune URL n'a été analysée. Veuillez d'abord analyser une URL.",
-      });
-      navigate('/');
-      return;
-    }
-
-    setLastAnalysis(seoData[0]);
-  }, [seoData, navigate, toast]);
+  const seoData = useSEOStore((state) => state.seoData);
+  const lastAnalysis = seoData[0];
 
   if (!lastAnalysis) {
+    navigate("/");
     return null;
   }
 
   const getSpeedColor = (speed: number) => {
-    if (speed <= 2) return 'bg-green-500';
-    if (speed <= 4) return 'bg-yellow-500';
-    return 'bg-red-500';
+    if (speed <= 2) return "text-green-600";
+    if (speed <= 4) return "text-yellow-600";
+    return "text-red-600";
   };
 
   const getSpeedText = (speed: number) => {
-    if (speed <= 2) return 'Excellent';
-    if (speed <= 4) return 'Acceptable';
-    return 'À améliorer';
+    if (speed <= 2) return "Excellent";
+    if (speed <= 4) return "Acceptable";
+    return "À améliorer";
   };
 
   return (
-    <div className="container mx-auto py-8 px-4">
-      <h1 className="text-3xl font-bold mb-8">Performance de la page</h1>
+    <div className="space-y-8">
+      <h1 className="text-3xl font-bold">Performance de la page</h1>
       
-      <div className="space-y-6">
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-xl">
-              URL analysée : <span className="text-purple-600 break-all">{lastAnalysis.url}</span>
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-8">
-            {/* Vitesse de chargement */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold">Vitesse de chargement</h3>
-              <div className="space-y-2">
-                <div className="flex justify-between items-center">
-                  <span>{getSpeedText(lastAnalysis.page_load_speed || 0)}</span>
-                  <span>{lastAnalysis.page_load_speed?.toFixed(2) || 0}s</span>
-                </div>
-                <Progress 
-                  value={Math.min(100, (lastAnalysis.page_load_speed || 0) * 20)} 
-                  className={`h-2 ${getSpeedColor(lastAnalysis.page_load_speed || 0)}`}
-                />
-              </div>
-            </div>
+      <Card>
+        <CardContent className="p-6 space-y-6">
+          <div>
+            <h2 className="text-xl font-semibold mb-2">URL analysée : </h2>
+            <a href={lastAnalysis.url} target="_blank" rel="noopener noreferrer" 
+               className="text-purple-600 hover:text-purple-700 break-all">
+              {lastAnalysis.url}
+            </a>
+          </div>
 
-            {/* Liens */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold">Analyse des liens</h3>
-              
-              {/* Liens internes */}
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="flex items-center gap-2">
-                    <Link2 className="h-4 w-4 text-blue-500" />
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold">Vitesse de chargement</h3>
+            <div className="flex items-center space-x-4">
+              <span className={`text-2xl font-bold ${getSpeedColor(lastAnalysis.page_load_speed)}`}>
+                {getSpeedText(lastAnalysis.page_load_speed)}
+              </span>
+              <span className="text-gray-600">
+                {lastAnalysis.page_load_speed}s
+              </span>
+            </div>
+            <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
+              <div 
+                className={`h-full ${
+                  lastAnalysis.page_load_speed <= 2 ? 'bg-green-500' :
+                  lastAnalysis.page_load_speed <= 4 ? 'bg-yellow-500' : 'bg-red-500'
+                }`}
+                style={{ width: `${Math.min((lastAnalysis.page_load_speed / 6) * 100, 100)}%` }}
+              />
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold">Analyse des liens</h3>
+            
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <Link2 className="h-5 w-5 text-blue-500" />
                     Liens internes
-                  </span>
-                  <Badge variant="outline">{lastAnalysis.internal_links?.length || 0}</Badge>
-                </div>
-                <div className="pl-6 space-y-1">
-                  {lastAnalysis.internal_links?.map((link: string, index: number) => (
-                    <div key={index} className="text-sm text-gray-600 break-all">
-                      {link}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    <p className="text-2xl font-bold">
+                      {lastAnalysis.internal_links?.length || 0}
+                    </p>
+                    <div className="max-h-40 overflow-y-auto space-y-1">
+                      {lastAnalysis.internal_links?.map((link, index) => (
+                        <p key={index} className="text-sm text-gray-600 break-all">
+                          {link}
+                        </p>
+                      ))}
                     </div>
-                  ))}
-                </div>
-              </div>
+                  </div>
+                </CardContent>
+              </Card>
 
-              {/* Liens externes */}
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="flex items-center gap-2">
-                    <Link2 className="h-4 w-4 text-green-500" />
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <ExternalLink className="h-5 w-5 text-green-500" />
                     Liens externes
-                  </span>
-                  <Badge variant="outline">{lastAnalysis.external_links?.length || 0}</Badge>
-                </div>
-                <div className="pl-6 space-y-1">
-                  {lastAnalysis.external_links?.map((link: string, index: number) => (
-                    <div key={index} className="text-sm text-gray-600 break-all">
-                      {link}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    <p className="text-2xl font-bold">
+                      {lastAnalysis.external_links?.length || 0}
+                    </p>
+                    <div className="max-h-40 overflow-y-auto space-y-1">
+                      {lastAnalysis.external_links?.map((link, index) => (
+                        <p key={index} className="text-sm text-gray-600 break-all">
+                          {link}
+                        </p>
+                      ))}
                     </div>
-                  ))}
-                </div>
-              </div>
+                  </div>
+                </CardContent>
+              </Card>
 
-              {/* Liens cassés */}
-              {lastAnalysis.broken_links && lastAnalysis.broken_links.length > 0 && (
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="flex items-center gap-2 text-red-500">
-                      <AlertTriangle className="h-4 w-4" />
-                      Liens cassés
-                    </span>
-                    <Badge variant="destructive">{lastAnalysis.broken_links.length}</Badge>
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <AlertTriangle className="h-5 w-5 text-red-500" />
+                    Liens cassés
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    <p className="text-2xl font-bold">
+                      {lastAnalysis.broken_links?.length || 0}
+                    </p>
+                    <div className="max-h-40 overflow-y-auto space-y-1">
+                      {lastAnalysis.broken_links?.map((link, index) => (
+                        <p key={index} className="text-sm text-gray-600 break-all">
+                          {link}
+                        </p>
+                      ))}
+                    </div>
                   </div>
-                  <div className="pl-6 space-y-1">
-                    {lastAnalysis.broken_links.map((link: string, index: number) => (
-                      <div key={index} className="text-sm text-red-500 break-all">
-                        {link}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
+                </CardContent>
+              </Card>
             </div>
-          </CardContent>
-        </Card>
-      </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
