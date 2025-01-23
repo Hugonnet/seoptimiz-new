@@ -11,31 +11,38 @@ interface SEOAnalysisSectionProps {
 }
 
 export function SEOAnalysisSection({ title, type, current, suggested, context }: SEOAnalysisSectionProps) {
-  // Ne pas afficher la section si elle est vide
-  if (type === 'single' && (!current || current === '')) {
-    return null;
+  console.log(`SEOAnalysisSection - ${title}:`, { current, suggested, context }); // Debug log
+
+  // Pour les sections de type "single"
+  if (type === 'single') {
+    if (!current || current === '') {
+      return null;
+    }
+    return (
+      <div className="space-y-6">
+        <h3 className="text-lg font-semibold">{title}</h3>
+        <HeadingComparison 
+          current={current as string} 
+          suggested={suggested as string} 
+          context={context as string} 
+        />
+      </div>
+    );
   }
 
-  if (type === 'array' && (!Array.isArray(current) || current.length === 0)) {
+  // Pour les sections de type "array"
+  if (!Array.isArray(current) || current.length === 0) {
     return null;
   }
 
   return (
     <div className="space-y-6">
       <h3 className="text-lg font-semibold">{title}</h3>
-      {type === 'single' ? (
-        <HeadingComparison 
-          current={current as string} 
-          suggested={suggested as string} 
-          context={context as string} 
-        />
-      ) : (
-        <HeadingArrayComparison 
-          current={current as string[]} 
-          suggested={suggested as string[]} 
-          context={context as string[]} 
-        />
-      )}
+      <HeadingArrayComparison 
+        current={current} 
+        suggested={Array.isArray(suggested) ? suggested : []} 
+        context={Array.isArray(context) ? context : []} 
+      />
     </div>
   );
 }
