@@ -27,17 +27,23 @@ export function HeadingComparison({ current, suggested, context }: HeadingCompar
     }
   };
 
+  // Si current est vide ou undefined, ne pas afficher le composant
+  if (!current || current.trim() === '') {
+    console.log('HeadingComparison: Empty current value');
+    return null;
+  }
+
   return (
     <div className="space-y-3">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-2 sm:gap-3 w-full">
         <div className="p-2 sm:p-3 bg-white rounded-lg shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-300">
           <div className="font-medium text-gray-800 mb-1.5">Version actuelle :</div>
           <div className="text-gray-600 italic break-words text-sm sm:text-base">
-            {current || 'Non défini'}
+            {current}
           </div>
         </div>
         <div className="p-2 sm:p-3 bg-gradient-to-br from-purple-50 to-pink-50 rounded-lg shadow-sm border border-purple-100 hover:shadow-md transition-shadow duration-300">
-          <div className="flex justify-between items-center">
+          <div className="flex">
             <div className="font-medium text-purple-800 mb-1.5">Version optimisée :</div>
             <TooltipProvider>
               <Tooltip>
@@ -66,7 +72,7 @@ export function HeadingComparison({ current, suggested, context }: HeadingCompar
           </div>
         </div>
       </div>
-      {context && (
+      {context && context.trim() !== '' && (
         <div className="text-xs sm:text-sm bg-blue-50 p-2 sm:p-3 rounded-lg border border-blue-100 shadow-sm">
           <span className="font-medium text-blue-800">Explication : </span>
           <span className="text-blue-700">{context}</span>

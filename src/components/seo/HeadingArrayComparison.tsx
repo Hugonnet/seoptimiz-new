@@ -16,9 +16,17 @@ interface HeadingArrayComparisonProps {
 
 export function HeadingArrayComparison({ current = [], suggested = [], context = [] }: HeadingArrayComparisonProps) {
   const [copiedIndex, setCopiedIndex] = React.useState<number | null>(null);
-  const validCurrentItems = Array.isArray(current) ? current.filter(item => item && item !== 'Non défini') : [];
-  const validSuggestedItems = Array.isArray(suggested) ? suggested.filter(item => item && item !== 'Non défini') : [];
-  const validContextItems = Array.isArray(context) ? context : [];
+  
+  // S'assurer que les tableaux sont bien définis et non vides
+  const validCurrentItems = Array.isArray(current) ? current.filter(item => item && item.trim() !== '') : [];
+  const validSuggestedItems = Array.isArray(suggested) ? suggested.filter(item => item && item.trim() !== '') : [];
+  const validContextItems = Array.isArray(context) ? context.filter(item => item && item.trim() !== '') : [];
+
+  console.log('HeadingArrayComparison - Items:', {
+    current: validCurrentItems,
+    suggested: validSuggestedItems,
+    context: validContextItems
+  });
 
   const copyToClipboard = async (text: string, index: number) => {
     try {
@@ -30,12 +38,18 @@ export function HeadingArrayComparison({ current = [], suggested = [], context =
     }
   };
 
-  if (validCurrentItems.length === 0) return null;
+  if (validCurrentItems.length === 0) {
+    console.log('HeadingArrayComparison: No valid current items');
+    return null;
+  }
 
   return (
     <div className="space-y-4 sm:space-y-6">
       {validCurrentItems.map((currentItem, index) => {
-        if (!currentItem || !validSuggestedItems[index]) return null;
+        const suggestedItem = validSuggestedItems[index];
+        const contextItem = validContextItems[index];
+
+        if (!currentItem || !suggestedItem) return null;
 
         return (
           <div key={index} className="space-y-3 animate-fade-in">
@@ -54,7 +68,7 @@ export function HeadingArrayComparison({ current = [], suggested = [], context =
                           variant="ghost"
                           size="sm"
                           className="h-8 w-8 p-0"
-                          onClick={() => copyToClipboard(validSuggestedItems[index], index)}
+                          onClick={() => copyToClipboard(suggestedItem, index)}
                         >
                           {copiedIndex === index ? (
                             <CopyCheck className="h-4 w-4 text-green-500" />
@@ -70,14 +84,14 @@ export function HeadingArrayComparison({ current = [], suggested = [], context =
                   </TooltipProvider>
                 </div>
                 <div className="text-purple-700 break-words text-sm sm:text-base">
-                  {validSuggestedItems[index]}
+                  {suggestedItem}
                 </div>
               </div>
             </div>
-            {validContextItems[index] && (
+            {contextItem && contextItem.trim() !== '' && (
               <div className="text-xs sm:text-sm bg-blue-50 p-2 sm:p-3 rounded-lg border border-blue-100 shadow-sm">
                 <span className="font-medium text-blue-800">Explication : </span>
-                <span className="text-blue-700">{validContextItems[index]}</span>
+                <span className="text-blue-700">{contextItem}</span>
               </div>
             )}
           </div>
