@@ -19,7 +19,7 @@ export function SEOTable() {
 
   console.log("SEO Data in table:", seoData); // Debug log
 
-  if (seoData.length === 0) {
+  if (!seoData || seoData.length === 0) {
     return (
       <div className="text-center py-3 sm:py-4 text-gray-600 bg-white rounded-lg shadow-sm border border-gray-100">
         Aucune donnée SEO disponible. Analysez une URL pour commencer.
@@ -63,21 +63,21 @@ export function SEOTable() {
                 type="single"
                 current={item.current_title || ''}
                 suggested={item.suggested_title || ''}
-                context={item.title_context}
+                context={item.title_context || ''}
               />
               <SEOAnalysisSection
                 title="Meta Description"
                 type="single"
                 current={item.current_description || ''}
                 suggested={item.suggested_description || ''}
-                context={item.description_context}
+                context={item.description_context || ''}
               />
               <SEOAnalysisSection
                 title="H1"
                 type="single"
                 current={item.current_h1 || ''}
                 suggested={item.suggested_h1 || ''}
-                context={item.h1_context}
+                context={item.h1_context || ''}
               />
               {item.current_h2s && item.current_h2s.length > 0 && (
                 <SEOAnalysisSection
@@ -85,7 +85,7 @@ export function SEOTable() {
                   type="array"
                   current={item.current_h2s}
                   suggested={item.suggested_h2s || []}
-                  context={item.h2s_context}
+                  context={item.h2s_context || []}
                 />
               )}
               {item.current_h3s && item.current_h3s.length > 0 && (
@@ -94,7 +94,7 @@ export function SEOTable() {
                   type="array"
                   current={item.current_h3s}
                   suggested={item.suggested_h3s || []}
-                  context={item.h3s_context}
+                  context={item.h3s_context || []}
                 />
               )}
               {item.current_h4s && item.current_h4s.length > 0 && (
@@ -103,7 +103,7 @@ export function SEOTable() {
                   type="array"
                   current={item.current_h4s}
                   suggested={item.suggested_h4s || []}
-                  context={item.h4s_context}
+                  context={item.h4s_context || []}
                 />
               )}
 

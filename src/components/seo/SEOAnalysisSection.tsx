@@ -35,13 +35,16 @@ export function SEOAnalysisSection({ title, type, current, suggested, context }:
     return null;
   }
 
+  const suggestedArray = Array.isArray(suggested) ? suggested : [];
+  const contextArray = Array.isArray(context) ? context : [];
+
   return (
     <div className="space-y-6">
       <h3 className="text-lg font-semibold">{title}</h3>
       <HeadingArrayComparison 
         current={current} 
-        suggested={Array.isArray(suggested) ? suggested : []} 
-        context={Array.isArray(context) ? context : []} 
+        suggested={suggestedArray} 
+        context={contextArray} 
       />
     </div>
   );
