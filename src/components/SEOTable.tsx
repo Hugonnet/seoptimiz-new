@@ -58,28 +58,37 @@ export function SEOTable() {
             </div>
             
             <div className="space-y-6">
-              <SEOAnalysisSection
-                title="Meta Title"
-                type="single"
-                current={item.current_title || ''}
-                suggested={item.suggested_title || ''}
-                context={item.title_context || ''}
-              />
-              <SEOAnalysisSection
-                title="Meta Description"
-                type="single"
-                current={item.current_description || ''}
-                suggested={item.suggested_description || ''}
-                context={item.description_context || ''}
-              />
-              <SEOAnalysisSection
-                title="H1"
-                type="single"
-                current={item.current_h1 || ''}
-                suggested={item.suggested_h1 || ''}
-                context={item.h1_context || ''}
-              />
-              {item.current_h2s && item.current_h2s.length > 0 && (
+              {item.current_title && (
+                <SEOAnalysisSection
+                  title="Meta Title"
+                  type="single"
+                  current={item.current_title}
+                  suggested={item.suggested_title || ''}
+                  context={item.title_context || ''}
+                />
+              )}
+              
+              {item.current_description && (
+                <SEOAnalysisSection
+                  title="Meta Description"
+                  type="single"
+                  current={item.current_description}
+                  suggested={item.suggested_description || ''}
+                  context={item.description_context || ''}
+                />
+              )}
+              
+              {item.current_h1 && (
+                <SEOAnalysisSection
+                  title="H1"
+                  type="single"
+                  current={item.current_h1}
+                  suggested={item.suggested_h1 || ''}
+                  context={item.h1_context || ''}
+                />
+              )}
+              
+              {Array.isArray(item.current_h2s) && item.current_h2s.length > 0 && (
                 <SEOAnalysisSection
                   title="H2"
                   type="array"
@@ -88,7 +97,8 @@ export function SEOTable() {
                   context={item.h2s_context || []}
                 />
               )}
-              {item.current_h3s && item.current_h3s.length > 0 && (
+              
+              {Array.isArray(item.current_h3s) && item.current_h3s.length > 0 && (
                 <SEOAnalysisSection
                   title="H3"
                   type="array"
@@ -97,7 +107,8 @@ export function SEOTable() {
                   context={item.h3s_context || []}
                 />
               )}
-              {item.current_h4s && item.current_h4s.length > 0 && (
+              
+              {Array.isArray(item.current_h4s) && item.current_h4s.length > 0 && (
                 <SEOAnalysisSection
                   title="H4"
                   type="array"

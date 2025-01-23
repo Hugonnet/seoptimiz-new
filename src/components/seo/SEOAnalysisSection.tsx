@@ -13,9 +13,9 @@ interface SEOAnalysisSectionProps {
 export function SEOAnalysisSection({ title, type, current, suggested, context }: SEOAnalysisSectionProps) {
   console.log(`SEOAnalysisSection - ${title}:`, { current, suggested, context }); // Debug log
 
-  // Pour les sections de type "single"
   if (type === 'single') {
     if (!current || current === '') {
+      console.log(`${title}: No current value`);
       return null;
     }
     return (
@@ -30,13 +30,19 @@ export function SEOAnalysisSection({ title, type, current, suggested, context }:
     );
   }
 
-  // Pour les sections de type "array"
   if (!Array.isArray(current) || current.length === 0) {
+    console.log(`${title}: No current array values`);
     return null;
   }
 
   const suggestedArray = Array.isArray(suggested) ? suggested : [];
   const contextArray = Array.isArray(context) ? context : [];
+
+  console.log(`${title} array values:`, {
+    current,
+    suggestedArray,
+    contextArray
+  });
 
   return (
     <div className="space-y-6">
