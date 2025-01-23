@@ -11,18 +11,16 @@ interface SEOAnalysisSectionProps {
 }
 
 export function SEOAnalysisSection({ title, type, current, suggested, context }: SEOAnalysisSectionProps) {
-  console.log(`SEOAnalysisSection - ${title}:`, { current, suggested, context }); // Debug log
-
   if (type === 'single') {
-    if (!current || current === '') {
-      console.log(`${title}: No current value`);
+    if (!current || typeof current !== 'string' || current.trim() === '') {
       return null;
     }
+
     return (
       <div className="space-y-6">
         <h3 className="text-lg font-semibold">{title}</h3>
         <HeadingComparison 
-          current={current as string} 
+          current={current} 
           suggested={suggested as string} 
           context={context as string} 
         />
@@ -30,19 +28,12 @@ export function SEOAnalysisSection({ title, type, current, suggested, context }:
     );
   }
 
-  if (!Array.isArray(current) || current.length === 0) {
-    console.log(`${title}: No current array values`);
+  if (!Array.isArray(current) || current.length === 0 || !current.some(item => item && item.trim() !== '')) {
     return null;
   }
 
   const suggestedArray = Array.isArray(suggested) ? suggested : [];
   const contextArray = Array.isArray(context) ? context : [];
-
-  console.log(`${title} array values:`, {
-    current,
-    suggestedArray,
-    contextArray
-  });
 
   return (
     <div className="space-y-6">
