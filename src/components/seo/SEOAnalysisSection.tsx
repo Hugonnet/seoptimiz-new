@@ -11,8 +11,11 @@ interface SEOAnalysisSectionProps {
 }
 
 export function SEOAnalysisSection({ title, type, current, suggested, context }: SEOAnalysisSectionProps) {
+  console.log(`SEOAnalysisSection - ${title}:`, { type, current, suggested, context });
+
   if (type === 'single') {
     if (!current || typeof current !== 'string' || current.trim() === '') {
+      console.log(`SEOAnalysisSection - ${title}: Skipping single type due to invalid current value`);
       return null;
     }
 
@@ -28,7 +31,17 @@ export function SEOAnalysisSection({ title, type, current, suggested, context }:
     );
   }
 
-  if (!Array.isArray(current) || current.length === 0 || !current.some(item => item && item.trim() !== '')) {
+  // Vérification pour le type array
+  if (!Array.isArray(current)) {
+    console.log(`SEOAnalysisSection - ${title}: Current is not an array`, current);
+    return null;
+  }
+
+  // Filtrer les éléments vides ou undefined
+  const validCurrentItems = current.filter(item => item && item.trim() !== '');
+  
+  if (validCurrentItems.length === 0) {
+    console.log(`SEOAnalysisSection - ${title}: No valid items in current array`);
     return null;
   }
 
@@ -39,7 +52,7 @@ export function SEOAnalysisSection({ title, type, current, suggested, context }:
     <div className="space-y-6">
       <h3 className="text-lg font-semibold">{title}</h3>
       <HeadingArrayComparison 
-        current={current} 
+        current={validCurrentItems} 
         suggested={suggestedArray} 
         context={contextArray} 
       />

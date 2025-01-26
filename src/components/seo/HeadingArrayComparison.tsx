@@ -49,8 +49,6 @@ export function HeadingArrayComparison({ current = [], suggested = [], context =
         const suggestedItem = validSuggestedItems[index];
         const contextItem = validContextItems[index];
 
-        if (!currentItem || !suggestedItem) return null;
-
         return (
           <div key={index} className="space-y-3 animate-fade-in">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-2 sm:gap-3 w-full">
@@ -58,35 +56,37 @@ export function HeadingArrayComparison({ current = [], suggested = [], context =
                 <div className="font-medium text-gray-800 mb-1.5">Version actuelle :</div>
                 <div className="text-gray-600 break-words text-sm sm:text-base">{currentItem}</div>
               </div>
-              <div className="p-2 sm:p-3 bg-gradient-to-br from-purple-50 to-pink-50 rounded-lg shadow-sm border border-purple-100 hover:shadow-md transition-shadow duration-300">
-                <div className="flex justify-between items-center">
-                  <div className="font-medium text-purple-800 mb-1.5">Version optimisée :</div>
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-8 w-8 p-0"
-                          onClick={() => copyToClipboard(suggestedItem, index)}
-                        >
-                          {copiedIndex === index ? (
-                            <CopyCheck className="h-4 w-4 text-green-500" />
-                          ) : (
-                            <Copy className="h-4 w-4 text-purple-600 hover:text-purple-800" />
-                          )}
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>{copiedIndex === index ? 'Copié !' : 'Copier le texte'}</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
+              {suggestedItem && (
+                <div className="p-2 sm:p-3 bg-gradient-to-br from-purple-50 to-pink-50 rounded-lg shadow-sm border border-purple-100 hover:shadow-md transition-shadow duration-300">
+                  <div className="flex justify-between items-center">
+                    <div className="font-medium text-purple-800 mb-1.5">Version optimisée :</div>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 w-8 p-0"
+                            onClick={() => copyToClipboard(suggestedItem, index)}
+                          >
+                            {copiedIndex === index ? (
+                              <CopyCheck className="h-4 w-4 text-green-500" />
+                            ) : (
+                              <Copy className="h-4 w-4 text-purple-600 hover:text-purple-800" />
+                            )}
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>{copiedIndex === index ? 'Copié !' : 'Copier le texte'}</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </div>
+                  <div className="text-purple-700 break-words text-sm sm:text-base">
+                    {suggestedItem}
+                  </div>
                 </div>
-                <div className="text-purple-700 break-words text-sm sm:text-base">
-                  {suggestedItem}
-                </div>
-              </div>
+              )}
             </div>
             {contextItem && contextItem.trim() !== '' && (
               <div className="text-xs sm:text-sm bg-blue-50 p-2 sm:p-3 rounded-lg border border-blue-100 shadow-sm">
