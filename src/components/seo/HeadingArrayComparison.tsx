@@ -9,23 +9,23 @@ import {
 } from "@/components/ui/tooltip";
 
 interface HeadingArrayComparisonProps {
-  current?: string[];
-  suggested?: string[];
+  current: string[];
+  suggested: string[];
   context?: string[];
 }
 
-export function HeadingArrayComparison({ current = [], suggested = [], context = [] }: HeadingArrayComparisonProps) {
+export function HeadingArrayComparison({ current, suggested = [], context = [] }: HeadingArrayComparisonProps) {
   const [copiedIndex, setCopiedIndex] = React.useState<number | null>(null);
   
-  // S'assurer que les tableaux sont bien définis et non vides
-  const validCurrentItems = Array.isArray(current) ? current.filter(item => item && item.trim() !== '') : [];
-  const validSuggestedItems = Array.isArray(suggested) ? suggested.filter(item => item && item.trim() !== '') : [];
-  const validContextItems = Array.isArray(context) ? context.filter(item => item && item.trim() !== '') : [];
+  // Vérification et nettoyage des données
+  const validCurrentItems = (Array.isArray(current) ? current : []).filter(item => item && typeof item === 'string' && item.trim() !== '');
+  const validSuggestedItems = (Array.isArray(suggested) ? suggested : []).filter(item => item && typeof item === 'string' && item.trim() !== '');
+  const validContextItems = (Array.isArray(context) ? context : []).filter(item => item && typeof item === 'string' && item.trim() !== '');
 
-  console.log('HeadingArrayComparison - Items:', {
-    current: validCurrentItems,
-    suggested: validSuggestedItems,
-    context: validContextItems
+  console.log('HeadingArrayComparison - Processed Items:', {
+    validCurrentItems,
+    validSuggestedItems,
+    validContextItems
   });
 
   const copyToClipboard = async (text: string, index: number) => {
@@ -44,59 +44,56 @@ export function HeadingArrayComparison({ current = [], suggested = [], context =
   }
 
   return (
-    <div className="space-y-4 sm:space-y-6">
-      {validCurrentItems.map((currentItem, index) => {
-        const suggestedItem = validSuggestedItems[index];
-        const contextItem = validContextItems[index];
-
-        return (
-          <div key={index} className="space-y-3 animate-fade-in">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-2 sm:gap-3 w-full">
-              <div className="p-2 sm:p-3 bg-white rounded-lg shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-300">
-                <div className="font-medium text-gray-800 mb-1.5">Version actuelle :</div>
-                <div className="text-gray-600 break-words text-sm sm:text-base">{currentItem}</div>
-              </div>
-              {suggestedItem && (
-                <div className="p-2 sm:p-3 bg-gradient-to-br from-purple-50 to-pink-50 rounded-lg shadow-sm border border-purple-100 hover:shadow-md transition-shadow duration-300">
-                  <div className="flex justify-between items-center">
-                    <div className="font-medium text-purple-800 mb-1.5">Version optimisée :</div>
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-8 w-8 p-0"
-                            onClick={() => copyToClipboard(suggestedItem, index)}
-                          >
-                            {copiedIndex === index ? (
-                              <CopyCheck className="h-4 w-4 text-green-500" />
-                            ) : (
-                              <Copy className="h-4 w-4 text-purple-600 hover:text-purple-800" />
-                            )}
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p>{copiedIndex === index ? 'Copié !' : 'Copier le texte'}</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                  </div>
-                  <div className="text-purple-700 break-words text-sm sm:text-base">
-                    {suggestedItem}
-                  </div>
-                </div>
-              )}
+    <div className="space-y-4">
+      {validCurrentItems.map((currentItem, index) => (
+        <div key={index} className="space-y-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="p-4 bg-white rounded-lg shadow-sm border border-gray-100">
+              <div className="font-medium text-gray-800 mb-2">Version actuelle :</div>
+              <div className="text-gray-600 break-words">{currentItem}</div>
             </div>
-            {contextItem && contextItem.trim() !== '' && (
-              <div className="text-xs sm:text-sm bg-blue-50 p-2 sm:p-3 rounded-lg border border-blue-100 shadow-sm">
-                <span className="font-medium text-blue-800">Explication : </span>
-                <span className="text-blue-700">{contextItem}</span>
+            
+            {validSuggestedItems[index] && (
+              <div className="p-4 bg-gradient-to-br from-purple-50 to-pink-50 rounded-lg shadow-sm border border-purple-100">
+                <div className="flex justify-between items-center mb-2">
+                  <div className="font-medium text-purple-800">Version optimisée :</div>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 w-8 p-0"
+                          onClick={() => copyToClipboard(validSuggestedItems[index], index)}
+                        >
+                          {copiedIndex === index ? (
+                            <CopyCheck className="h-4 w-4 text-green-500" />
+                          ) : (
+                            <Copy className="h-4 w-4 text-purple-600 hover:text-purple-800" />
+                          )}
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>{copiedIndex === index ? 'Copié !' : 'Copier le texte'}</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </div>
+                <div className="text-purple-700 break-words">
+                  {validSuggestedItems[index]}
+                </div>
               </div>
             )}
           </div>
-        );
-      })}
+          
+          {validContextItems[index] && (
+            <div className="text-sm bg-blue-50 p-4 rounded-lg border border-blue-100">
+              <span className="font-medium text-blue-800">Explication : </span>
+              <span className="text-blue-700">{validContextItems[index]}</span>
+            </div>
+          )}
+        </div>
+      ))}
     </div>
   );
 }

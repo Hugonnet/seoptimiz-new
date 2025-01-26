@@ -20,8 +20,8 @@ export function SEOAnalysisSection({ title, type, current, suggested, context }:
     }
 
     return (
-      <div className="space-y-6">
-        <h3 className="text-lg font-semibold">{title}</h3>
+      <div className="space-y-4">
+        <h3 className="text-lg font-semibold text-gray-800">{title}</h3>
         <HeadingComparison 
           current={current} 
           suggested={suggested as string} 
@@ -38,7 +38,7 @@ export function SEOAnalysisSection({ title, type, current, suggested, context }:
   }
 
   // Filtrer les éléments vides ou undefined
-  const validCurrentItems = current.filter(item => item && item.trim() !== '');
+  const validCurrentItems = current.filter(item => item && typeof item === 'string' && item.trim() !== '');
   
   if (validCurrentItems.length === 0) {
     console.log(`SEOAnalysisSection - ${title}: No valid items in current array`);
@@ -49,8 +49,8 @@ export function SEOAnalysisSection({ title, type, current, suggested, context }:
   const contextArray = Array.isArray(context) ? context : [];
 
   return (
-    <div className="space-y-6">
-      <h3 className="text-lg font-semibold">{title}</h3>
+    <div className="space-y-4">
+      <h3 className="text-lg font-semibold text-gray-800">{title}</h3>
       <HeadingArrayComparison 
         current={validCurrentItems} 
         suggested={suggestedArray} 
