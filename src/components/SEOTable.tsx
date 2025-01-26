@@ -25,29 +25,6 @@ export function SEOTable() {
     );
   }
 
-  const renderSEOSection = (item: any, title: string, type: 'single' | 'array', current: any, suggested: any, context: any) => {
-    if (!current) return null;
-    
-    if (type === 'single' && (!current || current.trim() === '')) return null;
-    
-    if (type === 'array') {
-      if (!Array.isArray(current) || current.length === 0) return null;
-      const validItems = current.filter(item => item && typeof item === 'string' && item.trim() !== '');
-      if (validItems.length === 0) return null;
-      current = validItems;
-    }
-
-    return (
-      <SEOAnalysisSection
-        title={title}
-        type={type}
-        current={current}
-        suggested={suggested || (type === 'array' ? [] : '')}
-        context={context || (type === 'array' ? [] : '')}
-      />
-    );
-  };
-
   return (
     <div className="space-y-6">
       {seoData.map((item) => (
@@ -77,12 +54,65 @@ export function SEOTable() {
           </div>
           
           <div className="space-y-6">
-            {renderSEOSection(item, "Meta Title", "single", item.current_title, item.suggested_title, item.title_context)}
-            {renderSEOSection(item, "Meta Description", "single", item.current_description, item.suggested_description, item.description_context)}
-            {renderSEOSection(item, "H1", "single", item.current_h1, item.suggested_h1, item.h1_context)}
-            {renderSEOSection(item, "H2", "array", item.current_h2s, item.suggested_h2s, item.h2s_context)}
-            {renderSEOSection(item, "H3", "array", item.current_h3s, item.suggested_h3s, item.h3s_context)}
-            {renderSEOSection(item, "H4", "array", item.current_h4s, item.suggested_h4s, item.h4s_context)}
+            {item.current_title && (
+              <SEOAnalysisSection
+                title="Meta Title"
+                type="single"
+                current={item.current_title}
+                suggested={item.suggested_title || ''}
+                context={item.title_context}
+              />
+            )}
+            
+            {item.current_description && (
+              <SEOAnalysisSection
+                title="Meta Description"
+                type="single"
+                current={item.current_description}
+                suggested={item.suggested_description || ''}
+                context={item.description_context}
+              />
+            )}
+            
+            {item.current_h1 && (
+              <SEOAnalysisSection
+                title="H1"
+                type="single"
+                current={item.current_h1}
+                suggested={item.suggested_h1 || ''}
+                context={item.h1_context}
+              />
+            )}
+            
+            {Array.isArray(item.current_h2s) && item.current_h2s.length > 0 && (
+              <SEOAnalysisSection
+                title="H2"
+                type="array"
+                current={item.current_h2s}
+                suggested={item.suggested_h2s || []}
+                context={item.h2s_context}
+              />
+            )}
+            
+            {Array.isArray(item.current_h3s) && item.current_h3s.length > 0 && (
+              <SEOAnalysisSection
+                title="H3"
+                type="array"
+                current={item.current_h3s}
+                suggested={item.suggested_h3s || []}
+                context={item.h3s_context}
+              />
+            )}
+            
+            {Array.isArray(item.current_h4s) && item.current_h4s.length > 0 && (
+              <SEOAnalysisSection
+                title="H4"
+                type="array"
+                current={item.current_h4s}
+                suggested={item.suggested_h4s || []}
+                context={item.h4s_context}
+              />
+            )}
 
             {showAdvanced[item.id] && (
               <AdvancedAnalysisSection
