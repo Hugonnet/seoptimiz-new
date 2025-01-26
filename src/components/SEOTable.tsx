@@ -28,7 +28,7 @@ export function SEOTable() {
   return (
     <div className="space-y-6">
       {seoData.map((item) => {
-        console.log('Processing SEO item:', item);
+        console.log('Processing SEO item:', JSON.stringify(item, null, 2));
         
         return (
           <div key={item.id} className="space-y-6 bg-gray-50 p-6 rounded-xl border border-gray-200">
@@ -77,7 +77,7 @@ export function SEOTable() {
                 />
               )}
               
-              {item.current_h1 && (
+              {item.current_h1 && item.current_h1.trim() !== '' && (
                 <SEOAnalysisSection
                   title="H1"
                   type="single"
@@ -87,31 +87,31 @@ export function SEOTable() {
                 />
               )}
               
-              {Array.isArray(item.current_h2s) && item.current_h2s.length > 0 && (
+              {Array.isArray(item.current_h2s) && item.current_h2s.length > 0 && item.current_h2s.some(h2 => h2 && h2.trim() !== '') && (
                 <SEOAnalysisSection
                   title="H2"
                   type="array"
-                  current={item.current_h2s}
+                  current={item.current_h2s.filter(h2 => h2 && h2.trim() !== '')}
                   suggested={item.suggested_h2s || []}
                   context={item.h2s_context || []}
                 />
               )}
               
-              {Array.isArray(item.current_h3s) && item.current_h3s.length > 0 && (
+              {Array.isArray(item.current_h3s) && item.current_h3s.length > 0 && item.current_h3s.some(h3 => h3 && h3.trim() !== '') && (
                 <SEOAnalysisSection
                   title="H3"
                   type="array"
-                  current={item.current_h3s}
+                  current={item.current_h3s.filter(h3 => h3 && h3.trim() !== '')}
                   suggested={item.suggested_h3s || []}
                   context={item.h3s_context || []}
                 />
               )}
               
-              {Array.isArray(item.current_h4s) && item.current_h4s.length > 0 && (
+              {Array.isArray(item.current_h4s) && item.current_h4s.length > 0 && item.current_h4s.some(h4 => h4 && h4.trim() !== '') && (
                 <SEOAnalysisSection
                   title="H4"
                   type="array"
-                  current={item.current_h4s}
+                  current={item.current_h4s.filter(h4 => h4 && h4.trim() !== '')}
                   suggested={item.suggested_h4s || []}
                   context={item.h4s_context || []}
                 />
