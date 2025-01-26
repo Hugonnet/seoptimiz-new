@@ -87,7 +87,7 @@ export function SEOTable() {
                 />
               )}
               
-              {item.current_h2s && item.current_h2s.length > 0 && (
+              {Array.isArray(item.current_h2s) && item.current_h2s.length > 0 && (
                 <SEOAnalysisSection
                   title="H2"
                   type="array"
@@ -97,7 +97,7 @@ export function SEOTable() {
                 />
               )}
               
-              {item.current_h3s && item.current_h3s.length > 0 && (
+              {Array.isArray(item.current_h3s) && item.current_h3s.length > 0 && (
                 <SEOAnalysisSection
                   title="H3"
                   type="array"
@@ -107,7 +107,7 @@ export function SEOTable() {
                 />
               )}
               
-              {item.current_h4s && item.current_h4s.length > 0 && (
+              {Array.isArray(item.current_h4s) && item.current_h4s.length > 0 && (
                 <SEOAnalysisSection
                   title="H4"
                   type="array"
