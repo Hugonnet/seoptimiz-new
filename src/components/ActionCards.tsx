@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { FileText, History, KeyRound, Gauge } from "lucide-react";
+import { FileText, History, KeyRound } from "lucide-react";
 
 export function ActionCards() {
   const navigate = useNavigate();
@@ -27,18 +27,11 @@ export function ActionCards() {
       icon: History,
       action: () => navigate("/history"),
       buttonText: "Voir l'historique"
-    },
-    {
-      title: "Vitesse de chargement",
-      description: "Analysez les performances de chargement de votre site",
-      icon: Gauge,
-      action: () => navigate("/performance"),
-      buttonText: "Voir les performances"
     }
   ];
 
   return (
-    <div className="grid gap-4 p-4 md:grid-cols-2 lg:grid-cols-4 max-w-7xl mx-auto">
+    <div className="grid gap-4 p-4 md:grid-cols-2 lg:grid-cols-3 max-w-7xl mx-auto">
       {cards.map((card, index) => (
         <Card key={index} className="bg-white/90">
           <CardHeader className="space-y-1 p-4">

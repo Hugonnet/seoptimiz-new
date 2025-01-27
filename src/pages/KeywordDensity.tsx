@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
 import { useSEOStore } from '@/store/seoStore';
-import { Loader2, ArrowUpCircle, ArrowDownCircle } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { useNavigate } from 'react-router-dom';
 import {
   Tooltip,
@@ -18,11 +18,6 @@ interface KeywordDensity {
   keyword: string;
   count: number;
   density: number;
-}
-
-interface LinkData {
-  internal: string[];
-  external: string[];
 }
 
 const getKeywordScore = (density: number): { color: string; status: string; action: string } => {
@@ -48,18 +43,9 @@ const getKeywordScore = (density: number): { color: string; status: string; acti
   };
 };
 
-const getLinkScore = (links: string[]): { color: string; status: string } => {
-  const count = links.length;
-  if (count === 0) return { color: 'bg-red-500', status: 'Aucun lien' };
-  if (count > 100) return { color: 'bg-red-500', status: 'Trop de liens' };
-  if (count >= 2 && count <= 100) return { color: 'bg-green-500', status: 'Nombre optimal' };
-  return { color: 'bg-yellow-500', status: 'À améliorer' };
-};
-
 export default function KeywordDensity() {
   const [isLoading, setIsLoading] = useState(false);
   const [keywordData, setKeywordData] = useState<KeywordDensity[]>([]);
-  const [linkData, setLinkData] = useState<LinkData>({ internal: [], external: [] });
   const [totalWords, setTotalWords] = useState(0);
   const { toast } = useToast();
   const seoData = useSEOStore((state) => state.seoData);
@@ -100,10 +86,6 @@ export default function KeywordDensity() {
           setKeywordData(cleanedData);
           setTotalWords(response.data.totalWords);
           
-          const internal = lastAnalysis.internal_links?.filter(Boolean) || [];
-          const external = lastAnalysis.external_links?.filter(Boolean) || [];
-          setLinkData({ internal, external });
-          
           toast({
             title: "Analyse terminée",
             description: "L'analyse de densité des mots clés a été effectuée avec succès.",
@@ -123,8 +105,6 @@ export default function KeywordDensity() {
 
     analyzeLastUrl();
   }, [seoData, toast, navigate]);
-
-  const isBigram = (keyword: string) => keyword.includes(' ');
 
   if (isLoading) {
     return (
@@ -158,7 +138,7 @@ export default function KeywordDensity() {
                         <div className="flex justify-between items-center">
                           <div className="flex items-center gap-2">
                             <span className="font-medium">{item.keyword}</span>
-                            {isBigram(item.keyword) && (
+                            {item.keyword.includes(' ') && (
                               <Badge variant="secondary" className="text-xs">Expression</Badge>
                             )}
                           </div>
@@ -166,38 +146,16 @@ export default function KeywordDensity() {
                             <span className="text-sm text-gray-500">
                               {item.count} occurrences ({item.density.toFixed(2)}%)
                             </span>
-                            <div className="flex items-center gap-2">
-                              <TooltipProvider>
-                                {item.density < 0.5 && (
-                                  <Tooltip>
-                                    <TooltipTrigger>
-                                      <ArrowUpCircle className="h-4 w-4 text-red-500" />
-                                    </TooltipTrigger>
-                                    <TooltipContent>
-                                      <p>Augmenter la densité</p>
-                                    </TooltipContent>
-                                  </Tooltip>
-                                )}
-                                {item.density > 4 && (
-                                  <Tooltip>
-                                    <TooltipTrigger>
-                                      <ArrowDownCircle className="h-4 w-4 text-red-500" />
-                                    </TooltipTrigger>
-                                    <TooltipContent>
-                                      <p>Réduire la densité</p>
-                                    </TooltipContent>
-                                  </Tooltip>
-                                )}
-                                <Tooltip>
-                                  <TooltipTrigger>
-                                    <div className={`w-3 h-3 rounded-full ${score.color}`} />
-                                  </TooltipTrigger>
-                                  <TooltipContent>
-                                    <p>{score.status} - {score.action}</p>
-                                  </TooltipContent>
-                                </Tooltip>
-                              </TooltipProvider>
-                            </div>
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger>
+                                  <div className={`w-3 h-3 rounded-full ${score.color}`} />
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  <p>{score.status} - {score.action}</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
                           </div>
                         </div>
                         <Progress value={item.density * 2} className="h-2" />
@@ -205,54 +163,6 @@ export default function KeywordDensity() {
                       </div>
                     );
                   })}
-                </div>
-
-                <div className="space-y-4 pt-6 border-t">
-                  <h3 className="text-lg font-semibold">Analyse des liens</h3>
-                  
-                  <div className="space-y-4">
-                    <div className="flex justify-between items-center">
-                      <span className="font-medium">Liens internes</span>
-                      <div className="flex items-center gap-4">
-                        <span className="text-sm text-gray-500">
-                          {linkData.internal.length} liens
-                        </span>
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger>
-                              <div 
-                                className={`w-3 h-3 rounded-full ${getLinkScore(linkData.internal).color}`}
-                              />
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              <p>{getLinkScore(linkData.internal).status}</p>
-                            </TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
-                      </div>
-                    </div>
-                    
-                    <div className="flex justify-between items-center">
-                      <span className="font-medium">Liens externes</span>
-                      <div className="flex items-center gap-4">
-                        <span className="text-sm text-gray-500">
-                          {linkData.external.length} liens
-                        </span>
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger>
-                              <div 
-                                className={`w-3 h-3 rounded-full ${getLinkScore(linkData.external).color}`}
-                              />
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              <p>{getLinkScore(linkData.external).status}</p>
-                            </TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
-                      </div>
-                    </div>
-                  </div>
                 </div>
               </div>
             </CardContent>

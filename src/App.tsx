@@ -13,7 +13,7 @@ function App() {
     <Router>
       <div className="min-h-screen bg-gray-50">
         <StickyHeader />
-        <div className="container mx-auto px-4 pt-24 pb-32">
+        <div className="container mx-auto px-4 pt-24 pb-16">
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/history" element={<History />} />
