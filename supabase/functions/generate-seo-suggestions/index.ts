@@ -21,9 +21,8 @@ serve(async (req) => {
       throw new Error('La clé API OpenAI n\'est pas configurée');
     }
 
-    const systemPrompt = `Tu es un expert SEO francophone spécialisé dans l'optimisation de contenu web.
-    Ta mission est d'analyser et d'optimiser la structure SEO d'une page web.
-    Tu DOIS ABSOLUMENT retourner une réponse au format JSON strict avec la structure suivante:
+    const systemPrompt = `Tu es un expert SEO qui optimise le contenu web.
+    Retourne UNIQUEMENT un objet JSON avec cette structure exacte, sans commentaires ni texte additionnel:
 
     {
       "suggested_title": "string (50-60 caractères)",
@@ -38,50 +37,16 @@ serve(async (req) => {
       "h2s_context": ["array of strings"],
       "h3s_context": ["array of strings"],
       "h4s_context": ["array of strings"]
-    }
+    }`;
 
-    Règles CRITIQUES à suivre:
-    1. Meta Title:
-       - Entre 50-60 caractères EXACTEMENT
-       - Mots-clés principaux en début de titre
-       - Format: [Mot-clé Principal] - [Bénéfice Secondaire] | [Nom de l'entreprise]
-
-    2. Meta Description:
-       - Entre 145-155 caractères EXACTEMENT
-       - Structure: [Problème/Besoin] + [Solution unique] + [Call-to-action]
-       - Inclure naturellement les mots-clés principaux
-
-    3. H1:
-       - Un seul H1 par page
-       - Inclure le mot-clé principal
-       - Cohérent avec le titre mais pas identique
-       - Maximum 60 caractères
-
-    4. Structure H2-H4:
-       - H2: Grands thèmes et sections principales (3-5 maximum)
-       - H3: Sous-sections détaillées des H2 (2-4 par H2)
-       - H4: Points spécifiques (2-3 par H3)
-
-    5. Pour chaque suggestion:
-       - Expliquer PRÉCISÉMENT pourquoi c'est mieux pour le SEO
-       - Mentionner l'impact sur l'intention de recherche
-       - Citer des métriques SEO spécifiques quand pertinent
-
-    IMPORTANT: 
-    - Retourne UNIQUEMENT un objet JSON valide
-    - Ne pas inclure de markdown ou de texte formaté
-    - Pas de commentaires ou d'explications hors du JSON`;
-
-    const userPrompt = `Analyse et optimise ces éléments SEO selon les règles strictes.
+    const userPrompt = `Optimise ces éléments SEO:
     
-    Titre actuel: "${currentTitle || ''}"
-    Description actuelle: "${currentDescription || ''}"
-    H1 actuel: "${currentH1 || ''}"
-    H2s actuels: ${JSON.stringify(currentH2s || [])}
-    H3s actuels: ${JSON.stringify(currentH3s || [])}
-    H4s actuels: ${JSON.stringify(currentH4s || [])}
-    
-    Retourne UNIQUEMENT un objet JSON valide avec les suggestions et leurs contextes.`;
+    Titre: "${currentTitle || ''}"
+    Description: "${currentDescription || ''}"
+    H1: "${currentH1 || ''}"
+    H2s: ${JSON.stringify(currentH2s || [])}
+    H3s: ${JSON.stringify(currentH3s || [])}
+    H4s: ${JSON.stringify(currentH4s || [])}`;
 
     console.log('Envoi de la requête à OpenAI...');
 
@@ -98,7 +63,6 @@ serve(async (req) => {
           { role: 'user', content: userPrompt }
         ],
         temperature: 0.3,
-        max_tokens: 2000,
         response_format: { type: "json_object" }
       }),
     });
@@ -118,42 +82,6 @@ serve(async (req) => {
 
     const suggestions = JSON.parse(data.choices[0].message.content);
     console.log('Suggestions parsées:', suggestions);
-
-    // Validation des suggestions
-    const requiredProps = [
-      'suggested_title',
-      'suggested_description',
-      'suggested_h1',
-      'suggested_h2s',
-      'suggested_h3s',
-      'suggested_h4s',
-      'title_context',
-      'description_context',
-      'h1_context',
-      'h2s_context',
-      'h3s_context',
-      'h4s_context'
-    ];
-
-    for (const prop of requiredProps) {
-      if (!(prop in suggestions)) {
-        throw new Error(`Propriété manquante dans la réponse: ${prop}`);
-      }
-    }
-
-    // Vérification de la cohérence des suggestions
-    const validateSuggestion = (text: string, type: string, minLength: number, maxLength: number) => {
-      if (!text || typeof text !== 'string') {
-        throw new Error(`${type} invalide: doit être une chaîne non vide`);
-      }
-      if (text.length < minLength || text.length > maxLength) {
-        throw new Error(`${type} invalide: longueur ${text.length} caractères (attendu entre ${minLength} et ${maxLength})`);
-      }
-    };
-
-    validateSuggestion(suggestions.suggested_title, 'Titre', 50, 60);
-    validateSuggestion(suggestions.suggested_description, 'Description', 145, 155);
-    validateSuggestion(suggestions.suggested_h1, 'H1', 20, 60);
 
     return new Response(JSON.stringify(suggestions), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
