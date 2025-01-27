@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import "https://deno.land/x/xhr@0.1.0/mod.ts";
 
 const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
 
@@ -22,6 +23,7 @@ serve(async (req) => {
     }
 
     const systemPrompt = `Tu es un expert SEO qui optimise le contenu web.
+    Pour chaque élément fourni, tu dois suggérer une version optimisée qui correspond EXACTEMENT à sa position dans la hiérarchie.
     Retourne UNIQUEMENT un objet JSON avec cette structure exacte, sans commentaires ni texte additionnel:
 
     {
@@ -37,9 +39,11 @@ serve(async (req) => {
       "h2s_context": ["array of strings"],
       "h3s_context": ["array of strings"],
       "h4s_context": ["array of strings"]
-    }`;
+    }
 
-    const userPrompt = `Optimise ces éléments SEO:
+    IMPORTANT: Les suggestions doivent correspondre à leur position originale. Par exemple, si "Pompes à chaleur" est le 3ème H3, la suggestion correspondante doit être à la 3ème position dans suggested_h3s.`;
+
+    const userPrompt = `Optimise ces éléments SEO en gardant leur ordre et leur hiérarchie:
     
     Titre: "${currentTitle || ''}"
     Description: "${currentDescription || ''}"
@@ -82,6 +86,14 @@ serve(async (req) => {
 
     const suggestions = JSON.parse(data.choices[0].message.content);
     console.log('Suggestions parsées:', suggestions);
+
+    // Vérification de l'alignement des suggestions
+    if (currentH3s && Array.isArray(currentH3s) && suggestions.suggested_h3s) {
+      console.log('Vérification de l\'alignement H3:', {
+        original: currentH3s,
+        suggestions: suggestions.suggested_h3s
+      });
+    }
 
     return new Response(JSON.stringify(suggestions), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
