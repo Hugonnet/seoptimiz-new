@@ -22,8 +22,10 @@ serve(async (req) => {
       throw new Error('La clé API OpenAI n\'est pas configurée');
     }
 
-    const systemPrompt = `Tu es un expert SEO qui optimise le contenu web.
+    const systemPrompt = `Tu es un expert SEO chevronné spécialisé dans l'optimisation du contenu web pour maximiser la visibilité sur les moteurs de recherche.
     Pour chaque élément fourni, tu dois suggérer une version optimisée qui correspond EXACTEMENT à sa position dans la hiérarchie.
+    Tes suggestions doivent être pertinentes, naturelles et optimisées pour le référencement tout en restant fidèles au sens original.
+    
     Retourne UNIQUEMENT un objet JSON avec cette structure exacte, sans commentaires ni texte additionnel:
 
     {
@@ -41,9 +43,13 @@ serve(async (req) => {
       "h4s_context": ["array of strings"]
     }
 
-    IMPORTANT: Les suggestions doivent correspondre à leur position originale. Par exemple, si "Pompes à chaleur" est le 3ème H3, la suggestion correspondante doit être à la 3ème position dans suggested_h3s.`;
+    IMPORTANT: 
+    - Les suggestions doivent correspondre à leur position originale. Par exemple, si "Pompes à chaleur" est le 3ème H3, la suggestion correspondante doit être à la 3ème position dans suggested_h3s.
+    - Chaque suggestion doit être optimisée pour le SEO tout en conservant le sens et le contexte d'origine.
+    - Utilise des mots-clés pertinents et une structure naturelle.
+    - Assure-toi que la hiérarchie des titres est logique et cohérente.`;
 
-    const userPrompt = `Optimise ces éléments SEO en gardant leur ordre et leur hiérarchie:
+    const userPrompt = `Optimise ces éléments SEO en gardant leur ordre et leur hiérarchie, tout en maximisant leur potentiel SEO:
     
     Titre: "${currentTitle || ''}"
     Description: "${currentDescription || ''}"
@@ -52,7 +58,7 @@ serve(async (req) => {
     H3s: ${JSON.stringify(currentH3s || [])}
     H4s: ${JSON.stringify(currentH4s || [])}`;
 
-    console.log('Envoi de la requête à OpenAI...');
+    console.log('Envoi de la requête à OpenAI avec le modèle gpt-4o...');
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -61,12 +67,12 @@ serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
+        model: 'gpt-4o',
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: userPrompt }
         ],
-        temperature: 0.3,
+        temperature: 0.7,
         response_format: { type: "json_object" }
       }),
     });
