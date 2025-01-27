@@ -22,50 +22,44 @@ serve(async (req) => {
     }
 
     const systemPrompt = `Tu es un expert SEO francophone spécialisé dans l'optimisation de contenu web.
-    Ta mission est de générer des suggestions d'optimisation SEO pertinentes et détaillées.
+    Ta mission est d'analyser et d'optimiser la structure SEO d'une page web en respectant ces règles strictes :
 
-    RÈGLES IMPORTANTES:
-    1. Pour la meta description:
-       - EXACTEMENT entre 145 et 155 caractères
-       - Inclure un appel à l'action clair
-       - Utiliser des mots-clés naturellement
-       - Être persuasive et informative
+    RÈGLES CRITIQUES:
+    1. Meta Title:
+       - Entre 50-60 caractères EXACTEMENT
+       - Mots-clés principaux en début de titre
+       - Format: [Mot-clé Principal] - [Bénéfice Secondaire] | [Nom de l'entreprise]
+       - Doit être accrocheur et pertinent
 
-    2. Pour le titre:
-       - Entre 50 et 60 caractères
-       - Placer les mots-clés importants au début
-       - Inclure le nom de l'entreprise
-       - Être accrocheur tout en restant professionnel
+    2. Meta Description:
+       - Entre 145-155 caractères EXACTEMENT
+       - Structure: [Problème/Besoin] + [Solution unique] + [Call-to-action]
+       - Inclure naturellement les mots-clés principaux
+       - Doit donner envie de cliquer
 
-    3. Pour les balises H1:
-       - Une seule balise H1 par page
+    3. H1:
+       - Un seul H1 par page
        - Inclure le mot-clé principal
-       - Être cohérent avec le titre
-       - Être clair et descriptif
+       - Cohérent avec le titre mais pas identique
+       - Maximum 60 caractères
 
-    4. Pour chaque suggestion:
-       - Fournir une explication SEO détaillée et technique
-       - Expliquer pourquoi la modification améliore le référencement
+    4. Structure H2-H4:
+       - H2: Grands thèmes et sections principales (3-5 maximum)
+       - H3: Sous-sections détaillées des H2 (2-4 par H2)
+       - H4: Points spécifiques et questions fréquentes (2-3 par H3)
+       - Chaque niveau doit être cohérent avec son parent
+       - Utiliser des mots-clés secondaires naturellement
+
+    5. Pour chaque suggestion:
+       - Expliquer PRÉCISÉMENT pourquoi c'est mieux pour le SEO
        - Mentionner l'impact sur l'intention de recherche
-       - Inclure des conseils d'optimisation spécifiques
+       - Citer des métriques SEO spécifiques quand pertinent
 
-    Réponds UNIQUEMENT avec un objet JSON valide contenant ces propriétés:
-    {
-      "suggested_title": "string (50-60 caractères)",
-      "suggested_description": "string (EXACTEMENT 145-155 caractères)",
-      "suggested_h1": "string",
-      "suggested_h2s": ["string"],
-      "suggested_h3s": ["string"],
-      "suggested_h4s": ["string"],
-      "title_context": "string (explication technique SEO)",
-      "description_context": "string (explication technique SEO)",
-      "h1_context": "string (explication technique SEO)",
-      "h2s_context": ["string"],
-      "h3s_context": ["string"],
-      "h4s_context": ["string"]
-    }`;
+    IMPORTANT: Garde une cohérence parfaite entre tous les niveaux de titres. Chaque suggestion doit avoir un lien logique avec sa section parente.`;
 
-    const userPrompt = `Analyse et optimise ces éléments SEO en suivant les règles strictes:
+    const userPrompt = `Analyse et optimise ces éléments SEO en suivant les règles strictes.
+    
+    URL analysée: ${currentTitle ? 'Page existante' : 'Nouvelle page'}
     
     Titre actuel: "${currentTitle || ''}"
     Description actuelle: "${currentDescription || ''}"
@@ -75,10 +69,10 @@ serve(async (req) => {
     H4s actuels: ${JSON.stringify(currentH4s || [])}
     
     Pour chaque élément:
-    1. Analyse l'existant d'un point de vue SEO
-    2. Propose une version optimisée
-    3. Explique techniquement pourquoi c'est mieux
-    4. Fournis des métriques SEO spécifiques`;
+    1. Analyse critique de l'existant
+    2. Proposition d'optimisation avec justification SEO
+    3. Explication de l'impact sur le référencement
+    4. Suggestions d'amélioration de la structure sémantique`;
 
     console.log('Envoi de la requête à OpenAI...');
 
@@ -94,7 +88,8 @@ serve(async (req) => {
           { role: 'system', content: systemPrompt },
           { role: 'user', content: userPrompt }
         ],
-        temperature: 0.7,
+        temperature: 0.3, // Réduit pour plus de cohérence
+        max_tokens: 2000,
       }),
     });
 
@@ -121,6 +116,7 @@ serve(async (req) => {
     const suggestions = JSON.parse(cleanedContent);
     console.log('Suggestions parsées:', suggestions);
 
+    // Validation des suggestions
     const requiredProps = [
       'suggested_title',
       'suggested_description',
@@ -142,12 +138,19 @@ serve(async (req) => {
       }
     }
 
-    // Vérification de la longueur de la meta description
-    const descriptionLength = suggestions.suggested_description.length;
-    if (descriptionLength < 145 || descriptionLength > 155) {
-      console.warn(`La meta description fait ${descriptionLength} caractères, ajustement nécessaire`);
-      // On pourrait ajouter ici une logique d'ajustement automatique
-    }
+    // Vérification de la cohérence des suggestions
+    const validateSuggestion = (text: string, type: string, minLength: number, maxLength: number) => {
+      if (!text || typeof text !== 'string') {
+        throw new Error(`${type} invalide: doit être une chaîne non vide`);
+      }
+      if (text.length < minLength || text.length > maxLength) {
+        throw new Error(`${type} invalide: longueur ${text.length} caractères (attendu entre ${minLength} et ${maxLength})`);
+      }
+    };
+
+    validateSuggestion(suggestions.suggested_title, 'Titre', 50, 60);
+    validateSuggestion(suggestions.suggested_description, 'Description', 145, 155);
+    validateSuggestion(suggestions.suggested_h1, 'H1', 20, 60);
 
     return new Response(JSON.stringify(suggestions), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
