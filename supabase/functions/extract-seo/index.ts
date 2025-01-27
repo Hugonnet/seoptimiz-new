@@ -14,17 +14,14 @@ serve(async (req) => {
       throw new Error('URL is required');
     }
 
-    const startTime = Date.now();
     console.log('Fetching URL content...');
-    
     const response = await fetch(url);
     if (!response.ok) {
       throw new Error(`Failed to fetch URL: ${response.statusText}`);
     }
 
     const html = await response.text();
-    const loadTime = (Date.now() - startTime) / 1000; // Convert to seconds
-    console.log(`Page loaded in ${loadTime} seconds`);
+    console.log('Extracting metadata from HTML...');
 
     // Helper function to extract meta content
     const getMetaContent = (content: string, name: string): string => {
@@ -35,7 +32,7 @@ serve(async (req) => {
     // Helper function to extract all links
     const extractLinks = (content: string, baseUrl: string): { internal: string[], external: string[] } => {
       const links: { internal: string[], external: string[] } = { internal: [], external: [] };
-      const hostname = new URL(baseUrl).hostname;
+      const hostname = new URL(url).hostname;
       
       const linkMatches = content.matchAll(/<a\s+(?:[^>]*?\s+)?href=["'](.*?)["']/gi);
       for (const match of Array.from(linkMatches)) {
@@ -45,27 +42,17 @@ serve(async (req) => {
             continue;
           }
           
-          let absoluteUrl = href;
-          try {
-            absoluteUrl = href.startsWith('http') ? href : new URL(href, baseUrl).href;
-          } catch (e) {
-            console.warn('Invalid URL:', href);
-            continue;
-          }
+          const absoluteUrl = href.startsWith('http') ? href : new URL(href, baseUrl).href;
+          const linkHostname = new URL(absoluteUrl).hostname;
           
-          try {
-            const linkHostname = new URL(absoluteUrl).hostname;
-            if (linkHostname === hostname) {
-              if (!links.internal.includes(absoluteUrl)) {
-                links.internal.push(absoluteUrl);
-              }
-            } else {
-              if (!links.external.includes(absoluteUrl)) {
-                links.external.push(absoluteUrl);
-              }
+          if (linkHostname === hostname) {
+            if (!links.internal.includes(absoluteUrl)) {
+              links.internal.push(absoluteUrl);
             }
-          } catch (e) {
-            console.warn('Error processing URL:', absoluteUrl);
+          } else {
+            if (!links.external.includes(absoluteUrl)) {
+              links.external.push(absoluteUrl);
+            }
           }
         } catch (e) {
           console.warn('Invalid URL found:', match[1]);
@@ -74,10 +61,24 @@ serve(async (req) => {
       return links;
     };
 
+    // Helper function to extract headings
+    const extractHeadings = (content: string, tag: string): string[] => {
+      const regex = new RegExp(`<${tag}[^>]*>(.*?)<\/${tag}>`, 'gi');
+      const matches = Array.from(content.matchAll(regex));
+      return matches.map(match => 
+        match[1]
+          .replace(/<[^>]+>/g, '')
+          .trim()
+      ).filter(Boolean);
+    };
+
     // Extract all metadata
-    console.log('Extracting metadata...');
     const title = html.match(/<title[^>]*>([^<]+)<\/title>/i)?.[1] || '';
     const description = getMetaContent(html, 'description');
+    const h1s = extractHeadings(html, 'h1');
+    const h2s = extractHeadings(html, 'h2');
+    const h3s = extractHeadings(html, 'h3');
+    const h4s = extractHeadings(html, 'h4');
     const { internal, external } = extractLinks(html, url);
     
     // Check for broken links
@@ -92,28 +93,36 @@ serve(async (req) => {
           brokenLinks.push(link);
         }
       } catch (e) {
-        console.warn('Error checking link:', link, e);
         brokenLinks.push(link);
       }
     });
 
     await Promise.all(checkPromises);
 
-    console.log('Analysis complete');
+    const metadata = {
+      title,
+      description,
+      h1: h1s[0] || '',
+      h2s,
+      h3s,
+      h4s,
+      keywords: getMetaContent(html, 'keywords'),
+      canonical: html.match(/<link[^>]*rel=["']canonical["'][^>]*href=["'](.*?)["']/i)?.[1] || '',
+      ogTitle: getMetaContent(html, 'og:title'),
+      ogDescription: getMetaContent(html, 'og:description'),
+      ogImage: getMetaContent(html, 'og:image'),
+      internal_links: internal,
+      external_links: external,
+      broken_links: brokenLinks,
+      page_load_speed: (Date.now() - performance.now()) / 1000 // Approximate load time in seconds
+    };
+
+    console.log('Metadata extraction complete');
     console.log('Links found:', {
       internal: internal.length,
       external: external.length,
       broken: brokenLinks.length
     });
-
-    const metadata = {
-      title,
-      description,
-      internal_links: internal,
-      external_links: external,
-      broken_links: brokenLinks,
-      page_load_speed: loadTime
-    };
 
     return new Response(JSON.stringify(metadata), {
       headers: { 

@@ -9,24 +9,16 @@ import {
 } from "@/components/ui/tooltip";
 
 interface HeadingArrayComparisonProps {
-  current: string[];
-  suggested: string[];
+  current?: string[];
+  suggested?: string[];
   context?: string[];
 }
 
-export function HeadingArrayComparison({ current, suggested = [], context = [] }: HeadingArrayComparisonProps) {
+export function HeadingArrayComparison({ current = [], suggested = [], context = [] }: HeadingArrayComparisonProps) {
   const [copiedIndex, setCopiedIndex] = React.useState<number | null>(null);
-  
-  // Vérification et nettoyage des données
-  const validCurrentItems = (Array.isArray(current) ? current : []).filter(item => item && typeof item === 'string' && item.trim() !== '');
-  const validSuggestedItems = (Array.isArray(suggested) ? suggested : []).filter(item => item && typeof item === 'string' && item.trim() !== '');
-  const validContextItems = (Array.isArray(context) ? context : []).filter(item => item && typeof item === 'string' && item.trim() !== '');
-
-  console.log('HeadingArrayComparison - Processed Items:', {
-    validCurrentItems,
-    validSuggestedItems,
-    validContextItems
-  });
+  const validCurrentItems = Array.isArray(current) ? current.filter(item => item && item !== 'Non défini') : [];
+  const validSuggestedItems = Array.isArray(suggested) ? suggested.filter(item => item && item !== 'Non défini') : [];
+  const validContextItems = Array.isArray(context) ? context : [];
 
   const copyToClipboard = async (text: string, index: number) => {
     try {
@@ -38,25 +30,23 @@ export function HeadingArrayComparison({ current, suggested = [], context = [] }
     }
   };
 
-  if (validCurrentItems.length === 0) {
-    console.log('HeadingArrayComparison: No valid current items');
-    return null;
-  }
+  if (validCurrentItems.length === 0) return null;
 
   return (
-    <div className="space-y-4">
-      {validCurrentItems.map((currentItem, index) => (
-        <div key={index} className="space-y-3">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="p-4 bg-white rounded-lg shadow-sm border border-gray-100">
-              <div className="font-medium text-gray-800 mb-2">Version actuelle :</div>
-              <div className="text-gray-600 break-words">{currentItem}</div>
-            </div>
-            
-            {validSuggestedItems[index] && (
-              <div className="p-4 bg-gradient-to-br from-purple-50 to-pink-50 rounded-lg shadow-sm border border-purple-100">
-                <div className="flex justify-between items-center mb-2">
-                  <div className="font-medium text-purple-800">Version optimisée :</div>
+    <div className="space-y-4 sm:space-y-6">
+      {validCurrentItems.map((currentItem, index) => {
+        if (!currentItem || !validSuggestedItems[index]) return null;
+
+        return (
+          <div key={index} className="space-y-3 animate-fade-in">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-2 sm:gap-3 w-full">
+              <div className="p-2 sm:p-3 bg-white rounded-lg shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-300">
+                <div className="font-medium text-gray-800 mb-1.5">Version actuelle :</div>
+                <div className="text-gray-600 break-words text-sm sm:text-base">{currentItem}</div>
+              </div>
+              <div className="p-2 sm:p-3 bg-gradient-to-br from-purple-50 to-pink-50 rounded-lg shadow-sm border border-purple-100 hover:shadow-md transition-shadow duration-300">
+                <div className="flex justify-between items-center">
+                  <div className="font-medium text-purple-800 mb-1.5">Version optimisée :</div>
                   <TooltipProvider>
                     <Tooltip>
                       <TooltipTrigger asChild>
@@ -79,21 +69,20 @@ export function HeadingArrayComparison({ current, suggested = [], context = [] }
                     </Tooltip>
                   </TooltipProvider>
                 </div>
-                <div className="text-purple-700 break-words">
+                <div className="text-purple-700 break-words text-sm sm:text-base">
                   {validSuggestedItems[index]}
                 </div>
               </div>
+            </div>
+            {validContextItems[index] && (
+              <div className="text-xs sm:text-sm bg-blue-50 p-2 sm:p-3 rounded-lg border border-blue-100 shadow-sm">
+                <span className="font-medium text-blue-800">Explication : </span>
+                <span className="text-blue-700">{validContextItems[index]}</span>
+              </div>
             )}
           </div>
-          
-          {validContextItems[index] && (
-            <div className="text-sm bg-blue-50 p-4 rounded-lg border border-blue-100">
-              <span className="font-medium text-blue-800">Explication : </span>
-              <span className="text-blue-700">{validContextItems[index]}</span>
-            </div>
-          )}
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }

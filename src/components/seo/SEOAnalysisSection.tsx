@@ -11,51 +11,31 @@ interface SEOAnalysisSectionProps {
 }
 
 export function SEOAnalysisSection({ title, type, current, suggested, context }: SEOAnalysisSectionProps) {
-  console.log(`SEOAnalysisSection - ${title}:`, { type, current, suggested, context });
+  // Ne pas afficher la section si elle est vide
+  if (type === 'single' && (!current || current === '')) {
+    return null;
+  }
 
-  if (type === 'single') {
-    if (!current || typeof current !== 'string' || current.trim() === '') {
-      console.log(`SEOAnalysisSection - ${title}: Skipping single type due to invalid current value`);
-      return null;
-    }
+  if (type === 'array' && (!Array.isArray(current) || current.length === 0)) {
+    return null;
+  }
 
-    return (
-      <div className="space-y-4">
-        <h3 className="text-lg font-semibold text-gray-800">{title}</h3>
+  return (
+    <div className="space-y-6">
+      <h3 className="text-lg font-semibold">{title}</h3>
+      {type === 'single' ? (
         <HeadingComparison 
-          current={current} 
+          current={current as string} 
           suggested={suggested as string} 
           context={context as string} 
         />
-      </div>
-    );
-  }
-
-  // Vérification pour le type array
-  if (!Array.isArray(current)) {
-    console.log(`SEOAnalysisSection - ${title}: Current is not an array`, current);
-    return null;
-  }
-
-  // Filtrer les éléments vides ou undefined
-  const validCurrentItems = current.filter(item => item && typeof item === 'string' && item.trim() !== '');
-  
-  if (validCurrentItems.length === 0) {
-    console.log(`SEOAnalysisSection - ${title}: No valid items in current array`);
-    return null;
-  }
-
-  const suggestedArray = Array.isArray(suggested) ? suggested : [];
-  const contextArray = Array.isArray(context) ? context : [];
-
-  return (
-    <div className="space-y-4">
-      <h3 className="text-lg font-semibold text-gray-800">{title}</h3>
-      <HeadingArrayComparison 
-        current={validCurrentItems} 
-        suggested={suggestedArray} 
-        context={contextArray} 
-      />
+      ) : (
+        <HeadingArrayComparison 
+          current={current as string[]} 
+          suggested={suggested as string[]} 
+          context={context as string[]} 
+        />
+      )}
     </div>
   );
 }
