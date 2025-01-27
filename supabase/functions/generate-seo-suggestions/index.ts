@@ -22,20 +22,34 @@ serve(async (req) => {
     }
 
     const systemPrompt = `Tu es un expert SEO francophone spécialisé dans l'optimisation de contenu web.
-    Ta mission est d'analyser et d'optimiser la structure SEO d'une page web en respectant ces règles strictes :
+    Ta mission est d'analyser et d'optimiser la structure SEO d'une page web.
+    Tu DOIS ABSOLUMENT retourner une réponse au format JSON strict avec la structure suivante:
 
-    RÈGLES CRITIQUES:
+    {
+      "suggested_title": "string (50-60 caractères)",
+      "suggested_description": "string (145-155 caractères)",
+      "suggested_h1": "string",
+      "suggested_h2s": ["array of strings"],
+      "suggested_h3s": ["array of strings"],
+      "suggested_h4s": ["array of strings"],
+      "title_context": "string",
+      "description_context": "string",
+      "h1_context": "string",
+      "h2s_context": ["array of strings"],
+      "h3s_context": ["array of strings"],
+      "h4s_context": ["array of strings"]
+    }
+
+    Règles CRITIQUES à suivre:
     1. Meta Title:
        - Entre 50-60 caractères EXACTEMENT
        - Mots-clés principaux en début de titre
        - Format: [Mot-clé Principal] - [Bénéfice Secondaire] | [Nom de l'entreprise]
-       - Doit être accrocheur et pertinent
 
     2. Meta Description:
        - Entre 145-155 caractères EXACTEMENT
        - Structure: [Problème/Besoin] + [Solution unique] + [Call-to-action]
        - Inclure naturellement les mots-clés principaux
-       - Doit donner envie de cliquer
 
     3. H1:
        - Un seul H1 par page
@@ -46,20 +60,19 @@ serve(async (req) => {
     4. Structure H2-H4:
        - H2: Grands thèmes et sections principales (3-5 maximum)
        - H3: Sous-sections détaillées des H2 (2-4 par H2)
-       - H4: Points spécifiques et questions fréquentes (2-3 par H3)
-       - Chaque niveau doit être cohérent avec son parent
-       - Utiliser des mots-clés secondaires naturellement
+       - H4: Points spécifiques (2-3 par H3)
 
     5. Pour chaque suggestion:
        - Expliquer PRÉCISÉMENT pourquoi c'est mieux pour le SEO
        - Mentionner l'impact sur l'intention de recherche
        - Citer des métriques SEO spécifiques quand pertinent
 
-    IMPORTANT: Garde une cohérence parfaite entre tous les niveaux de titres. Chaque suggestion doit avoir un lien logique avec sa section parente.`;
+    IMPORTANT: 
+    - Retourne UNIQUEMENT un objet JSON valide
+    - Ne pas inclure de markdown ou de texte formaté
+    - Pas de commentaires ou d'explications hors du JSON`;
 
-    const userPrompt = `Analyse et optimise ces éléments SEO en suivant les règles strictes.
-    
-    URL analysée: ${currentTitle ? 'Page existante' : 'Nouvelle page'}
+    const userPrompt = `Analyse et optimise ces éléments SEO selon les règles strictes.
     
     Titre actuel: "${currentTitle || ''}"
     Description actuelle: "${currentDescription || ''}"
@@ -68,11 +81,7 @@ serve(async (req) => {
     H3s actuels: ${JSON.stringify(currentH3s || [])}
     H4s actuels: ${JSON.stringify(currentH4s || [])}
     
-    Pour chaque élément:
-    1. Analyse critique de l'existant
-    2. Proposition d'optimisation avec justification SEO
-    3. Explication de l'impact sur le référencement
-    4. Suggestions d'amélioration de la structure sémantique`;
+    Retourne UNIQUEMENT un objet JSON valide avec les suggestions et leurs contextes.`;
 
     console.log('Envoi de la requête à OpenAI...');
 
@@ -88,8 +97,9 @@ serve(async (req) => {
           { role: 'system', content: systemPrompt },
           { role: 'user', content: userPrompt }
         ],
-        temperature: 0.3, // Réduit pour plus de cohérence
+        temperature: 0.3,
         max_tokens: 2000,
+        response_format: { type: "json_object" }
       }),
     });
 
@@ -106,14 +116,7 @@ serve(async (req) => {
       throw new Error('Réponse OpenAI invalide ou vide');
     }
 
-    let cleanedContent = data.choices[0].message.content
-      .replace(/```json\n?/g, '')
-      .replace(/```\n?/g, '')
-      .trim();
-
-    console.log('Contenu nettoyé:', cleanedContent);
-
-    const suggestions = JSON.parse(cleanedContent);
+    const suggestions = JSON.parse(data.choices[0].message.content);
     console.log('Suggestions parsées:', suggestions);
 
     // Validation des suggestions
