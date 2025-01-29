@@ -24,6 +24,19 @@ export const analyzeSEO = async (url: string, company: string): Promise<SEOAnaly
     throw new Error("Impossible d'extraire les données SEO");
   }
 
+  // Test page speed
+  console.log('Test de vitesse pour:', formattedUrl);
+  const { data: speedData, error: speedError } = await supabase.functions.invoke('test-page-speed', {
+    body: { url: formattedUrl }
+  });
+
+  if (speedError) {
+    console.error('Erreur lors du test de vitesse:', speedError);
+    throw speedError;
+  }
+
+  console.log('Résultats du test de vitesse:', speedData);
+
   console.log('Appel à l\'Edge Function pour générer les suggestions');
   const { data: suggestions, error: suggestionsError } = await supabase.functions.invoke('generate-seo-suggestions', {
     body: {
@@ -68,6 +81,7 @@ export const analyzeSEO = async (url: string, company: string): Promise<SEOAnaly
         h2s_context: suggestions.h2s_context,
         h3s_context: suggestions.h3s_context,
         h4s_context: suggestions.h4s_context,
+        page_load_speed: speedData.loadTime,
       },
     ])
     .select()
