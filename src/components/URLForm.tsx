@@ -39,12 +39,26 @@ export function URLForm() {
   };
 
   const formatURL = (url: string): string => {
-    let formattedUrl = url.trim();
-    formattedUrl = formattedUrl.replace(/[:\/]+$/, '');
-    if (!formattedUrl.startsWith('http://') && !formattedUrl.startsWith('https://')) {
-      formattedUrl = 'https://' + formattedUrl;
+    let formattedUrl = url.trim().toLowerCase();
+    
+    // Supprimer les protocoles existants
+    formattedUrl = formattedUrl.replace(/^(https?:\/\/)?(www\.)?/, '');
+    
+    // Supprimer les slashes à la fin
+    formattedUrl = formattedUrl.replace(/\/+$/, '');
+    
+    // Supprimer les deux points à la fin
+    formattedUrl = formattedUrl.replace(/:+$/, '');
+    
+    // Ajouter le protocole https://
+    if (!formattedUrl.startsWith('http')) {
+      formattedUrl = `https://${formattedUrl}`;
     }
+    
+    // Nettoyer les doubles slashes sauf après le protocole
     formattedUrl = formattedUrl.replace(/([^:]\/)\/+/g, '$1');
+    
+    console.log('URL formatée:', formattedUrl);
     return formattedUrl;
   };
 
@@ -57,7 +71,7 @@ export function URLForm() {
 
     try {
       const formattedUrl = formatURL(domain);
-      console.log('Formatted URL:', formattedUrl);
+      console.log('URL formatée:', formattedUrl);
       
       const analysisData = await analyzeSEO(formattedUrl, company);
       
