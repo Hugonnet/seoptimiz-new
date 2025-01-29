@@ -8,10 +8,11 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Trash2 } from "lucide-react";
+import { Eye, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useSEOStore } from "@/store/seoStore";
 import { supabase } from "@/integrations/supabase/client";
+import { SEOAnalysisModal } from "./SEOAnalysisModal";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -29,6 +30,7 @@ export function SEOTable() {
   const seoData = useSEOStore((state) => state.seoData);
   const setSEOData = useSEOStore((state) => state.setSEOData);
   const [selectedUrl, setSelectedUrl] = useState<string | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const deleteAnalysesByUrl = async (url: string) => {
     try {
@@ -92,7 +94,19 @@ export function SEOTable() {
                   minute: '2-digit'
                 })}
               </TableCell>
-              <TableCell className="text-right">
+              <TableCell className="text-right space-x-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="gap-2"
+                  onClick={() => {
+                    setSelectedUrl(url);
+                    setIsModalOpen(true);
+                  }}
+                >
+                  <Eye className="h-4 w-4" />
+                  Voir les analyses
+                </Button>
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
                     <Button 
@@ -129,6 +143,15 @@ export function SEOTable() {
           ))}
         </TableBody>
       </Table>
+
+      {selectedUrl && (
+        <SEOAnalysisModal
+          url={selectedUrl}
+          analyses={groupedAnalyses[selectedUrl]}
+          open={isModalOpen}
+          onOpenChange={setIsModalOpen}
+        />
+      )}
     </div>
   );
 }
