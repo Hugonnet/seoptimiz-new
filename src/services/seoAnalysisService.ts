@@ -5,7 +5,20 @@ import { SEOAnalysis } from "@/store/seoStore";
 export const analyzeSEO = async (url: string, company: string): Promise<SEOAnalysis> => {
   console.log('Analyse de l\'URL:', url);
   
-  const seoData = await extractSEOMetadata(url);
+  // Ensure URL is properly formatted
+  let formattedUrl = url;
+  try {
+    const urlObject = new URL(url);
+    // Remove any trailing colons from the hostname
+    urlObject.hostname = urlObject.hostname.replace(/:+$/, '');
+    formattedUrl = urlObject.toString();
+    console.log('URL formatée:', formattedUrl);
+  } catch (error) {
+    console.error('Erreur de formatage d\'URL:', error);
+    throw new Error("URL invalide");
+  }
+  
+  const seoData = await extractSEOMetadata(formattedUrl);
   
   if (!seoData) {
     throw new Error("Impossible d'extraire les données SEO");
@@ -34,7 +47,7 @@ export const analyzeSEO = async (url: string, company: string): Promise<SEOAnaly
     .from('seo_analyses')
     .insert([
       {
-        url: url,
+        url: formattedUrl,
         company: company,
         current_title: seoData.title,
         current_description: seoData.description,
