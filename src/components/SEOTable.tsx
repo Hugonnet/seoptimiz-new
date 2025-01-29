@@ -1,117 +1,134 @@
-import { Button } from "@/components/ui/button";
-import { Download, BarChart2 } from "lucide-react";
-import { downloadTableAsCSV } from "@/services/seoService";
-import { useSEOStore } from "@/store/seoStore";
-import { SEOAnalysisSection } from "./seo/SEOAnalysisSection";
-import { AdvancedAnalysisSection } from "./seo/AdvancedAnalysisSection";
 import { useState } from "react";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
+import { Trash2 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { useSEOStore } from "@/store/seoStore";
+import { supabase } from "@/integrations/supabase/client";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 export function SEOTable() {
+  const { toast } = useToast();
   const seoData = useSEOStore((state) => state.seoData);
-  const [showAdvanced, setShowAdvanced] = useState<{ [key: number]: boolean }>({});
+  const setSEOData = useSEOStore((state) => state.setSEOData);
+  const [selectedUrl, setSelectedUrl] = useState<string | null>(null);
 
-  const toggleAdvanced = (id: number) => {
-    setShowAdvanced(prev => ({
-      ...prev,
-      [id]: !prev[id]
-    }));
+  const deleteAnalysesByUrl = async (url: string) => {
+    try {
+      const { error } = await supabase
+        .from('seo_analyses')
+        .delete()
+        .eq('url', url);
+
+      if (error) throw error;
+
+      // Mettre à jour le state local
+      const updatedData = seoData.filter(item => item.url !== url);
+      setSEOData(updatedData);
+
+      toast({
+        title: "Analyses supprimées",
+        description: `Toutes les analyses pour ${url} ont été supprimées avec succès.`,
+      });
+    } catch (error) {
+      console.error('Erreur lors de la suppression:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de supprimer les analyses.",
+        variant: "destructive",
+      });
+    }
   };
 
-  if (seoData.length === 0) {
-    return (
-      <div className="text-center py-3 sm:py-4 text-gray-600 bg-white rounded-lg shadow-sm border border-gray-100">
-        Aucune donnée SEO disponible. Analysez une URL pour commencer.
-      </div>
-    );
-  }
+  // Grouper les analyses par URL
+  const groupedAnalyses = seoData.reduce((acc, analysis) => {
+    const url = analysis.url;
+    if (!acc[url]) {
+      acc[url] = [];
+    }
+    acc[url].push(analysis);
+    return acc;
+  }, {} as Record<string, typeof seoData>);
 
   return (
-    <div className="space-y-6">
-      {seoData.map((item) => (
-        <div key={item.id} className="space-y-6 bg-gray-50 p-6 rounded-xl border border-gray-200">
-          <div className="flex items-center justify-between">
-            <h2 className="text-xl font-semibold text-purple-600">
-              Analyse SEO pour : <span className="text-gray-700 break-all">{item.url}</span>
-            </h2>
-            <div className="flex gap-2">
-              <Button 
-                onClick={() => toggleAdvanced(item.id)} 
-                variant="outline" 
-                className="gap-2"
-              >
-                <BarChart2 className="h-4 w-4" />
-                {showAdvanced[item.id] ? 'Masquer l\'analyse avancée' : 'Analyse avancée'}
-              </Button>
-              <Button 
-                onClick={() => downloadTableAsCSV(seoData)} 
-                variant="outline" 
-                className="gap-2"
-              >
-                <Download className="h-4 w-4" />
-                Exporter
-              </Button>
-            </div>
-          </div>
-          
-          <div className="space-y-6">
-            <SEOAnalysisSection
-              title="Meta Title"
-              type="single"
-              current={item.current_title || ''}
-              suggested={item.suggested_title || ''}
-              context={item.title_context}
-            />
-            <SEOAnalysisSection
-              title="Meta Description"
-              type="single"
-              current={item.current_description || ''}
-              suggested={item.suggested_description || ''}
-              context={item.description_context}
-            />
-            <SEOAnalysisSection
-              title="H1"
-              type="single"
-              current={item.current_h1 || ''}
-              suggested={item.suggested_h1 || ''}
-              context={item.h1_context}
-            />
-            <SEOAnalysisSection
-              title="H2"
-              type="array"
-              current={item.current_h2s || []}
-              suggested={item.suggested_h2s || []}
-              context={item.h2s_context}
-            />
-            <SEOAnalysisSection
-              title="H3"
-              type="array"
-              current={item.current_h3s || []}
-              suggested={item.suggested_h3s || []}
-              context={item.h3s_context}
-            />
-            <SEOAnalysisSection
-              title="H4"
-              type="array"
-              current={item.current_h4s || []}
-              suggested={item.suggested_h4s || []}
-              context={item.h4s_context}
-            />
-
-            {showAdvanced[item.id] && (
-              <AdvancedAnalysisSection
-                readabilityScore={item.readability_score}
-                contentLength={item.content_length}
-                internalLinks={item.internal_links}
-                externalLinks={item.external_links}
-                brokenLinks={item.broken_links}
-                imageAlts={item.image_alts}
-                pageLoadSpeed={item.page_load_speed}
-                mobileFriendly={item.mobile_friendly}
-              />
-            )}
-          </div>
-        </div>
-      ))}
+    <div className="rounded-md border">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>URL analysée</TableHead>
+            <TableHead>Nombre d'analyses</TableHead>
+            <TableHead>Dernière analyse</TableHead>
+            <TableHead className="text-right">Actions</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {Object.entries(groupedAnalyses).map(([url, analyses]) => (
+            <TableRow key={url}>
+              <TableCell className="font-medium">{url}</TableCell>
+              <TableCell>{analyses.length}</TableCell>
+              <TableCell>
+                {new Date(analyses[0].created_at!).toLocaleDateString('fr-FR', {
+                  day: 'numeric',
+                  month: 'long',
+                  year: 'numeric',
+                  hour: '2-digit',
+                  minute: '2-digit'
+                })}
+              </TableCell>
+              <TableCell className="text-right">
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button 
+                      variant="destructive" 
+                      size="sm"
+                      className="gap-2"
+                      onClick={() => setSelectedUrl(url)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                      Supprimer
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Êtes-vous sûr ?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Cette action va supprimer toutes les analyses pour {url}.
+                        Cette action est irréversible.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Annuler</AlertDialogCancel>
+                      <AlertDialogAction
+                        onClick={() => selectedUrl && deleteAnalysesByUrl(selectedUrl)}
+                        className="bg-red-500 hover:bg-red-600"
+                      >
+                        Supprimer
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
     </div>
   );
 }
