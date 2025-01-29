@@ -23,8 +23,20 @@ serve(async (req) => {
     }
 
     const systemPrompt = `Tu es un expert SEO chevronné spécialisé dans l'optimisation du contenu web pour maximiser la visibilité sur les moteurs de recherche.
-    Pour chaque élément fourni, tu dois suggérer une version optimisée qui correspond EXACTEMENT à sa position dans la hiérarchie.
-    Tes suggestions doivent être pertinentes, naturelles et optimisées pour le référencement tout en restant fidèles au sens original.
+    
+    IMPORTANT: Si une balise est manquante (vide ou "Non défini"), tu dois absolument proposer une suggestion pertinente basée sur le contexte global de la page et les autres éléments disponibles.
+    
+    Pour chaque élément fourni ou manquant, tu dois suggérer une version optimisée qui:
+    - Correspond à sa position dans la hiérarchie
+    - Utilise des mots-clés pertinents
+    - Est naturelle et engageante pour les utilisateurs
+    - Respecte les bonnes pratiques SEO
+    
+    Règles spécifiques:
+    - Title: 50-60 caractères, mots-clés au début
+    - Description: 145-155 caractères, call-to-action clair
+    - H1: Unique, inclut le mot-clé principal
+    - H2s, H3s, H4s: Structure logique et hiérarchique
     
     Retourne UNIQUEMENT un objet JSON avec cette structure exacte, sans commentaires ni texte additionnel:
 
@@ -41,24 +53,20 @@ serve(async (req) => {
       "h2s_context": ["array of strings"],
       "h3s_context": ["array of strings"],
       "h4s_context": ["array of strings"]
-    }
+    }`;
 
-    IMPORTANT: 
-    - Les suggestions doivent correspondre à leur position originale. Par exemple, si "Pompes à chaleur" est le 3ème H3, la suggestion correspondante doit être à la 3ème position dans suggested_h3s.
-    - Chaque suggestion doit être optimisée pour le SEO tout en conservant le sens et le contexte d'origine.
-    - Utilise des mots-clés pertinents et une structure naturelle.
-    - Assure-toi que la hiérarchie des titres est logique et cohérente.`;
-
-    const userPrompt = `Optimise ces éléments SEO en gardant leur ordre et leur hiérarchie, tout en maximisant leur potentiel SEO:
+    const userPrompt = `Analyse et optimise ces éléments SEO, en proposant des suggestions même pour les éléments manquants:
     
-    Titre: "${currentTitle || ''}"
-    Description: "${currentDescription || ''}"
-    H1: "${currentH1 || ''}"
-    H2s: ${JSON.stringify(currentH2s || [])}
-    H3s: ${JSON.stringify(currentH3s || [])}
-    H4s: ${JSON.stringify(currentH4s || [])}`;
+    Titre actuel: "${currentTitle || 'Non défini'}"
+    Description actuelle: "${currentDescription || 'Non définie'}"
+    H1 actuel: "${currentH1 || 'Non défini'}"
+    H2s actuels: ${JSON.stringify(currentH2s || [])}
+    H3s actuels: ${JSON.stringify(currentH3s || [])}
+    H4s actuels: ${JSON.stringify(currentH4s || [])}
+    
+    Si des éléments sont manquants, propose des suggestions basées sur le contexte global et les éléments disponibles.`;
 
-    console.log('Envoi de la requête à OpenAI avec le modèle gpt-4o...');
+    console.log('Envoi de la requête à OpenAI...');
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -91,15 +99,7 @@ serve(async (req) => {
     }
 
     const suggestions = JSON.parse(data.choices[0].message.content);
-    console.log('Suggestions parsées:', suggestions);
-
-    // Vérification de l'alignement des suggestions
-    if (currentH3s && Array.isArray(currentH3s) && suggestions.suggested_h3s) {
-      console.log('Vérification de l\'alignement H3:', {
-        original: currentH3s,
-        suggestions: suggestions.suggested_h3s
-      });
-    }
+    console.log('Suggestions générées:', suggestions);
 
     return new Response(JSON.stringify(suggestions), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
