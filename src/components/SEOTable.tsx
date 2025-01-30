@@ -58,6 +58,13 @@ export function SEOTable() {
     }
   };
 
+  const scrollToAnalysis = (url: string) => {
+    const element = document.getElementById(`analysis-${encodeURIComponent(url)}`);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+
   const groupedAnalyses = seoData.reduce((acc, analysis) => {
     const url = analysis.url;
     if (!acc[url]) {
@@ -96,49 +103,52 @@ export function SEOTable() {
                   minute: '2-digit'
                 })}
               </TableCell>
-              <TableCell className="text-right space-x-4">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="gap-2 bg-gradient-to-r from-purple-100 to-blue-100 hover:from-purple-200 hover:to-blue-200 border-purple-200"
-                  onClick={() => {
-                    setSelectedUrl(url);
-                    setIsModalOpen(true);
-                  }}
-                >
-                  <Eye className="h-4 w-4" />
-                  Voir les analyses
-                </Button>
-                <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                    <Button 
-                      variant="destructive" 
-                      size="sm"
-                      className="gap-2"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                      Supprimer
-                    </Button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>Êtes-vous sûr ?</AlertDialogTitle>
-                      <AlertDialogDescription>
-                        Cette action va supprimer toutes les analyses pour {url}.
-                        Cette action est irréversible.
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>Annuler</AlertDialogCancel>
-                      <AlertDialogAction
-                        onClick={() => selectedUrl && deleteAnalysesByUrl(selectedUrl)}
-                        className="bg-red-500 hover:bg-red-600"
+              <TableCell className="text-right">
+                <div className="flex justify-end gap-4">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="gap-2 bg-gradient-to-r from-purple-100 to-blue-100 hover:from-purple-200 hover:to-blue-200 border-purple-200"
+                    onClick={() => {
+                      setSelectedUrl(url);
+                      setIsModalOpen(true);
+                      scrollToAnalysis(url);
+                    }}
+                  >
+                    <Eye className="h-4 w-4" />
+                    Voir les analyses
+                  </Button>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button 
+                        variant="destructive" 
+                        size="sm"
+                        className="gap-2"
                       >
+                        <Trash2 className="h-4 w-4" />
                         Supprimer
-                      </AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Êtes-vous sûr ?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Cette action va supprimer toutes les analyses pour {url}.
+                          Cette action est irréversible.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Annuler</AlertDialogCancel>
+                        <AlertDialogAction
+                          onClick={() => selectedUrl && deleteAnalysesByUrl(selectedUrl)}
+                          className="bg-red-500 hover:bg-red-600"
+                        >
+                          Supprimer
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </div>
               </TableCell>
             </TableRow>
           ))}
