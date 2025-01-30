@@ -54,15 +54,22 @@ function containsDate(str: string): boolean {
 
 // Fonction pour vérifier si un mot est probablement un nom propre
 function isLikelyProperNoun(word: string): boolean {
-  // Vérifie si le mot commence par une majuscule et n'est pas en début de phrase
   return /^[A-Z][a-zà-ÿ]+/.test(word) && word.length > 1;
+}
+
+function cleanText(text: string): string {
+  // Nettoyer les virgules et la ponctuation
+  return text
+    .replace(/[,;]/g, ' ') // Remplacer les virgules et points-virgules par des espaces
+    .replace(/\s+/g, ' ') // Normaliser les espaces
+    .trim();
 }
 
 function getBigrams(words: string[]): string[] {
   const bigrams: string[] = [];
   for (let i = 0; i < words.length - 1; i++) {
-    const word1 = words[i].toLowerCase();
-    const word2 = words[i + 1].toLowerCase();
+    const word1 = cleanText(words[i].toLowerCase());
+    const word2 = cleanText(words[i + 1].toLowerCase());
     
     // Vérifie que les deux mots ne sont pas des stop words et ont plus de 3 caractères
     if (!stopWords.has(word1) && !stopWords.has(word2) && 
@@ -101,12 +108,12 @@ serve(async (req) => {
     console.log("Successfully fetched HTML content, length:", html.length);
 
     // Nettoyage du texte
-    const visibleText = html
+    const visibleText = cleanText(html
       .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
       .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
       .replace(/<[^>]+>/g, ' ')
-      .replace(/\s+/g, ' ')
-      .trim();
+      .trim()
+    );
 
     const words = visibleText.split(/\s+/);
     const totalWords = words.length;
@@ -122,8 +129,8 @@ serve(async (req) => {
     // Analyse des mots simples avec filtrage
     const wordFrequency: { [key: string]: number } = {};
     words.forEach(word => {
-      const normalizedWord = word.toLowerCase();
-      if (word.length > 3 && 
+      const normalizedWord = cleanText(word.toLowerCase());
+      if (normalizedWord.length > 3 && 
           !stopWords.has(normalizedWord) && 
           !containsDate(normalizedWord) &&
           !isLikelyProperNoun(word)) {
