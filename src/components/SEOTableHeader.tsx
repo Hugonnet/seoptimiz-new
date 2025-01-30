@@ -1,5 +1,4 @@
 import { TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Calendar } from "lucide-react";
 
 export function SEOTableHeader() {
   return (
