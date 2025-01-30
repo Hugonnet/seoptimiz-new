@@ -3,9 +3,11 @@ import { TableHead, TableHeader, TableRow } from "@/components/ui/table";
 export function SEOTableHeader() {
   return (
     <TableHeader>
-      <TableRow>
-        <TableHead className="text-gray-600 w-1/2">Dénominations actuelles</TableHead>
-        <TableHead className="text-gray-600 w-1/2">Améliorations suggérées par I.A</TableHead>
+      <TableRow className="bg-purple-50/50">
+        <TableHead>URL analysée</TableHead>
+        <TableHead>Nombre d'analyses</TableHead>
+        <TableHead>Dernière analyse</TableHead>
+        <TableHead className="text-right">Actions</TableHead>
       </TableRow>
     </TableHeader>
   );

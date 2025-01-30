@@ -1,29 +1,11 @@
 import { useState } from "react";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
-import { Eye, Trash2 } from "lucide-react";
+import { Table, TableBody } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
 import { useSEOStore } from "@/store/seoStore";
 import { supabase } from "@/integrations/supabase/client";
 import { SEOAnalysisModal } from "./SEOAnalysisModal";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
+import { SEOTableHeader } from "./SEOTableHeader";
+import { SEOTableRow } from "./seo/SEOTableRow";
 
 export function SEOTable() {
   const { toast } = useToast();
@@ -65,6 +47,12 @@ export function SEOTable() {
     }
   };
 
+  const handleViewAnalysis = (url: string) => {
+    setSelectedUrl(url);
+    setIsModalOpen(true);
+    scrollToAnalysis(url);
+  };
+
   const groupedAnalyses = seoData.reduce((acc, analysis) => {
     const url = analysis.url;
     if (!acc[url]) {
@@ -77,80 +65,17 @@ export function SEOTable() {
   return (
     <div className="rounded-md border">
       <Table>
-        <TableHeader>
-          <TableRow className="bg-purple-50/50">
-            <TableHead>URL analysée</TableHead>
-            <TableHead>Nombre d'analyses</TableHead>
-            <TableHead>Dernière analyse</TableHead>
-            <TableHead className="text-right">Actions</TableHead>
-          </TableRow>
-        </TableHeader>
+        <SEOTableHeader />
         <TableBody>
           {Object.entries(groupedAnalyses).map(([url, analyses]) => (
-            <TableRow key={url} className="hover:bg-purple-50/20" id={`analysis-${encodeURIComponent(url)}`}>
-              <TableCell className="font-medium max-w-md truncate">
-                <a href={url} target="_blank" rel="noopener noreferrer" className="text-purple-600 hover:text-purple-800">
-                  {url}
-                </a>
-              </TableCell>
-              <TableCell>{analyses.length}</TableCell>
-              <TableCell>
-                {new Date(analyses[0].created_at!).toLocaleDateString('fr-FR', {
-                  day: 'numeric',
-                  month: 'long',
-                  year: 'numeric',
-                  hour: '2-digit',
-                  minute: '2-digit'
-                })}
-              </TableCell>
-              <TableCell className="text-right">
-                <div className="flex justify-end gap-4">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="gap-2 bg-gradient-to-r from-purple-100 to-blue-100 hover:from-purple-200 hover:to-blue-200 border-purple-200"
-                    onClick={() => {
-                      setSelectedUrl(url);
-                      setIsModalOpen(true);
-                      scrollToAnalysis(url);
-                    }}
-                  >
-                    <Eye className="h-4 w-4" />
-                    Voir les analyses
-                  </Button>
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <Button 
-                        variant="destructive" 
-                        size="sm"
-                        className="gap-2"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                        Supprimer
-                      </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Êtes-vous sûr ?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          Cette action va supprimer toutes les analyses pour {url}.
-                          Cette action est irréversible.
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Annuler</AlertDialogCancel>
-                        <AlertDialogAction
-                          onClick={() => selectedUrl && deleteAnalysesByUrl(selectedUrl)}
-                          className="bg-red-500 hover:bg-red-600"
-                        >
-                          Supprimer
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
-                </div>
-              </TableCell>
-            </TableRow>
+            <SEOTableRow
+              key={url}
+              url={url}
+              analyses={analyses}
+              selectedUrl={selectedUrl}
+              onViewAnalysis={handleViewAnalysis}
+              onDeleteAnalysis={deleteAnalysesByUrl}
+            />
           ))}
         </TableBody>
       </Table>

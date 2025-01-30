@@ -1,8 +1,8 @@
 import React from 'react';
 import { Table, TableBody } from "@/components/ui/table";
-import { SEOTableHeader } from "../SEOTableHeader";
-import { SEOTableRow } from "./SEOTableRow";
 import type { SEOAnalysis } from "@/store/seoStore";
+import { HeadingComparison } from './HeadingComparison';
+import { HeadingArrayComparison } from './HeadingArrayComparison';
 
 interface SEOAnalysisContentProps {
   analysis: SEOAnalysis;
@@ -10,72 +10,97 @@ interface SEOAnalysisContentProps {
 
 export function SEOAnalysisContent({ analysis }: SEOAnalysisContentProps) {
   return (
-    <Table>
-      <SEOTableHeader />
-      <TableBody>
+    <div className="space-y-8">
+      <div className="grid grid-cols-2 gap-6 mb-4">
+        <h3 className="text-lg font-semibold text-purple-700">Dénominations actuelles</h3>
+        <h3 className="text-lg font-semibold text-purple-700">Améliorations suggérées par I.A</h3>
+      </div>
+
+      <div className="space-y-8">
         {analysis.current_title && analysis.suggested_title && (
-          <SEOTableRow
-            label="Meta Title"
-            current={analysis.current_title}
-            suggested={analysis.suggested_title}
-            context={analysis.title_context}
-            fieldId={`title-${analysis.id}`}
-          />
+          <div className="space-y-2">
+            <div className="grid grid-cols-2 gap-6">
+              <div className="font-medium text-gray-700">Meta Title</div>
+              <div className="font-medium text-purple-700">Meta Title suggéré</div>
+            </div>
+            <HeadingComparison
+              current={analysis.current_title}
+              suggested={analysis.suggested_title}
+              context={analysis.title_context}
+            />
+          </div>
         )}
 
         {analysis.current_description && analysis.suggested_description && (
-          <SEOTableRow
-            label="Meta Description"
-            current={analysis.current_description}
-            suggested={analysis.suggested_description}
-            context={analysis.description_context}
-            fieldId={`desc-${analysis.id}`}
-          />
+          <div className="space-y-2">
+            <div className="grid grid-cols-2 gap-6">
+              <div className="font-medium text-gray-700">Meta Description</div>
+              <div className="font-medium text-purple-700">Meta Description suggérée</div>
+            </div>
+            <HeadingComparison
+              current={analysis.current_description}
+              suggested={analysis.suggested_description}
+              context={analysis.description_context}
+            />
+          </div>
         )}
 
         {analysis.current_h1 && analysis.suggested_h1 && (
-          <SEOTableRow
-            label="H1"
-            current={analysis.current_h1}
-            suggested={analysis.suggested_h1}
-            context={analysis.h1_context}
-            fieldId={`h1-${analysis.id}`}
-          />
+          <div className="space-y-2">
+            <div className="grid grid-cols-2 gap-6">
+              <div className="font-medium text-gray-700">H1</div>
+              <div className="font-medium text-purple-700">H1 suggéré</div>
+            </div>
+            <HeadingComparison
+              current={analysis.current_h1}
+              suggested={analysis.suggested_h1}
+              context={analysis.h1_context}
+            />
+          </div>
         )}
 
-        {analysis.current_h2s?.map((h2, index) => (
-          <SEOTableRow
-            key={`h2-${index}`}
-            label={`H2 #${index + 1}`}
-            current={h2}
-            suggested={analysis.suggested_h2s?.[index] || ''}
-            context={analysis.h2s_context?.[index]}
-            fieldId={`h2-${analysis.id}-${index}`}
-          />
-        ))}
+        {analysis.current_h2s?.length > 0 && (
+          <div className="space-y-2">
+            <div className="grid grid-cols-2 gap-6">
+              <div className="font-medium text-gray-700">H2</div>
+              <div className="font-medium text-purple-700">H2 suggérés</div>
+            </div>
+            <HeadingArrayComparison
+              current={analysis.current_h2s}
+              suggested={analysis.suggested_h2s}
+              context={analysis.h2s_context}
+            />
+          </div>
+        )}
 
-        {analysis.current_h3s?.map((h3, index) => (
-          <SEOTableRow
-            key={`h3-${index}`}
-            label={`H3 #${index + 1}`}
-            current={h3}
-            suggested={analysis.suggested_h3s?.[index] || ''}
-            context={analysis.h3s_context?.[index]}
-            fieldId={`h3-${analysis.id}-${index}`}
-          />
-        ))}
+        {analysis.current_h3s?.length > 0 && (
+          <div className="space-y-2">
+            <div className="grid grid-cols-2 gap-6">
+              <div className="font-medium text-gray-700">H3</div>
+              <div className="font-medium text-purple-700">H3 suggérés</div>
+            </div>
+            <HeadingArrayComparison
+              current={analysis.current_h3s}
+              suggested={analysis.suggested_h3s}
+              context={analysis.h3s_context}
+            />
+          </div>
+        )}
 
-        {analysis.current_h4s?.map((h4, index) => (
-          <SEOTableRow
-            key={`h4-${index}`}
-            label={`H4 #${index + 1}`}
-            current={h4}
-            suggested={analysis.suggested_h4s?.[index] || ''}
-            context={analysis.h4s_context?.[index]}
-            fieldId={`h4-${analysis.id}-${index}`}
-          />
-        ))}
-      </TableBody>
-    </Table>
+        {analysis.current_h4s?.length > 0 && (
+          <div className="space-y-2">
+            <div className="grid grid-cols-2 gap-6">
+              <div className="font-medium text-gray-700">H4</div>
+              <div className="font-medium text-purple-700">H4 suggérés</div>
+            </div>
+            <HeadingArrayComparison
+              current={analysis.current_h4s}
+              suggested={analysis.suggested_h4s}
+              context={analysis.h4s_context}
+            />
+          </div>
+        )}
+      </div>
+    </div>
   );
 }
