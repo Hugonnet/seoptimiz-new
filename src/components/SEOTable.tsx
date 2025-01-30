@@ -41,7 +41,6 @@ export function SEOTable() {
 
       if (error) throw error;
 
-      // Mettre à jour le state local
       const updatedData = seoData.filter(item => item.url !== url);
       setSEOData(updatedData);
 
@@ -59,7 +58,6 @@ export function SEOTable() {
     }
   };
 
-  // Grouper les analyses par URL
   const groupedAnalyses = seoData.reduce((acc, analysis) => {
     const url = analysis.url;
     if (!acc[url]) {
@@ -73,7 +71,7 @@ export function SEOTable() {
     <div className="rounded-md border">
       <Table>
         <TableHeader>
-          <TableRow>
+          <TableRow className="bg-purple-50/50">
             <TableHead>URL analysée</TableHead>
             <TableHead>Nombre d'analyses</TableHead>
             <TableHead>Dernière analyse</TableHead>
@@ -82,8 +80,12 @@ export function SEOTable() {
         </TableHeader>
         <TableBody>
           {Object.entries(groupedAnalyses).map(([url, analyses]) => (
-            <TableRow key={url}>
-              <TableCell className="font-medium">{url}</TableCell>
+            <TableRow key={url} className="hover:bg-purple-50/20" id={`analysis-${encodeURIComponent(url)}`}>
+              <TableCell className="font-medium max-w-md truncate">
+                <a href={url} target="_blank" rel="noopener noreferrer" className="text-purple-600 hover:text-purple-800">
+                  {url}
+                </a>
+              </TableCell>
               <TableCell>{analyses.length}</TableCell>
               <TableCell>
                 {new Date(analyses[0].created_at!).toLocaleDateString('fr-FR', {
@@ -94,11 +96,11 @@ export function SEOTable() {
                   minute: '2-digit'
                 })}
               </TableCell>
-              <TableCell className="text-right space-x-2">
+              <TableCell className="text-right space-x-4">
                 <Button
                   variant="outline"
                   size="sm"
-                  className="gap-2"
+                  className="gap-2 bg-gradient-to-r from-purple-100 to-blue-100 hover:from-purple-200 hover:to-blue-200 border-purple-200"
                   onClick={() => {
                     setSelectedUrl(url);
                     setIsModalOpen(true);
@@ -113,7 +115,6 @@ export function SEOTable() {
                       variant="destructive" 
                       size="sm"
                       className="gap-2"
-                      onClick={() => setSelectedUrl(url)}
                     >
                       <Trash2 className="h-4 w-4" />
                       Supprimer
