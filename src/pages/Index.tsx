@@ -41,12 +41,12 @@ export default function Index() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#F8F9FF] to-[#FFFFFF]">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="space-y-8 sm:space-y-12"
+          className="space-y-4 sm:space-y-6"
         >
           <div className="space-y-2 text-center">
             <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold bg-gradient-to-r from-[#6366F1] to-[#EC4899] text-transparent bg-clip-text">
