@@ -24,6 +24,27 @@ export type Database = {
         }
         Relationships: []
       }
+      profiles: {
+        Row: {
+          created_at: string | null
+          email: string | null
+          id: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          email?: string | null
+          id: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       project_submissions: {
         Row: {
           audio_path: string | null
@@ -54,6 +75,60 @@ export type Database = {
           description?: string
           id?: number
           photo_paths?: string[] | null
+        }
+        Relationships: []
+      }
+      realizations: {
+        Row: {
+          content: string | null
+          created_at: string | null
+          description: string
+          gallery: string[] | null
+          id: string
+          image: string
+          image_order: string[] | null
+          location: string | null
+          meta_description: string | null
+          meta_title: string | null
+          slug: string
+          subtitle: string | null
+          tags: string[] | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          content?: string | null
+          created_at?: string | null
+          description: string
+          gallery?: string[] | null
+          id?: string
+          image: string
+          image_order?: string[] | null
+          location?: string | null
+          meta_description?: string | null
+          meta_title?: string | null
+          slug: string
+          subtitle?: string | null
+          tags?: string[] | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          content?: string | null
+          created_at?: string | null
+          description?: string
+          gallery?: string[] | null
+          id?: string
+          image?: string
+          image_order?: string[] | null
+          location?: string | null
+          meta_description?: string | null
+          meta_title?: string | null
+          slug?: string
+          subtitle?: string | null
+          tags?: string[] | null
+          title?: string
+          updated_at?: string | null
         }
         Relationships: []
       }
@@ -194,7 +269,13 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      realization_tag:
+        | "Plâtrerie"
+        | "Peinture intérieure"
+        | "Peinture extérieure"
+        | "Isolation intérieure"
+        | "Isolation extérieure"
+        | "Étanchéité à l'air"
     }
     CompositeTypes: {
       [_ in never]: never

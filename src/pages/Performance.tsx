@@ -1,3 +1,4 @@
+
 import { useNavigate } from "react-router-dom";
 import { useSEOStore } from "@/store/seoStore";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -39,9 +40,15 @@ export default function Performance() {
   };
 
   // Ensure arrays exist and filter out empty/invalid URLs
-  const internalLinks = lastAnalysis.internal_links?.filter(link => link && link.trim() !== '') || [];
-  const externalLinks = lastAnalysis.external_links?.filter(link => link && link.trim() !== '') || [];
-  const brokenLinks = lastAnalysis.broken_links?.filter(link => link && link.trim() !== '') || [];
+  const internalLinks = Array.isArray(lastAnalysis.internal_links) 
+    ? lastAnalysis.internal_links.filter(link => link && typeof link === 'string' && link.trim() !== '') 
+    : [];
+  const externalLinks = Array.isArray(lastAnalysis.external_links)
+    ? lastAnalysis.external_links.filter(link => link && typeof link === 'string' && link.trim() !== '')
+    : [];
+  const brokenLinks = Array.isArray(lastAnalysis.broken_links)
+    ? lastAnalysis.broken_links.filter(link => link && typeof link === 'string' && link.trim() !== '')
+    : [];
 
   return (
     <div className="space-y-8 pb-8">
@@ -64,11 +71,11 @@ export default function Performance() {
           <div className="space-y-4">
             <h3 className="text-lg font-semibold">Vitesse de chargement</h3>
             <div className="flex items-center space-x-4">
-              <span className={`text-2xl font-bold ${getSpeedColor(lastAnalysis.page_load_speed)}`}>
-                {getSpeedText(lastAnalysis.page_load_speed)}
+              <span className={`text-2xl font-bold ${getSpeedColor(lastAnalysis.page_load_speed || 0)}`}>
+                {getSpeedText(lastAnalysis.page_load_speed || 0)}
               </span>
               <span className="text-gray-600">
-                {lastAnalysis.page_load_speed}s
+                {lastAnalysis.page_load_speed || 0}s
               </span>
             </div>
             <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
@@ -77,7 +84,7 @@ export default function Performance() {
                   lastAnalysis.page_load_speed <= 2 ? 'bg-green-500' :
                   lastAnalysis.page_load_speed <= 4 ? 'bg-yellow-500' : 'bg-red-500'
                 }`}
-                style={{ width: `${Math.min((lastAnalysis.page_load_speed / 6) * 100, 100)}%` }}
+                style={{ width: `${Math.min(((lastAnalysis.page_load_speed || 0) / 6) * 100, 100)}%` }}
               />
             </div>
           </div>
