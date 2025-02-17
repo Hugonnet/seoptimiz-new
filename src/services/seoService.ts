@@ -1,5 +1,6 @@
 
 import { JSDOM } from 'jsdom';
+import { SEOAnalysis } from '@/store/seoStore';
 
 export interface SEOMetadata {
   title: string;
@@ -14,6 +15,49 @@ export interface SEOMetadata {
   brokenLinks: string[];
 }
 
+export const downloadTableAsCSV = (data: SEOAnalysis[]) => {
+  if (!data || data.length === 0) return;
+
+  const headers = [
+    'URL',
+    'Entreprise',
+    'Titre actuel',
+    'Description actuelle',
+    'H1 actuel',
+    'Titre suggéré',
+    'Description suggérée',
+    'H1 suggéré',
+    'Vitesse de chargement'
+  ];
+
+  const csvContent = [
+    headers.join(','),
+    ...data.map(row => [
+      row.url,
+      row.company || '',
+      `"${(row.current_title || '').replace(/"/g, '""')}"`,
+      `"${(row.current_description || '').replace(/"/g, '""')}"`,
+      `"${(row.current_h1 || '').replace(/"/g, '""')}"`,
+      `"${(row.suggested_title || '').replace(/"/g, '""')}"`,
+      `"${(row.suggested_description || '').replace(/"/g, '""')}"`,
+      `"${(row.suggested_h1 || '').replace(/"/g, '""')}"`,
+      row.page_load_speed || ''
+    ].join(','))
+  ].join('\n');
+
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const link = document.createElement('a');
+  const url = URL.createObjectURL(blob);
+  
+  link.setAttribute('href', url);
+  link.setAttribute('download', `seo_analysis_${new Date().toISOString()}.csv`);
+  link.style.display = 'none';
+  
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+};
+
 export const extractSEOMetadata = async (url: string): Promise<SEOMetadata> => {
   console.log('Extraction des métadonnées SEO pour:', url);
   
@@ -25,22 +69,22 @@ export const extractSEOMetadata = async (url: string): Promise<SEOMetadata> => {
     const baseUrl = new URL(url);
 
     // Extraire les liens
-    const links = Array.from(document.querySelectorAll('a'));
+    const links = Array.from(document.querySelectorAll('a')) as HTMLAnchorElement[];
     const { internalLinks, externalLinks } = categorizeLinks(links, baseUrl);
     const brokenLinks = await checkBrokenLinks([...internalLinks, ...externalLinks]);
 
-    // Extraire le texte visible
+    // Extraire le texte visible avec typage explicite
     const visibleText = Array.from(document.body.querySelectorAll('p, li, td, th, div, span'))
-      .map(element => element.textContent?.trim())
-      .filter(text => text && text.length > 0);
+      .map(element => (element as HTMLElement).textContent?.trim())
+      .filter((text): text is string => text !== undefined && text !== '');
 
     const metadata: SEOMetadata = {
       title: document.title || '',
       description: document.querySelector('meta[name="description"]')?.getAttribute('content') || '',
-      h1: document.querySelector('h1')?.textContent?.trim() || '',
-      h2s: Array.from(document.querySelectorAll('h2')).map(h2 => h2.textContent?.trim() || ''),
-      h3s: Array.from(document.querySelectorAll('h3')).map(h3 => h3.textContent?.trim() || ''),
-      h4s: Array.from(document.querySelectorAll('h4')).map(h4 => h4.textContent?.trim() || ''),
+      h1: (document.querySelector('h1') as HTMLElement)?.textContent?.trim() || '',
+      h2s: Array.from(document.querySelectorAll('h2')).map(h2 => (h2 as HTMLElement).textContent?.trim() || ''),
+      h3s: Array.from(document.querySelectorAll('h3')).map(h3 => (h3 as HTMLElement).textContent?.trim() || ''),
+      h4s: Array.from(document.querySelectorAll('h4')).map(h4 => (h4 as HTMLElement).textContent?.trim() || ''),
       visibleText,
       internalLinks: Array.from(new Set(internalLinks)),
       externalLinks: Array.from(new Set(externalLinks)),
