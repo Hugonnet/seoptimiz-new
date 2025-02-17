@@ -1,5 +1,6 @@
 
 import { SEOAnalysis } from '@/store/seoStore';
+import { supabase } from "@/integrations/supabase/client";
 
 export interface SEOMetadata {
   title: string;
@@ -61,19 +62,22 @@ export const extractSEOMetadata = async (url: string): Promise<SEOMetadata> => {
   console.log('Extraction des métadonnées SEO pour:', url);
   
   try {
-    // Utiliser une API ou un service backend pour récupérer le contenu HTML
-    // Pour l'instant, nous allons utiliser les données de l'analyse déjà effectuée
+    const { data: seoData, error } = await supabase.functions.invoke('extract-seo', {
+      body: { url }
+    });
+
+    if (error) {
+      console.error('Erreur lors de l\'appel à extract-seo:', error);
+      throw error;
+    }
+
+    // Vérification des liens cassés côté client
+    const allLinks = [...seoData.internalLinks, ...seoData.externalLinks];
+    const brokenLinks = await checkBrokenLinks(allLinks);
+
     return {
-      title: '',
-      description: '',
-      h1: '',
-      h2s: [],
-      h3s: [],
-      h4s: [],
-      visibleText: [],
-      internalLinks: [],
-      externalLinks: [],
-      brokenLinks: [],
+      ...seoData,
+      brokenLinks,
     };
   } catch (error) {
     console.error('Erreur lors de l\'extraction des métadonnées:', error);

@@ -1,144 +1,115 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { corsHeaders } from "../_shared/cors.ts";
+import { corsHeaders } from '../_shared/cors.ts';
 
-serve(async (req) => {
+interface RequestBody {
+  url: string;
+}
+
+interface SEOData {
+  title: string;
+  description: string;
+  h1: string;
+  h2s: string[];
+  h3s: string[];
+  h4s: string[];
+  visibleText: string[];
+  internalLinks: string[];
+  externalLinks: string[];
+  brokenLinks: string[];
+}
+
+Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { url } = await req.json();
-    console.log('Analyzing URL:', url);
+    const { url } = await req.json() as RequestBody;
+    console.log('Extraction SEO pour:', url);
 
-    if (!url) {
-      throw new Error('URL is required');
-    }
-
-    console.log('Fetching URL content...');
     const response = await fetch(url);
-    if (!response.ok) {
-      throw new Error(`Failed to fetch URL: ${response.statusText}`);
+    const html = await response.text();
+
+    // Utiliser une expression régulière pour extraire les liens
+    const linkRegex = /<a[^>]+href=["']([^"']+)["'][^>]*>/g;
+    const links: string[] = [];
+    let match;
+
+    while ((match = linkRegex.exec(html)) !== null) {
+      if (match[1]) {
+        links.push(match[1]);
+      }
     }
 
-    const html = await response.text();
-    console.log('Extracting metadata from HTML...');
+    const baseUrl = new URL(url);
+    const internalLinks: string[] = [];
+    const externalLinks: string[] = [];
 
-    // Helper function to extract meta content
-    const getMetaContent = (content: string, name: string): string => {
-      const match = content.match(new RegExp(`<meta.*?(?:name|property)=["']${name}["'].*?content=["'](.*?)["']`, 'i'));
-      return match ? match[1] : '';
-    };
-
-    // Helper function to extract all links
-    const extractLinks = (content: string, baseUrl: string): { internal: string[], external: string[] } => {
-      const links: { internal: string[], external: string[] } = { internal: [], external: [] };
-      const hostname = new URL(url).hostname;
-      
-      const linkMatches = content.matchAll(/<a\s+(?:[^>]*?\s+)?href=["'](.*?)["']/gi);
-      for (const match of Array.from(linkMatches)) {
-        try {
-          const href = match[1];
-          if (!href || href.startsWith('#') || href.startsWith('javascript:') || href.startsWith('mailto:')) {
-            continue;
-          }
-          
-          const absoluteUrl = href.startsWith('http') ? href : new URL(href, baseUrl).href;
-          const linkHostname = new URL(absoluteUrl).hostname;
-          
-          if (linkHostname === hostname) {
-            if (!links.internal.includes(absoluteUrl)) {
-              links.internal.push(absoluteUrl);
-            }
-          } else {
-            if (!links.external.includes(absoluteUrl)) {
-              links.external.push(absoluteUrl);
-            }
-          }
-        } catch (e) {
-          console.warn('Invalid URL found:', match[1]);
-        }
+    links.forEach(href => {
+      if (!href || href === '#' || href.startsWith('javascript:') || href.startsWith('mailto:') || href.startsWith('tel:')) {
+        return;
       }
-      return links;
+
+      try {
+        const linkUrl = new URL(href, baseUrl.href);
+        if (linkUrl.hostname === baseUrl.hostname) {
+          internalLinks.push(linkUrl.href);
+        } else {
+          externalLinks.push(linkUrl.href);
+        }
+      } catch (error) {
+        console.warn('URL invalide ignorée:', href);
+      }
+    });
+
+    // Extraction des autres balises avec des expressions régulières
+    const titleRegex = /<title[^>]*>([^<]+)<\/title>/i;
+    const titleMatch = html.match(titleRegex);
+    const title = titleMatch ? titleMatch[1].trim() : '';
+
+    const descriptionRegex = /<meta[^>]+name=["']description["'][^>]+content=["']([^"']+)["'][^>]*>/i;
+    const descriptionMatch = html.match(descriptionRegex);
+    const description = descriptionMatch ? descriptionMatch[1].trim() : '';
+
+    const h1Regex = /<h1[^>]*>([^<]+)<\/h1>/i;
+    const h1Match = html.match(h1Regex);
+    const h1 = h1Match ? h1Match[1].trim() : '';
+
+    // Extraction des h2s, h3s, h4s
+    const extractHeadings = (html: string, tag: string) => {
+      const regex = new RegExp(`<${tag}[^>]*>([^<]+)<\/${tag}>`, 'gi');
+      const matches = [];
+      let match;
+      while ((match = regex.exec(html)) !== null) {
+        matches.push(match[1].trim());
+      }
+      return matches;
     };
 
-    // Helper function to extract headings
-    const extractHeadings = (content: string, tag: string): string[] => {
-      const regex = new RegExp(`<${tag}[^>]*>(.*?)<\/${tag}>`, 'gi');
-      const matches = Array.from(content.matchAll(regex));
-      return matches.map(match => 
-        match[1]
-          .replace(/<[^>]+>/g, '')
-          .trim()
-      ).filter(Boolean);
-    };
-
-    // Extract all metadata
-    const title = html.match(/<title[^>]*>([^<]+)<\/title>/i)?.[1] || '';
-    const description = getMetaContent(html, 'description');
-    const h1s = extractHeadings(html, 'h1');
     const h2s = extractHeadings(html, 'h2');
     const h3s = extractHeadings(html, 'h3');
     const h4s = extractHeadings(html, 'h4');
-    const { internal, external } = extractLinks(html, url);
-    
-    // Check for broken links
-    console.log('Checking for broken links...');
-    const brokenLinks: string[] = [];
-    const allLinks = [...internal, ...external];
-    
-    const checkPromises = allLinks.slice(0, 10).map(async (link) => {
-      try {
-        const response = await fetch(link, { method: 'HEAD' });
-        if (!response.ok) {
-          brokenLinks.push(link);
-        }
-      } catch (e) {
-        brokenLinks.push(link);
-      }
-    });
 
-    await Promise.all(checkPromises);
-
-    const metadata = {
+    const seoData: SEOData = {
       title,
       description,
-      h1: h1s[0] || '',
+      h1,
       h2s,
       h3s,
       h4s,
-      keywords: getMetaContent(html, 'keywords'),
-      canonical: html.match(/<link[^>]*rel=["']canonical["'][^>]*href=["'](.*?)["']/i)?.[1] || '',
-      ogTitle: getMetaContent(html, 'og:title'),
-      ogDescription: getMetaContent(html, 'og:description'),
-      ogImage: getMetaContent(html, 'og:image'),
-      internal_links: internal,
-      external_links: external,
-      broken_links: brokenLinks,
-      page_load_speed: (Date.now() - performance.now()) / 1000 // Approximate load time in seconds
+      visibleText: [], // À implémenter si nécessaire
+      internalLinks: Array.from(new Set(internalLinks)),
+      externalLinks: Array.from(new Set(externalLinks)),
+      brokenLinks: [], // Les liens cassés seront vérifiés côté client
     };
 
-    console.log('Metadata extraction complete');
-    console.log('Links found:', {
-      internal: internal.length,
-      external: external.length,
-      broken: brokenLinks.length
+    return new Response(JSON.stringify(seoData), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
-
-    return new Response(JSON.stringify(metadata), {
-      headers: { 
-        ...corsHeaders,
-        'Content-Type': 'application/json'
-      }
-    });
-
   } catch (error) {
-    console.error('Error in extract-seo function:', error);
+    console.error('Erreur lors de l\'extraction SEO:', error);
     return new Response(JSON.stringify({ error: error.message }), {
       status: 500,
-      headers: { 
-        ...corsHeaders,
-        'Content-Type': 'application/json'
-      }
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   }
 });
