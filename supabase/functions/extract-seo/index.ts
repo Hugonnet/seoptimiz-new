@@ -1,5 +1,6 @@
 
 import { corsHeaders } from '../_shared/cors.ts';
+import puppeteer from "puppeteer";
 
 interface RequestBody {
   url: string;
@@ -48,98 +49,99 @@ Deno.serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  let browser;
   try {
     const { url } = await req.json() as RequestBody;
     console.log('Extraction SEO pour:', url);
 
-    const response = await fetch(url, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-      }
+    // Lancer un navigateur headless
+    browser = await puppeteer.launch({ headless: true });
+    const page = await browser.newPage();
+    
+    // Configurer le User-Agent
+    await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36');
+    
+    // Attendre que la page soit chargée
+    await page.goto(url, { waitUntil: 'networkidle0' });
+
+    // Extraire les métadonnées après le chargement complet
+    const seoData = await page.evaluate(() => {
+      const getTextContent = (element: Element | null): string => 
+        element ? element.textContent?.trim() || '' : '';
+
+      const getArrayOfText = (elements: NodeListOf<Element>): string[] =>
+        Array.from(elements).map(el => el.textContent?.trim() || '').filter(Boolean);
+
+      const getLinks = (): { internalLinks: string[], externalLinks: string[] } => {
+        const currentHostname = window.location.hostname;
+        const links = Array.from(document.querySelectorAll('a[href]'));
+        const internalLinks: string[] = [];
+        const externalLinks: string[] = [];
+
+        links.forEach(link => {
+          const href = link.getAttribute('href');
+          if (!href || href === '#' || href.startsWith('javascript:') || href.startsWith('mailto:') || href.startsWith('tel:')) {
+            return;
+          }
+
+          try {
+            const url = new URL(href, window.location.href);
+            if (url.hostname === currentHostname) {
+              internalLinks.push(url.href);
+            } else {
+              externalLinks.push(url.href);
+            }
+          } catch (error) {
+            console.warn('URL invalide ignorée:', href);
+          }
+        });
+
+        return {
+          internalLinks: Array.from(new Set(internalLinks)),
+          externalLinks: Array.from(new Set(externalLinks))
+        };
+      };
+
+      const title = document.title;
+      const description = document.querySelector('meta[name="description"]')?.getAttribute('content') || '';
+      const h1 = getTextContent(document.querySelector('h1'));
+      const h2s = getArrayOfText(document.querySelectorAll('h2'));
+      const h3s = getArrayOfText(document.querySelectorAll('h3'));
+      const h4s = getArrayOfText(document.querySelectorAll('h4'));
+      const { internalLinks, externalLinks } = getLinks();
+
+      return {
+        title,
+        description,
+        h1,
+        h2s,
+        h3s,
+        h4s,
+        internalLinks,
+        externalLinks,
+      };
     });
-    const html = await response.text();
 
-    // Utiliser une expression régulière pour extraire les liens
-    const linkRegex = /<a[^>]+href=["']([^"']+)["'][^>]*>/g;
-    const links: string[] = [];
-    let match;
-
-    while ((match = linkRegex.exec(html)) !== null) {
-      if (match[1]) {
-        links.push(match[1]);
-      }
-    }
-
-    const baseUrl = new URL(url);
-    const internalLinks: string[] = [];
-    const externalLinks: string[] = [];
-
-    links.forEach(href => {
-      if (!href || href === '#' || href.startsWith('javascript:') || href.startsWith('mailto:') || href.startsWith('tel:')) {
-        return;
-      }
-
-      try {
-        const linkUrl = new URL(href, baseUrl.href);
-        if (linkUrl.hostname === baseUrl.hostname) {
-          internalLinks.push(linkUrl.href);
-        } else {
-          externalLinks.push(linkUrl.href);
-        }
-      } catch (error) {
-        console.warn('URL invalide ignorée:', href);
-      }
-    });
-
-    // Extraire les autres balises avec des expressions régulières
-    const titleRegex = /<title[^>]*>([^<]+)<\/title>/i;
-    const titleMatch = html.match(titleRegex);
-    const title = titleMatch ? titleMatch[1].trim() : '';
-
-    const descriptionRegex = /<meta[^>]+name=["']description["'][^>]+content=["']([^"']+)["'][^>]*>/i;
-    const descriptionMatch = html.match(descriptionRegex);
-    const description = descriptionMatch ? descriptionMatch[1].trim() : '';
-
-    const h1Regex = /<h1[^>]*>([^<]+)<\/h1>/i;
-    const h1Match = html.match(h1Regex);
-    const h1 = h1Match ? h1Match[1].trim() : '';
-
-    const extractHeadings = (html: string, tag: string) => {
-      const regex = new RegExp(`<${tag}[^>]*>([^<]+)<\/${tag}>`, 'gi');
-      const matches = [];
-      let match;
-      while ((match = regex.exec(html)) !== null) {
-        matches.push(match[1].trim());
-      }
-      return matches;
-    };
-
-    const h2s = extractHeadings(html, 'h2');
-    const h3s = extractHeadings(html, 'h3');
-    const h4s = extractHeadings(html, 'h4');
-
-    // Vérifier les liens cassés depuis l'Edge Function
-    const uniqueLinks = Array.from(new Set([...internalLinks, ...externalLinks]));
+    // Vérifier les liens cassés
+    const uniqueLinks = Array.from(new Set([...seoData.internalLinks, ...seoData.externalLinks]));
     const brokenLinks = await checkBrokenLinks(uniqueLinks);
 
-    const seoData: SEOData = {
-      title,
-      description,
-      h1,
-      h2s,
-      h3s,
-      h4s,
+    const fullSeoData: SEOData = {
+      ...seoData,
       visibleText: [], // À implémenter si nécessaire
-      internalLinks: Array.from(new Set(internalLinks)),
-      externalLinks: Array.from(new Set(externalLinks)),
       brokenLinks,
     };
 
-    return new Response(JSON.stringify(seoData), {
+    await browser.close();
+
+    return new Response(JSON.stringify(fullSeoData), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (error) {
     console.error('Erreur lors de l\'extraction SEO:', error);
+    if (browser) {
+      await browser.close();
+    }
     return new Response(JSON.stringify({ error: error.message }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
