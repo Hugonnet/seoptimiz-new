@@ -71,62 +71,9 @@ export const extractSEOMetadata = async (url: string): Promise<SEOMetadata> => {
       throw error;
     }
 
-    // Vérification des liens cassés côté client
-    const allLinks = [...seoData.internalLinks, ...seoData.externalLinks];
-    const brokenLinks = await checkBrokenLinks(allLinks);
-
-    return {
-      ...seoData,
-      brokenLinks,
-    };
+    return seoData;
   } catch (error) {
     console.error('Erreur lors de l\'extraction des métadonnées:', error);
     throw error;
   }
-};
-
-const categorizeLinks = (baseUrl: URL, links: string[]): { internalLinks: string[], externalLinks: string[] } => {
-  const internalLinks: string[] = [];
-  const externalLinks: string[] = [];
-
-  links.forEach(href => {
-    if (!href || href === '#' || href.startsWith('javascript:') || href.startsWith('mailto:') || href.startsWith('tel:')) {
-      return;
-    }
-
-    try {
-      const linkUrl = new URL(href, baseUrl.href);
-      if (linkUrl.hostname === baseUrl.hostname) {
-        internalLinks.push(linkUrl.href);
-      } else {
-        externalLinks.push(linkUrl.href);
-      }
-    } catch (error) {
-      console.warn('URL invalide ignorée:', href);
-    }
-  });
-
-  return {
-    internalLinks: Array.from(new Set(internalLinks)),
-    externalLinks: Array.from(new Set(externalLinks))
-  };
-};
-
-const checkBrokenLinks = async (links: string[]): Promise<string[]> => {
-  const brokenLinks: string[] = [];
-
-  await Promise.all(
-    links.map(async (link) => {
-      try {
-        const response = await fetch(link, { method: 'HEAD' });
-        if (!response.ok) {
-          brokenLinks.push(link);
-        }
-      } catch (error) {
-        brokenLinks.push(link);
-      }
-    })
-  );
-
-  return Array.from(new Set(brokenLinks));
 };
