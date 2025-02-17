@@ -1,6 +1,5 @@
 
 import { corsHeaders } from '../_shared/cors.ts';
-import puppeteer from "puppeteer";
 
 interface RequestBody {
   url: string;
@@ -17,6 +16,54 @@ interface SEOData {
   internalLinks: string[];
   externalLinks: string[];
   brokenLinks: string[];
+}
+
+async function extractMetadata(html: string, baseUrl: string): Promise<Partial<SEOData>> {
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(html, 'text/html');
+
+  // Extraire les liens
+  const links = Array.from(doc.querySelectorAll('a[href]'));
+  const internalLinks: string[] = [];
+  const externalLinks: string[] = [];
+  const baseUrlObj = new URL(baseUrl);
+
+  links.forEach(link => {
+    const href = link.getAttribute('href');
+    if (!href || href === '#' || href.startsWith('javascript:') || href.startsWith('mailto:') || href.startsWith('tel:')) {
+      return;
+    }
+
+    try {
+      const url = new URL(href, baseUrl);
+      if (url.hostname === baseUrlObj.hostname) {
+        internalLinks.push(url.href);
+      } else {
+        externalLinks.push(url.href);
+      }
+    } catch (error) {
+      console.warn('URL invalide ignorée:', href);
+    }
+  });
+
+  // Extraire les autres métadonnées
+  const title = doc.querySelector('title')?.textContent || '';
+  const description = doc.querySelector('meta[name="description"]')?.getAttribute('content') || '';
+  const h1 = doc.querySelector('h1')?.textContent?.trim() || '';
+  const h2s = Array.from(doc.querySelectorAll('h2')).map(el => el.textContent?.trim() || '').filter(Boolean);
+  const h3s = Array.from(doc.querySelectorAll('h3')).map(el => el.textContent?.trim() || '').filter(Boolean);
+  const h4s = Array.from(doc.querySelectorAll('h4')).map(el => el.textContent?.trim() || '').filter(Boolean);
+
+  return {
+    title,
+    description,
+    h1,
+    h2s,
+    h3s,
+    h4s,
+    internalLinks: Array.from(new Set(internalLinks)),
+    externalLinks: Array.from(new Set(externalLinks))
+  };
 }
 
 async function checkBrokenLinks(links: string[]): Promise<string[]> {
@@ -49,99 +96,38 @@ Deno.serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
-  let browser;
   try {
     const { url } = await req.json() as RequestBody;
     console.log('Extraction SEO pour:', url);
 
-    // Lancer un navigateur headless
-    browser = await puppeteer.launch({ headless: true });
-    const page = await browser.newPage();
-    
-    // Configurer le User-Agent
-    await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36');
-    
-    // Attendre que la page soit chargée
-    await page.goto(url, { waitUntil: 'networkidle0' });
-
-    // Extraire les métadonnées après le chargement complet
-    const seoData = await page.evaluate(() => {
-      const getTextContent = (element: Element | null): string => 
-        element ? element.textContent?.trim() || '' : '';
-
-      const getArrayOfText = (elements: NodeListOf<Element>): string[] =>
-        Array.from(elements).map(el => el.textContent?.trim() || '').filter(Boolean);
-
-      const getLinks = (): { internalLinks: string[], externalLinks: string[] } => {
-        const currentHostname = window.location.hostname;
-        const links = Array.from(document.querySelectorAll('a[href]'));
-        const internalLinks: string[] = [];
-        const externalLinks: string[] = [];
-
-        links.forEach(link => {
-          const href = link.getAttribute('href');
-          if (!href || href === '#' || href.startsWith('javascript:') || href.startsWith('mailto:') || href.startsWith('tel:')) {
-            return;
-          }
-
-          try {
-            const url = new URL(href, window.location.href);
-            if (url.hostname === currentHostname) {
-              internalLinks.push(url.href);
-            } else {
-              externalLinks.push(url.href);
-            }
-          } catch (error) {
-            console.warn('URL invalide ignorée:', href);
-          }
-        });
-
-        return {
-          internalLinks: Array.from(new Set(internalLinks)),
-          externalLinks: Array.from(new Set(externalLinks))
-        };
-      };
-
-      const title = document.title;
-      const description = document.querySelector('meta[name="description"]')?.getAttribute('content') || '';
-      const h1 = getTextContent(document.querySelector('h1'));
-      const h2s = getArrayOfText(document.querySelectorAll('h2'));
-      const h3s = getArrayOfText(document.querySelectorAll('h3'));
-      const h4s = getArrayOfText(document.querySelectorAll('h4'));
-      const { internalLinks, externalLinks } = getLinks();
-
-      return {
-        title,
-        description,
-        h1,
-        h2s,
-        h3s,
-        h4s,
-        internalLinks,
-        externalLinks,
-      };
+    const response = await fetch(url, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+      }
     });
 
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const html = await response.text();
+    const metadata = await extractMetadata(html, url);
+
     // Vérifier les liens cassés
-    const uniqueLinks = Array.from(new Set([...seoData.internalLinks, ...seoData.externalLinks]));
+    const uniqueLinks = Array.from(new Set([...metadata.internalLinks || [], ...metadata.externalLinks || []]));
     const brokenLinks = await checkBrokenLinks(uniqueLinks);
 
-    const fullSeoData: SEOData = {
-      ...seoData,
-      visibleText: [], // À implémenter si nécessaire
+    const seoData: SEOData = {
+      ...metadata as SEOData,
+      visibleText: [],
       brokenLinks,
     };
 
-    await browser.close();
-
-    return new Response(JSON.stringify(fullSeoData), {
+    return new Response(JSON.stringify(seoData), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (error) {
     console.error('Erreur lors de l\'extraction SEO:', error);
-    if (browser) {
-      await browser.close();
-    }
     return new Response(JSON.stringify({ error: error.message }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
