@@ -1,5 +1,6 @@
 
 import { corsHeaders } from '../_shared/cors.ts';
+import { DOMParser } from "https://deno.land/x/deno_dom@v0.1.38/deno-dom-wasm.ts";
 
 interface RequestBody {
   url: string;
@@ -21,9 +22,13 @@ interface SEOData {
 async function extractMetadata(html: string, baseUrl: string): Promise<Partial<SEOData>> {
   const parser = new DOMParser();
   const doc = parser.parseFromString(html, 'text/html');
+  
+  if (!doc) {
+    throw new Error("Impossible de parser le HTML");
+  }
 
   // Extraire les liens
-  const links = Array.from(doc.querySelectorAll('a[href]'));
+  const links = Array.from(doc.querySelectorAll('a'));
   const internalLinks: string[] = [];
   const externalLinks: string[] = [];
   const baseUrlObj = new URL(baseUrl);
@@ -111,21 +116,27 @@ Deno.serve(async (req) => {
     }
 
     const html = await response.text();
-    const metadata = await extractMetadata(html, url);
+    
+    try {
+      const metadata = await extractMetadata(html, url);
 
-    // Vérifier les liens cassés
-    const uniqueLinks = Array.from(new Set([...metadata.internalLinks || [], ...metadata.externalLinks || []]));
-    const brokenLinks = await checkBrokenLinks(uniqueLinks);
+      // Vérifier les liens cassés
+      const uniqueLinks = Array.from(new Set([...metadata.internalLinks || [], ...metadata.externalLinks || []]));
+      const brokenLinks = await checkBrokenLinks(uniqueLinks);
 
-    const seoData: SEOData = {
-      ...metadata as SEOData,
-      visibleText: [],
-      brokenLinks,
-    };
+      const seoData: SEOData = {
+        ...metadata as SEOData,
+        visibleText: [],
+        brokenLinks,
+      };
 
-    return new Response(JSON.stringify(seoData), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+      return new Response(JSON.stringify(seoData), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    } catch (parseError) {
+      console.error('Erreur lors du parsing du HTML:', parseError);
+      throw new Error(`Erreur lors de l'analyse de la page: ${parseError.message}`);
+    }
   } catch (error) {
     console.error('Erreur lors de l\'extraction SEO:', error);
     return new Response(JSON.stringify({ error: error.message }), {
