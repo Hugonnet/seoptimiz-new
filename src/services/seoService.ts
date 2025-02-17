@@ -1,6 +1,5 @@
-import { supabase } from '@/integrations/supabase/client';
-import { format, parseISO } from 'date-fns';
-import { fr } from 'date-fns/locale';
+
+import { JSDOM } from 'jsdom';
 
 export interface SEOMetadata {
   title: string;
@@ -10,156 +9,95 @@ export interface SEOMetadata {
   h3s: string[];
   h4s: string[];
   visibleText: string[];
-  keywords?: string;
-  canonical?: string;
-  ogTitle?: string;
-  ogDescription?: string;
-  ogImage?: string;
+  internalLinks: string[];
+  externalLinks: string[];
+  brokenLinks: string[];
 }
 
 export const extractSEOMetadata = async (url: string): Promise<SEOMetadata> => {
-  if (!url) {
-    throw new Error("Veuillez entrer une URL valide");
-  }
-
-  console.log('Démarrage de l\'analyse SEO pour:', url);
-  console.log('Envoi de la requête avec URL:', url);
+  console.log('Extraction des métadonnées SEO pour:', url);
   
   try {
-    new URL(url);
-  } catch (e) {
-    throw new Error("Format d'URL invalide");
+    const response = await fetch(url);
+    const html = await response.text();
+    const dom = new JSDOM(html);
+    const document = dom.window.document;
+    const baseUrl = new URL(url);
+
+    // Extraire les liens
+    const links = Array.from(document.querySelectorAll('a'));
+    const { internalLinks, externalLinks } = categorizeLinks(links, baseUrl);
+    const brokenLinks = await checkBrokenLinks([...internalLinks, ...externalLinks]);
+
+    // Extraire le texte visible
+    const visibleText = Array.from(document.body.querySelectorAll('p, li, td, th, div, span'))
+      .map(element => element.textContent?.trim())
+      .filter(text => text && text.length > 0);
+
+    const metadata: SEOMetadata = {
+      title: document.title || '',
+      description: document.querySelector('meta[name="description"]')?.getAttribute('content') || '',
+      h1: document.querySelector('h1')?.textContent?.trim() || '',
+      h2s: Array.from(document.querySelectorAll('h2')).map(h2 => h2.textContent?.trim() || ''),
+      h3s: Array.from(document.querySelectorAll('h3')).map(h3 => h3.textContent?.trim() || ''),
+      h4s: Array.from(document.querySelectorAll('h4')).map(h4 => h4.textContent?.trim() || ''),
+      visibleText,
+      internalLinks: Array.from(new Set(internalLinks)),
+      externalLinks: Array.from(new Set(externalLinks)),
+      brokenLinks: Array.from(new Set(brokenLinks)),
+    };
+
+    console.log('Métadonnées extraites avec succès');
+    return metadata;
+  } catch (error) {
+    console.error('Erreur lors de l\'extraction des métadonnées:', error);
+    throw error;
   }
-
-  console.log('Appel de la fonction extract-seo avec:', { url });
-
-  const { data, error } = await supabase.functions.invoke('extract-seo', {
-    body: { url },
-  });
-
-  if (error) {
-    console.error('Erreur lors de l\'analyse SEO:', error);
-    throw new Error(error.message || "Impossible d'analyser cette URL pour le moment. Veuillez réessayer plus tard.");
-  }
-
-  if (!data) {
-    throw new Error("Aucune donnée n'a été récupérée");
-  }
-
-  console.log('Données SEO extraites:', data);
-
-  return data as SEOMetadata;
 };
 
-export const downloadTableAsCSV = async (data: any[]) => {
-  if (data.length === 0) return;
+const categorizeLinks = (links: HTMLAnchorElement[], baseUrl: URL): { internalLinks: string[], externalLinks: string[] } => {
+  const internalLinks: string[] = [];
+  const externalLinks: string[] = [];
 
-  const company = data[0].company;
-  if (!company) {
-    console.error('Nom d\'entreprise manquant');
-    return;
-  }
+  links.forEach(link => {
+    const href = link.href?.trim();
+    if (!href || href === '#' || href.startsWith('javascript:') || href.startsWith('mailto:') || href.startsWith('tel:')) {
+      return;
+    }
 
-  const { data: allAnalyses, error } = await supabase
-    .from('seo_analyses')
-    .select('*')
-    .eq('company', company)
-    .order('created_at', { ascending: false });
-
-  if (error) {
-    console.error('Erreur lors de la récupération des analyses:', error);
-    return;
-  }
-
-  const csvRows: string[] = [];
-
-  csvRows.push(`"Analyse SEO pour l'entreprise : ${company}"`);
-  csvRows.push(''); // Ligne vide pour la lisibilité
-
-  allAnalyses.forEach((item) => {
-    let formattedDate;
     try {
-      const date = item.created_at ? parseISO(item.created_at) : new Date();
-      formattedDate = format(date, 'dd MMMM yyyy à HH:mm', { locale: fr });
+      const linkUrl = new URL(href, baseUrl.href);
+      if (linkUrl.hostname === baseUrl.hostname) {
+        internalLinks.push(linkUrl.href);
+      } else {
+        externalLinks.push(linkUrl.href);
+      }
     } catch (error) {
-      formattedDate = format(new Date(), 'dd MMMM yyyy à HH:mm', { locale: fr });
-      console.error('Error formatting date:', error);
+      console.warn('URL invalide ignorée:', href);
     }
-    
-    csvRows.push(`"URL analysée : ${item.url}"`);
-    csvRows.push(`"Date d'analyse : ${formattedDate}"`);
-    csvRows.push(''); // Ligne vide pour la lisibilité
-
-    // En-têtes des colonnes
-    csvRows.push('"Élément","Contenu actuel","Suggestion d\'amélioration","Contexte"');
-
-    // Titre
-    csvRows.push(`"Titre","${escapeCSV(item.current_title)}","${escapeCSV(item.suggested_title)}","${escapeCSV(item.title_context || '')}"`);
-
-    // Description
-    csvRows.push(`"Description","${escapeCSV(item.current_description)}","${escapeCSV(item.suggested_description)}","${escapeCSV(item.description_context || '')}"`);
-
-    // H1
-    csvRows.push(`"H1","${escapeCSV(item.current_h1)}","${escapeCSV(item.suggested_h1)}","${escapeCSV(item.h1_context || '')}"`);
-
-    // H2s
-    if (item.current_h2s && item.current_h2s.length > 0) {
-      const h2sCount = Math.max(
-        item.current_h2s.length,
-        (item.suggested_h2s || []).length
-      );
-      for (let i = 0; i < h2sCount; i++) {
-        csvRows.push(`"H2 ${i + 1}","${escapeCSV(item.current_h2s[i] || '')}","${escapeCSV(item.suggested_h2s?.[i] || '')}","${escapeCSV(item.h2s_context?.[i] || '')}"`);
-      }
-    }
-
-    // H3s
-    if (item.current_h3s && item.current_h3s.length > 0) {
-      const h3sCount = Math.max(
-        item.current_h3s.length,
-        (item.suggested_h3s || []).length
-      );
-      for (let i = 0; i < h3sCount; i++) {
-        csvRows.push(`"H3 ${i + 1}","${escapeCSV(item.current_h3s[i] || '')}","${escapeCSV(item.suggested_h3s?.[i] || '')}","${escapeCSV(item.h3s_context?.[i] || '')}"`);
-      }
-    }
-
-    // H4s
-    if (item.current_h4s && item.current_h4s.length > 0) {
-      const h4sCount = Math.max(
-        item.current_h4s.length,
-        (item.suggested_h4s || []).length
-      );
-      for (let i = 0; i < h4sCount; i++) {
-        csvRows.push(`"H4 ${i + 1}","${escapeCSV(item.current_h4s[i] || '')}","${escapeCSV(item.suggested_h4s?.[i] || '')}","${escapeCSV(item.h4s_context?.[i] || '')}"`);
-      }
-    }
-
-    // Contenu textuel
-    if (item.visible_text && item.visible_text.length > 0) {
-      csvRows.push('');
-      csvRows.push('"Analyse du contenu textuel"');
-      csvRows.push(`"Suggestions d'amélioration","${escapeCSV(item.content_suggestions || '')}"`);
-      csvRows.push(`"Contexte","${escapeCSV(item.content_context || '')}"`);
-    }
-
-    // Ajouter des lignes vides entre chaque URL
-    csvRows.push('');
-    csvRows.push('');
   });
 
-  // Créer et télécharger le fichier CSV
-  const csvContent = csvRows.join('\n');
-  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-  const link = document.createElement('a');
-  const safeCompanyName = company.replace(/[^a-z0-9]/gi, '_').toLowerCase();
-  link.href = URL.createObjectURL(blob);
-  link.download = `${safeCompanyName}.csv`;
-  link.click();
+  return {
+    internalLinks: internalLinks.filter(Boolean),
+    externalLinks: externalLinks.filter(Boolean)
+  };
 };
 
-// Fonction utilitaire pour échapper les caractères spéciaux dans le CSV
-const escapeCSV = (str: string | null | undefined): string => {
-  if (!str) return '';
-  return str.replace(/"/g, '""');
+const checkBrokenLinks = async (links: string[]): Promise<string[]> => {
+  const brokenLinks: string[] = [];
+
+  await Promise.all(
+    links.map(async (link) => {
+      try {
+        const response = await fetch(link, { method: 'HEAD' });
+        if (!response.ok) {
+          brokenLinks.push(link);
+        }
+      } catch (error) {
+        brokenLinks.push(link);
+      }
+    })
+  );
+
+  return brokenLinks;
 };
