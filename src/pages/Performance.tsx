@@ -4,6 +4,8 @@ import { useSEOStore } from "@/store/seoStore";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Link2, ExternalLink, AlertTriangle } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Info } from "lucide-react";
 
 export default function Performance() {
   const navigate = useNavigate();
@@ -50,6 +52,8 @@ export default function Performance() {
     ? lastAnalysis.broken_links.filter(link => link && typeof link === 'string' && link.trim() !== '')
     : [];
 
+  const noLinksFound = internalLinks.length === 0 && externalLinks.length === 0;
+
   return (
     <div className="space-y-8 pb-8">
       <h1 className="text-3xl font-bold">Performance de la page</h1>
@@ -92,6 +96,15 @@ export default function Performance() {
           <div className="space-y-4">
             <h3 className="text-lg font-semibold">Analyse des liens</h3>
             
+            {noLinksFound && (
+              <Alert className="bg-yellow-50 border-yellow-200">
+                <Info className="h-4 w-4 text-yellow-600" />
+                <AlertDescription className="text-yellow-700">
+                  Aucun lien n'a pu être extrait de la page. Cela peut arriver si le site utilise certaines technologies modernes ou des protections particulières.
+                </AlertDescription>
+              </Alert>
+            )}
+
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
               <Card className="bg-white shadow-md hover:shadow-lg transition-shadow">
                 <CardHeader>
