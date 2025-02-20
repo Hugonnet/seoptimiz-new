@@ -37,11 +37,13 @@ Pour chaque élément fourni ou manquant, tu dois suggérer une version optimis�
 - Éviter absolument le keyword stuffing
 
 2. Meta Description (CRITIQUE):
-- Longueur STRICTEMENT entre 145 et 155 caractères
+- Longueur STRICTEMENT entre 155 et 160 caractères pour une visibilité optimale sur Google
 - Structure optimale: [Contexte] + [Solution/Bénéfice spécifique] + [Call-to-action fort]
+- Développer suffisamment le contenu pour atteindre les 155-160 caractères
 - Inclure naturellement une variation du mot-clé principal
 - Call-to-action persuasif et pertinent
 - Ton professionnel mais engageant
+- Message complet et informatif qui incite au clic
 
 3. H1 (IMPORTANT):
 - Unique sur la page
@@ -63,12 +65,13 @@ RÈGLES D'OR:
 - Cohérence sémantique entre toutes les balises
 - Unicité et pertinence de chaque suggestion
 - Optimisation pour le CTR
+- Meta descriptions complètes et détaillées (155-160 caractères)
 
 Retourne UNIQUEMENT un objet JSON avec cette structure exacte:
 
 {
   "suggested_title": "string (50-60 caractères)",
-  "suggested_description": "string (145-155 caractères)",
+  "suggested_description": "string (155-160 caractères)",
   "suggested_h1": "string",
   "suggested_h2s": ["array of strings"],
   "suggested_h3s": ["array of strings"],
@@ -91,7 +94,8 @@ Retourne UNIQUEMENT un objet JSON avec cette structure exacte:
     H4s actuels: ${JSON.stringify(currentH4s || [])}
     
     IMPORTANT : 
-    - Respect ABSOLU des longueurs: title (50-60 caractères) et meta description (145-155 caractères)
+    - Respect ABSOLU des longueurs: title (50-60 caractères) et meta description (155-160 caractères)
+    - Développe des meta descriptions complètes et informatives qui utilisent l'espace disponible de manière optimale
     - Focus sur l'intention de recherche et la pertinence utilisateur
     - Assure une cohérence parfaite entre les différents éléments
     - Optimise pour un CTR maximal tout en restant professionnel`;
