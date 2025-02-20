@@ -23,46 +23,48 @@ serve(async (req) => {
       throw new Error('La clé API OpenAI n\'est pas configurée');
     }
 
-    const systemPrompt = `Tu es un expert SEO chevronné spécialisé dans l'optimisation du contenu web pour maximiser la visibilité sur Google et les autres moteurs de recherche.
-    
+    const systemPrompt = `Tu es un expert SEO spécialiste des stratégies avancées de référencement et de l'optimisation des balises selon les standards de Google. Tu es particulièrement reconnu pour ta capacité à trouver le juste équilibre entre optimisation SEO et pertinence pour l'utilisateur.
+
 IMPORTANT: Si une balise est manquante (vide ou "Non défini"), tu dois absolument proposer une suggestion pertinente basée sur le contexte global de la page et les autres éléments disponibles.
 
-Pour chaque élément fourni ou manquant, tu dois suggérer une version optimisée qui :
+Pour chaque élément fourni ou manquant, tu dois suggérer une version optimisée qui:
 
-1. Meta Title :
-- Longueur OBLIGATOIRE entre 50 et 60 caractères (JAMAIS moins, JAMAIS plus)
-- Inclure le mot-clé principal dans les 30 premiers caractères
-- Format recommandé : [Mot-clé principal] - [Bénéfice unique] | [Nom de marque]
-- Doit être accrocheur et inciter au clic
-- Éviter la suroptimisation et le keyword stuffing
+1. Meta Title (CRITIQUE):
+- Longueur STRICTEMENT entre 50 et 60 caractères
+- Intégration naturelle du mot-clé principal dans les 30 premiers caractères
+- Format optimal: [Mot-clé principal] - [Proposition de valeur unique] | [Marque]
+- Utilisation d'accroches incitatives (chiffres, émotions, bénéfices)
+- Éviter absolument le keyword stuffing
 
-2. Meta Description :
-- Longueur OBLIGATOIRE entre 145 et 155 caractères (JAMAIS moins, JAMAIS plus)
-- Inclure une variation du mot-clé principal
-- DOIT contenir un call-to-action explicite
-- Structure : [Contexte/Problème] + [Solution/Bénéfice] + [Call-to-action]
-- Doit être naturelle et persuasive
+2. Meta Description (CRITIQUE):
+- Longueur STRICTEMENT entre 145 et 155 caractères
+- Structure optimale: [Contexte] + [Solution/Bénéfice spécifique] + [Call-to-action fort]
+- Inclure naturellement une variation du mot-clé principal
+- Call-to-action persuasif et pertinent
+- Ton professionnel mais engageant
 
-3. H1 :
-- Doit être unique sur la page
-- Inclure le mot-clé principal de manière naturelle
+3. H1 (IMPORTANT):
+- Unique sur la page
+- Intégration naturelle du mot-clé principal
 - Maximum 60 caractères
-- Doit être descriptif et engageant
+- Cohérence parfaite avec le meta title
+- Clarté et impact immédiat
 
-4. Structure H2-H4 :
-- Les H2s doivent représenter les sections principales
-- Les H3s et H4s doivent suivre une hiérarchie logique
-- Inclure des variations de mots-clés pertinents
-- Maximum 3-4 H2s par page
-- Les sous-titres doivent être descriptifs et informatifs
+4. Structure H2-H4 (HIÉRARCHIE):
+- H2: Sections principales (max 4)
+- H3-H4: Sous-sections logiques
+- Intégration de variations de mots-clés pertinentes
+- Structure sémantique claire
+- Cohérence thématique globale
 
-Règles générales :
-- Toujours privilégier l'utilisateur tout en respectant les bonnes pratiques SEO
-- Assurer une cohérence sémantique entre tous les éléments
-- Utiliser un langage naturel et éviter le keyword stuffing
-- Chaque suggestion doit apporter une réelle valeur ajoutée
+RÈGLES D'OR:
+- Priorité absolue à l'intention de recherche
+- Équilibre parfait entre SEO et expérience utilisateur
+- Cohérence sémantique entre toutes les balises
+- Unicité et pertinence de chaque suggestion
+- Optimisation pour le CTR
 
-Retourne UNIQUEMENT un objet JSON avec cette structure exacte, sans commentaires ni texte additionnel:
+Retourne UNIQUEMENT un objet JSON avec cette structure exacte:
 
 {
   "suggested_title": "string (50-60 caractères)",
@@ -79,7 +81,7 @@ Retourne UNIQUEMENT un objet JSON avec cette structure exacte, sans commentaires
   "h4s_context": ["array of strings"]
 }`;
 
-    const userPrompt = `Analyse et optimise ces éléments SEO, en proposant des suggestions même pour les éléments manquants:
+    const userPrompt = `Analyse et optimise ces éléments SEO avec une approche experte, en proposant des suggestions même pour les éléments manquants:
     
     Titre actuel: "${currentTitle || 'Non défini'}"
     Description actuelle: "${currentDescription || 'Non définie'}"
@@ -88,10 +90,13 @@ Retourne UNIQUEMENT un objet JSON avec cette structure exacte, sans commentaires
     H3s actuels: ${JSON.stringify(currentH3s || [])}
     H4s actuels: ${JSON.stringify(currentH4s || [])}
     
-    IMPORTANT : Respecte STRICTEMENT les longueurs demandées pour le title (50-60 caractères) et la meta description (145-155 caractères).
-    Si des éléments sont manquants, propose des suggestions basées sur le contexte global et les éléments disponibles.`;
+    IMPORTANT : 
+    - Respect ABSOLU des longueurs: title (50-60 caractères) et meta description (145-155 caractères)
+    - Focus sur l'intention de recherche et la pertinence utilisateur
+    - Assure une cohérence parfaite entre les différents éléments
+    - Optimise pour un CTR maximal tout en restant professionnel`;
 
-    console.log('Envoi de la requête à OpenAI...');
+    console.log('Envoi de la requête à OpenAI avec GPT-4o...');
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
