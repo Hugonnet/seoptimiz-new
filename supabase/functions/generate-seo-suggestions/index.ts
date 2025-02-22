@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 
@@ -24,7 +25,13 @@ serve(async (req) => {
 
     const systemPrompt = `Tu es un expert SEO spécialiste des stratégies avancées de référencement et de l'optimisation des balises selon les standards de Google. Pour chaque suggestion, tu dois fournir une explication détaillée et pédagogique des améliorations proposées.
 
-IMPORTANT: Si une balise est manquante (vide ou "Non défini"), tu dois absolument proposer une suggestion pertinente basée sur le contexte global de la page et les autres éléments disponibles.
+IMPORTANT: 
+- Si la meta description est absente (vide ou "Non définie"), tu DOIS en générer une nouvelle en te basant sur :
+  1. Le titre de la page
+  2. Le contenu H1
+  3. La structure des headings disponibles
+  4. Le contexte général de la page
+- La description générée doit respecter STRICTEMENT les critères de longueur et de qualité
 
 Pour chaque élément fourni ou manquant, tu dois suggérer une version optimisée qui:
 
@@ -35,14 +42,16 @@ Pour chaque élément fourni ou manquant, tu dois suggérer une version optimis�
 - Utilisation d'accroches incitatives (chiffres, émotions, bénéfices)
 - Éviter absolument le keyword stuffing
 
-2. Meta Description (CRITIQUE):
-- Longueur STRICTEMENT entre 155 et 160 caractères pour une visibilité optimale sur Google
+2. Meta Description (CRITIQUE et OBLIGATOIRE):
+- TOUJOURS fournir une suggestion, même si la description actuelle est absente
+- Longueur STRICTEMENT entre 155 et 160 caractères
 - Structure optimale: [Contexte] + [Solution/Bénéfice spécifique] + [Call-to-action fort]
 - Développer suffisamment le contenu pour atteindre les 155-160 caractères
 - Inclure naturellement une variation du mot-clé principal
 - Call-to-action persuasif et pertinent
 - Ton professionnel mais engageant
 - Message complet et informatif qui incite au clic
+- Si la description originale est absente, créer une nouvelle description basée sur le titre et le H1
 
 3. H1 (IMPORTANT):
 - Unique sur la page
@@ -59,7 +68,7 @@ Pour chaque élément fourni ou manquant, tu dois suggérer une version optimis�
 - Cohérence thématique globale
 
 Pour chaque suggestion, fournis une explication détaillée qui inclut:
-1. Les points forts de la version actuelle
+1. Les points forts de la version actuelle (ou "Description manquante" si absente)
 2. Les opportunités d'amélioration identifiées
 3. Comment la suggestion optimise le SEO et l'expérience utilisateur
 4. Les mots-clés et variations ciblés
@@ -82,7 +91,7 @@ Retourne un objet JSON avec cette structure exacte:
   "suggested_h3s": ["array of strings"],
   "suggested_h4s": ["array of strings"],
   "title_context": "string",
-  "description_context": "string",
+  "description_context": "string (DOIT inclure une explication même si la description originale est absente)",
   "h1_context": "string",
   "h2s_context": ["array of strings"],
   "h3s_context": ["array of strings"],
@@ -92,15 +101,16 @@ Retourne un objet JSON avec cette structure exacte:
     const userPrompt = `Analyse et optimise ces éléments SEO avec une approche experte, en proposant des suggestions même pour les éléments manquants:
     
     Titre actuel: "${currentTitle || 'Non défini'}"
-    Description actuelle: "${currentDescription || 'Non définie'}"
+    Description actuelle: "${currentDescription || 'Non définie - Une nouvelle description sera générée'}"
     H1 actuel: "${currentH1 || 'Non défini'}"
     H2s actuels: ${JSON.stringify(currentH2s || [])}
     H3s actuels: ${JSON.stringify(currentH3s || [])}
     H4s actuels: ${JSON.stringify(currentH4s || [])}
     
     IMPORTANT : 
+    - Si la meta description est absente, tu DOIS en générer une nouvelle
     - Respect ABSOLU des longueurs: title (50-60 caractères) et meta description (155-160 caractères)
-    - Développe des meta descriptions complètes et informatives qui utilisent l'espace disponible de manière optimale
+    - Développe des meta descriptions complètes et informatives
     - Focus sur l'intention de recherche et la pertinence utilisateur
     - Assure une cohérence parfaite entre les différents éléments
     - Optimise pour un CTR maximal tout en restant professionnel`;
