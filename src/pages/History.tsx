@@ -1,3 +1,4 @@
+
 import { SEOTable } from "@/components/SEOTable";
 import { StickyHeader } from "@/components/StickyHeader";
 import { motion } from "framer-motion";
@@ -54,12 +55,31 @@ const History = () => {
     loadSEOData();
   }, [setSEOData, toast]);
 
-  const handleReset = () => {
-    clearSEOData();
-    toast({
-      title: "Historique réinitialisé",
-      description: "L'historique des analyses SEO a été effacé avec succès.",
-    });
+  const handleReset = async () => {
+    try {
+      // Supprimer toutes les données de la table seo_analyses
+      const { error } = await supabase
+        .from('seo_analyses')
+        .update({ archived: true })
+        .neq('id', 0); // Met à jour toutes les entrées
+
+      if (error) throw error;
+
+      // Vider le store local
+      clearSEOData();
+
+      toast({
+        title: "Historique réinitialisé",
+        description: "L'historique des analyses SEO a été archivé avec succès.",
+      });
+    } catch (error) {
+      console.error('Erreur lors de la réinitialisation:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de réinitialiser l'historique",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -108,8 +128,8 @@ const History = () => {
                 <AlertDialogHeader>
                   <AlertDialogTitle>Êtes-vous sûr ?</AlertDialogTitle>
                   <AlertDialogDescription>
-                    Cette action va supprimer définitivement tout l'historique de vos analyses SEO.
-                    Cette action est irréversible.
+                    Cette action va archiver tout l'historique de vos analyses SEO.
+                    Les données seront conservées mais masquées de l'interface.
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
@@ -118,7 +138,7 @@ const History = () => {
                     onClick={handleReset}
                     className="bg-red-500 hover:bg-red-600"
                   >
-                    Confirmer la suppression
+                    Confirmer l'archivage
                   </AlertDialogAction>
                 </AlertDialogFooter>
               </AlertDialogContent>
