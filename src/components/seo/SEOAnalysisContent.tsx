@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Table, TableBody } from "@/components/ui/table";
 import type { SEOAnalysis } from "@/store/seoStore";
@@ -17,42 +18,40 @@ export function SEOAnalysisContent({ analysis }: SEOAnalysisContentProps) {
       </div>
 
       <div className="space-y-8">
-        {analysis.current_title && analysis.suggested_title && (
+        {(analysis.current_title || analysis.suggested_title) && (
           <div className="space-y-2">
             <div className="grid grid-cols-2 gap-6">
               <div className="font-medium text-gray-700">Meta Title</div>
               <div className="font-medium text-purple-700">Meta Title suggéré</div>
             </div>
             <HeadingComparison
-              current={analysis.current_title}
+              current={analysis.current_title || "Non défini"}
               suggested={analysis.suggested_title}
               context={analysis.title_context}
             />
           </div>
         )}
 
-        {analysis.current_description && analysis.suggested_description && (
-          <div className="space-y-2">
-            <div className="grid grid-cols-2 gap-6">
-              <div className="font-medium text-gray-700">Meta Description</div>
-              <div className="font-medium text-purple-700">Meta Description suggérée</div>
-            </div>
-            <HeadingComparison
-              current={analysis.current_description}
-              suggested={analysis.suggested_description}
-              context={analysis.description_context}
-            />
+        <div className="space-y-2">
+          <div className="grid grid-cols-2 gap-6">
+            <div className="font-medium text-gray-700">Meta Description</div>
+            <div className="font-medium text-purple-700">Meta Description suggérée</div>
           </div>
-        )}
+          <HeadingComparison
+            current={analysis.current_description || "Non définie"}
+            suggested={analysis.suggested_description}
+            context={analysis.description_context}
+          />
+        </div>
 
-        {analysis.current_h1 && analysis.suggested_h1 && (
+        {(analysis.current_h1 || analysis.suggested_h1) && (
           <div className="space-y-2">
             <div className="grid grid-cols-2 gap-6">
               <div className="font-medium text-gray-700">H1</div>
               <div className="font-medium text-purple-700">H1 suggéré</div>
             </div>
             <HeadingComparison
-              current={analysis.current_h1}
+              current={analysis.current_h1 || "Non défini"}
               suggested={analysis.suggested_h1}
               context={analysis.h1_context}
             />
