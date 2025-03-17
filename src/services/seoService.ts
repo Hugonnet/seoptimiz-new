@@ -15,6 +15,13 @@ export interface SEOMetadata {
   brokenLinks: string[];
 }
 
+// Helper function to clean text for CSV export
+const cleanCSVText = (text: string | null | undefined): string => {
+  if (!text) return '';
+  // Remove any double quotes or special characters that might break CSV
+  return text.replace(/"/g, '""').replace(/[\r\n]+/g, ' ');
+};
+
 export const downloadTableAsCSV = (data: SEOAnalysis[]) => {
   if (!data || data.length === 0) return;
 
@@ -35,12 +42,12 @@ export const downloadTableAsCSV = (data: SEOAnalysis[]) => {
     ...data.map(row => [
       row.url,
       row.company || '',
-      `"${(row.current_title || '').replace(/"/g, '""')}"`,
-      `"${(row.current_description || '').replace(/"/g, '""')}"`,
-      `"${(row.current_h1 || '').replace(/"/g, '""')}"`,
-      `"${(row.suggested_title || '').replace(/"/g, '""')}"`,
-      `"${(row.suggested_description || '').replace(/"/g, '""')}"`,
-      `"${(row.suggested_h1 || '').replace(/"/g, '""')}"`,
+      `"${cleanCSVText(row.current_title)}"`,
+      `"${cleanCSVText(row.current_description)}"`,
+      `"${cleanCSVText(row.current_h1)}"`,
+      `"${cleanCSVText(row.suggested_title)}"`,
+      `"${cleanCSVText(row.suggested_description)}"`,
+      `"${cleanCSVText(row.suggested_h1)}"`,
       row.page_load_speed || ''
     ].join(','))
   ].join('\n');

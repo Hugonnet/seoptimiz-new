@@ -1,6 +1,28 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { extractSEOMetadata } from "./seoService";
 import { SEOAnalysis } from "@/store/seoStore";
+
+// Helper function to clean text from CSS classes and other unwanted elements
+const cleanText = (text: string | null | undefined): string => {
+  if (!text) return "";
+  
+  // Remove CSS class patterns that appear in the data
+  const cleanedText = text
+    .replace(/\b[a-z]+-[a-z]+-[a-z]+\b/g, ' ') // Remove class patterns like "alt-circle-downnarrow"
+    .replace(/\b[a-z]+arrow-[a-z]+\b/g, ' ')  // Remove arrow classes
+    .replace(/\b[a-z]+-[a-z]+\b/g, ' ')       // Remove two-word classes like "menu-4categories"
+    .replace(/\s{2,}/g, ' ')                  // Replace multiple spaces with a single space
+    .trim();
+  
+  return cleanedText;
+};
+
+// Helper function to clean array items
+const cleanArray = (arr: string[] | null | undefined): string[] => {
+  if (!arr || !Array.isArray(arr)) return [];
+  return arr.map(item => cleanText(item)).filter(item => item.length > 0);
+};
 
 export const analyzeSEO = async (url: string, company: string): Promise<SEOAnalysis> => {
   console.log('Analyse de l\'URL:', url);
@@ -24,6 +46,20 @@ export const analyzeSEO = async (url: string, company: string): Promise<SEOAnaly
     throw new Error("Impossible d'extraire les données SEO");
   }
 
+  // Clean the extracted SEO data
+  const cleanedSeoData = {
+    title: cleanText(seoData.title),
+    description: cleanText(seoData.description),
+    h1: cleanText(seoData.h1),
+    h2s: cleanArray(seoData.h2s),
+    h3s: cleanArray(seoData.h3s),
+    h4s: cleanArray(seoData.h4s),
+    visibleText: cleanArray(seoData.visibleText),
+    internalLinks: seoData.internalLinks,
+    externalLinks: seoData.externalLinks,
+    brokenLinks: seoData.brokenLinks,
+  };
+
   // Test page speed
   console.log('Test de vitesse pour:', formattedUrl);
   const { data: speedData, error: speedError } = await supabase.functions.invoke('test-page-speed', {
@@ -40,12 +76,12 @@ export const analyzeSEO = async (url: string, company: string): Promise<SEOAnaly
   console.log('Appel à l\'Edge Function pour générer les suggestions');
   const { data: suggestions, error: suggestionsError } = await supabase.functions.invoke('generate-seo-suggestions', {
     body: {
-      currentTitle: seoData.title,
-      currentDescription: seoData.description,
-      currentH1: seoData.h1,
-      currentH2s: seoData.h2s,
-      currentH3s: seoData.h3s,
-      currentH4s: seoData.h4s,
+      currentTitle: cleanedSeoData.title,
+      currentDescription: cleanedSeoData.description,
+      currentH1: cleanedSeoData.h1,
+      currentH2s: cleanedSeoData.h2s,
+      currentH3s: cleanedSeoData.h3s,
+      currentH4s: cleanedSeoData.h4s,
     },
   });
 
@@ -62,13 +98,13 @@ export const analyzeSEO = async (url: string, company: string): Promise<SEOAnaly
       {
         url: formattedUrl,
         company: company,
-        current_title: seoData.title,
-        current_description: seoData.description,
-        current_h1: seoData.h1,
-        current_h2s: seoData.h2s,
-        current_h3s: seoData.h3s,
-        current_h4s: seoData.h4s,
-        visible_text: seoData.visibleText,
+        current_title: cleanedSeoData.title,
+        current_description: cleanedSeoData.description,
+        current_h1: cleanedSeoData.h1,
+        current_h2s: cleanedSeoData.h2s,
+        current_h3s: cleanedSeoData.h3s,
+        current_h4s: cleanedSeoData.h4s,
+        visible_text: cleanedSeoData.visibleText,
         suggested_title: suggestions.suggested_title,
         suggested_description: suggestions.suggested_description,
         suggested_h1: suggestions.suggested_h1,
