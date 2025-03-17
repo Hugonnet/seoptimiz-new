@@ -13,6 +13,7 @@ export interface SEOMetadata {
   internalLinks: string[];
   externalLinks: string[];
   brokenLinks: string[];
+  isProtectedPage?: boolean;
 }
 
 // Enhanced helper function to clean text for CSV export and display
