@@ -126,7 +126,7 @@ export function SEOAnalysisModal({ url, analyses }: SEOAnalysisModalProps) {
               </Button>
             </div>
 
-            <ScrollArea className="h-[500px] px-6 pb-6">
+            <ScrollArea className="h-[600px] px-6 pb-8">
               <SEOAnalysisContent 
                 analysis={analysis} 
                 onCopy={(type) => copyToClipboard(analysis, type)}

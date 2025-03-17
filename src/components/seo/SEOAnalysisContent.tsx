@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Table, TableBody } from "@/components/ui/table";
 import type { SEOAnalysis } from "@/store/seoStore";
@@ -29,14 +28,15 @@ export function SEOAnalysisContent({ analysis, onCopy }: SEOAnalysisContentProps
           <AlertTitle className="text-lg font-bold mb-2">Attention : Protection anti-bot détectée</AlertTitle>
           <AlertDescription className="text-base">
             Les données récupérées proviennent d'une page de protection anti-bot, et non du contenu réel du site.
-            Les suggestions ci-dessous sont basées sur cette page de protection et ne reflètent pas le contenu original du site.
-            <br /><br />
-            <strong>Solutions possibles :</strong>
-            <ul className="list-disc pl-5 pt-2">
-              <li>Essayer d'analyser à nouveau le site après un certain temps</li>
-              <li>Utiliser un autre navigateur ou une connexion différente</li>
-              <li>Contacter le propriétaire du site pour obtenir l'accès</li>
-            </ul>
+            Les suggestions ci-dessous sont basées sur cette page de protection et ne reflètent pas le contenu original du site web.
+            <div className="mt-4">
+              <strong>Solutions possibles :</strong>
+              <ul className="list-disc pl-5 pt-2">
+                <li>Essayer d'analyser à nouveau le site après un certain temps</li>
+                <li>Utiliser un autre navigateur ou une connexion différente</li>
+                <li>Contacter le propriétaire du site pour obtenir l'accès</li>
+              </ul>
+            </div>
           </AlertDescription>
         </Alert>
       )}

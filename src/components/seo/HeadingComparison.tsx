@@ -52,9 +52,12 @@ export function HeadingComparison({ current, suggested, context }: HeadingCompar
     (cleanCurrent && cleanCurrent.toLowerCase().includes('cloudflare')) ||
     (cleanCurrent && cleanCurrent.toLowerCase().includes('security check'));
 
+  // Determine if context includes bot protection warning
+  const hasBotProtectionWarning = context && context.toLowerCase().includes('page de protection anti-bot');
+
   return (
     <div className="space-y-3">
-      {isBotProtectionPage && (
+      {isBotProtectionPage && !hasBotProtectionWarning && (
         <Alert variant="destructive" className="mb-4">
           <AlertTriangle className="h-4 w-4" />
           <AlertDescription className="ml-2">
