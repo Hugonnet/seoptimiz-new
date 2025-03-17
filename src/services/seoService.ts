@@ -22,7 +22,13 @@ const cleanCSVText = (text: string | null | undefined): string => {
   
   // More comprehensive cleaning for titles and descriptions
   const cleaned = text
-    // Remove all CSS-like class patterns
+    // Remove common bot protection pattern with numeric sequences and dashes
+    .replace(/(-\d+\s+)+/g, '')
+    .replace(/(\s*-\d+){2,}/g, '')
+    // Remove patterns like "-1 -2 -3 -4 2- -2vine e"
+    .replace(/-\d+\s+-\d+\s+-\d+\s+-\d+\s+\d+-\s+-\d+vine\s+e/g, '')
+    .replace(/-\d+vine\s+e/g, '')
+    // Remove CSS-like class patterns
     .replace(/\b[a-z]+[-][a-z]+[-][a-z]+\b/g, ' ')
     .replace(/\b[a-z]+[-][a-z]+\b/g, ' ')
     // Remove specific patterns identified in the data

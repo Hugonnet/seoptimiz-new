@@ -29,11 +29,18 @@ export function HeadingComparison({ current, suggested, context }: HeadingCompar
     }
   };
 
-  // Additional cleaning of content with dashes and formatting artifacts
+  // Enhanced cleaning function to better handle formatting artifacts
   const cleanDisplayText = (text: string) => {
     if (!text) return '';
     
     return text
+      // Remove common bot protection pattern with numeric sequences and dashes
+      .replace(/(-\d+\s+)+/g, '')
+      .replace(/(\s*-\d+){2,}/g, '')
+      // Remove patterns like "-1 -2 -3 -4 2- -2vine e"
+      .replace(/-\d+\s+-\d+\s+-\d+\s+-\d+\s+\d+-\s+-\d+vine\s+e/g, '')
+      .replace(/-\d+vine\s+e/g, '')
+      // Handle other common patterns
       .replace(/(?:- ){2,}/g, '') // Remove repeating dash patterns
       .replace(/[-]{2,}/g, ' ') // Replace long dash sequences with space
       .replace(/(\s-\s-\s-)+/g, ' ') // Remove formatted dash sequences
