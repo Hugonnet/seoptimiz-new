@@ -1,4 +1,3 @@
-
 import { corsHeaders } from '../_shared/cors.ts';
 import { load } from "https://esm.sh/cheerio@1.0.0-rc.12";
 
@@ -18,6 +17,13 @@ interface SEOData {
   externalLinks: string[];
   brokenLinks: string[];
 }
+
+// Helper function to clean extracted text
+const cleanExtractedText = (text: string): string => {
+  return text
+    .replace(/\s+/g, ' ')  // Replace multiple spaces with a single space
+    .trim();               // Remove leading and trailing whitespace
+};
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -86,13 +92,37 @@ Deno.serve(async (req) => {
     console.log('Liens externes trouvés:', externalLinks.size);
 
     // Extraire les autres métadonnées
-    const title = $('title').text().trim();
-    const description = $('meta[name="description"]').attr('content') || '';
-    const h1 = $('h1').first().text().trim();
-    const h2s = $('h2').map((_, el) => $(el).text().trim()).get().filter(Boolean);
-    const h3s = $('h3').map((_, el) => $(el).text().trim()).get().filter(Boolean);
-    const h4s = $('h4').map((_, el) => $(el).text().trim()).get().filter(Boolean);
+    const title = cleanExtractedText($('title').text());
+    const description = cleanExtractedText($('meta[name="description"]').attr('content') || '');
+    
+    // Remove all classes and attributes from the content before extracting text
+    $('*').each((_, el) => {
+      const element = $(el);
+      const attrs = el.attributes;
+      // Keep only essential attributes
+      for (let i = attrs.length - 1; i >= 0; i--) {
+        const attrName = attrs[i].name;
+        if (attrName !== 'href' && attrName !== 'src') {
+          element.removeAttr(attrName);
+        }
+      }
+    });
+    
+    // Extract heading content after removing attributes
+    const h1 = cleanExtractedText($('h1').first().text());
+    const h2s = $('h2').map((_, el) => cleanExtractedText($(el).text())).get().filter(Boolean);
+    const h3s = $('h3').map((_, el) => cleanExtractedText($(el).text())).get().filter(Boolean);
+    const h4s = $('h4').map((_, el) => cleanExtractedText($(el).text())).get().filter(Boolean);
 
+    // Get visible body text (excluding scripts, styles, etc.)
+    const visibleText: string[] = [];
+    $('body p, body li, body div:not(:has(*))').each((_, el) => {
+      const text = cleanExtractedText($(el).text());
+      if (text && text.length > 10) { // Only include meaningful text
+        visibleText.push(text);
+      }
+    });
+    
     // Test simple des liens cassés
     const brokenLinks: string[] = [];
     
@@ -104,7 +134,7 @@ Deno.serve(async (req) => {
       h2s,
       h3s,
       h4s,
-      visibleText: [],
+      visibleText,
       internalLinks: Array.from(internalLinks),
       externalLinks: Array.from(externalLinks),
       brokenLinks

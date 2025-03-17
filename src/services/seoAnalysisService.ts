@@ -3,19 +3,26 @@ import { supabase } from "@/integrations/supabase/client";
 import { extractSEOMetadata } from "./seoService";
 import { SEOAnalysis } from "@/store/seoStore";
 
-// Helper function to clean text from CSS classes and other unwanted elements
+// Enhanced helper function to clean text from CSS classes and other unwanted elements
 const cleanText = (text: string | null | undefined): string => {
   if (!text) return "";
   
-  // Remove CSS class patterns that appear in the data
-  const cleanedText = text
-    .replace(/\b[a-z]+-[a-z]+-[a-z]+\b/g, ' ') // Remove class patterns like "alt-circle-downnarrow"
-    .replace(/\b[a-z]+arrow-[a-z]+\b/g, ' ')  // Remove arrow classes
-    .replace(/\b[a-z]+-[a-z]+\b/g, ' ')       // Remove two-word classes like "menu-4categories"
-    .replace(/\s{2,}/g, ' ')                  // Replace multiple spaces with a single space
+  // Significantly improved cleaning pattern
+  return text
+    // Remove all CSS-like class patterns
+    .replace(/\b[a-z]+[-][a-z]+[-][a-z]+\b/g, ' ')
+    .replace(/\b[a-z]+[-][a-z]+\b/g, ' ')
+    // Remove specific patterns identified in the data
+    .replace(/account|android|arrow|cart|menu|categories|chevron|opening/g, ' ')
+    .replace(/circle|tinder|trello|tripadvisor|tumblr|twitch|twitter|viber|vimeo|vk/g, ' ')
+    .replace(/ontakt|website|wechat|whatsapp|windows|wishlist|xing|yelp|youtube|zoom/g, ' ')
+    // Remove common icon names
+    .replace(/icon-[a-z-]+/g, ' ')
+    // Remove dashes and repeated dashes
+    .replace(/[-]{2,}/g, ' ')
+    // Clean up extra spaces
+    .replace(/\s{2,}/g, ' ')
     .trim();
-  
-  return cleanedText;
 };
 
 // Helper function to clean array items

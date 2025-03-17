@@ -15,11 +15,29 @@ export interface SEOMetadata {
   brokenLinks: string[];
 }
 
-// Helper function to clean text for CSV export
+// Enhanced helper function to clean text for CSV export
 const cleanCSVText = (text: string | null | undefined): string => {
   if (!text) return '';
-  // Remove any double quotes or special characters that might break CSV
-  return text.replace(/"/g, '""').replace(/[\r\n]+/g, ' ');
+  
+  // First clean up any social media icons and CSS classes
+  const cleaned = text
+    // Remove all CSS-like class patterns
+    .replace(/\b[a-z]+[-][a-z]+[-][a-z]+\b/g, ' ')
+    .replace(/\b[a-z]+[-][a-z]+\b/g, ' ')
+    // Remove specific patterns identified in the data
+    .replace(/account|android|arrow|cart|menu|categories|chevron|opening/g, ' ')
+    .replace(/circle|tinder|trello|tripadvisor|tumblr|twitch|twitter|viber|vimeo|vk/g, ' ')
+    .replace(/ontakt|website|wechat|whatsapp|windows|wishlist|xing|yelp|youtube|zoom/g, ' ')
+    // Remove icon patterns
+    .replace(/icon-[a-z-]+/g, ' ')
+    // Remove dashes and repeated dashes
+    .replace(/[-]{2,}/g, ' ')
+    // Clean up extra spaces
+    .replace(/\s{2,}/g, ' ')
+    .trim();
+  
+  // Then escape for CSV
+  return cleaned.replace(/"/g, '""').replace(/[\r\n]+/g, ' ');
 };
 
 export const downloadTableAsCSV = (data: SEOAnalysis[]) => {

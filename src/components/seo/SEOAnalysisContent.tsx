@@ -4,17 +4,22 @@ import { Table, TableBody } from "@/components/ui/table";
 import type { SEOAnalysis } from "@/store/seoStore";
 import { HeadingComparison } from './HeadingComparison';
 import { HeadingArrayComparison } from './HeadingArrayComparison';
+import { Copy } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 interface SEOAnalysisContentProps {
   analysis: SEOAnalysis;
+  onCopy?: (type: 'title' | 'description' | 'h1') => void;
 }
 
-export function SEOAnalysisContent({ analysis }: SEOAnalysisContentProps) {
+export function SEOAnalysisContent({ analysis, onCopy }: SEOAnalysisContentProps) {
   return (
     <div className="space-y-8">
       <div className="grid grid-cols-2 gap-6 mb-4">
         <h3 className="text-lg font-semibold text-purple-700">Dénominations actuelles</h3>
-        <h3 className="text-lg font-semibold text-purple-700">Améliorations suggérées par I.A</h3>
+        <div className="flex items-center justify-between">
+          <h3 className="text-lg font-semibold text-purple-700">Améliorations suggérées par I.A</h3>
+        </div>
       </div>
 
       <div className="space-y-8">
@@ -22,7 +27,14 @@ export function SEOAnalysisContent({ analysis }: SEOAnalysisContentProps) {
           <div className="space-y-2">
             <div className="grid grid-cols-2 gap-6">
               <div className="font-medium text-gray-700">Meta Title</div>
-              <div className="font-medium text-purple-700">Meta Title suggéré</div>
+              <div className="flex items-center justify-between">
+                <div className="font-medium text-purple-700">Meta Title suggéré</div>
+                {onCopy && (
+                  <Button variant="ghost" size="sm" onClick={() => onCopy('title')} className="text-purple-600 hover:text-purple-800">
+                    <Copy className="h-4 w-4 mr-1" /> Copier
+                  </Button>
+                )}
+              </div>
             </div>
             <HeadingComparison
               current={analysis.current_title || "Non défini"}
@@ -35,7 +47,14 @@ export function SEOAnalysisContent({ analysis }: SEOAnalysisContentProps) {
         <div className="space-y-2">
           <div className="grid grid-cols-2 gap-6">
             <div className="font-medium text-gray-700">Meta Description</div>
-            <div className="font-medium text-purple-700">Meta Description suggérée</div>
+            <div className="flex items-center justify-between">
+              <div className="font-medium text-purple-700">Meta Description suggérée</div>
+              {onCopy && (
+                <Button variant="ghost" size="sm" onClick={() => onCopy('description')} className="text-purple-600 hover:text-purple-800">
+                  <Copy className="h-4 w-4 mr-1" /> Copier
+                </Button>
+              )}
+            </div>
           </div>
           <HeadingComparison
             current={analysis.current_description || "Non définie"}
@@ -48,7 +67,14 @@ export function SEOAnalysisContent({ analysis }: SEOAnalysisContentProps) {
           <div className="space-y-2">
             <div className="grid grid-cols-2 gap-6">
               <div className="font-medium text-gray-700">H1</div>
-              <div className="font-medium text-purple-700">H1 suggéré</div>
+              <div className="flex items-center justify-between">
+                <div className="font-medium text-purple-700">H1 suggéré</div>
+                {onCopy && (
+                  <Button variant="ghost" size="sm" onClick={() => onCopy('h1')} className="text-purple-600 hover:text-purple-800">
+                    <Copy className="h-4 w-4 mr-1" /> Copier
+                  </Button>
+                )}
+              </div>
             </div>
             <HeadingComparison
               current={analysis.current_h1 || "Non défini"}

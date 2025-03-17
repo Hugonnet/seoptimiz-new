@@ -1,6 +1,7 @@
+
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
-import { Trash2 } from "lucide-react";
+import { Trash2, Copy } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useSEOStore } from "@/store/seoStore";
@@ -44,6 +45,38 @@ export function SEOAnalysisModal({ url, analyses }: SEOAnalysisModalProps) {
       });
     }
   };
+  
+  const copyToClipboard = (analysis: SEOAnalysis, type: 'title' | 'description' | 'h1') => {
+    let text = '';
+    
+    switch (type) {
+      case 'title':
+        text = analysis.suggested_title || '';
+        break;
+      case 'description':
+        text = analysis.suggested_description || '';
+        break;
+      case 'h1':
+        text = analysis.suggested_h1 || '';
+        break;
+    }
+    
+    if (text) {
+      navigator.clipboard.writeText(text).then(() => {
+        toast({
+          title: "Copié !",
+          description: `${type === 'title' ? 'Titre' : type === 'description' ? 'Description' : 'H1'} copié dans le presse-papier.`,
+        });
+      }).catch(err => {
+        console.error('Erreur lors de la copie:', err);
+        toast({
+          title: "Erreur",
+          description: "Impossible de copier le texte.",
+          variant: "destructive",
+        });
+      });
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -75,8 +108,11 @@ export function SEOAnalysisModal({ url, analyses }: SEOAnalysisModalProps) {
               </Button>
             </div>
 
-            <ScrollArea className="h-[500px]">
-              <SEOAnalysisContent analysis={analysis} />
+            <ScrollArea className="h-[500px] px-6">
+              <SEOAnalysisContent 
+                analysis={analysis} 
+                onCopy={(type) => copyToClipboard(analysis, type)}
+              />
             </ScrollArea>
           </div>
         ))}
