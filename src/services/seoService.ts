@@ -15,11 +15,11 @@ export interface SEOMetadata {
   brokenLinks: string[];
 }
 
-// Enhanced helper function to clean text for CSV export
+// Enhanced helper function to clean text for CSV export and display
 const cleanCSVText = (text: string | null | undefined): string => {
   if (!text) return '';
   
-  // First clean up any social media icons and CSS classes
+  // More comprehensive cleaning for titles and descriptions
   const cleaned = text
     // Remove all CSS-like class patterns
     .replace(/\b[a-z]+[-][a-z]+[-][a-z]+\b/g, ' ')
@@ -30,8 +30,13 @@ const cleanCSVText = (text: string | null | undefined): string => {
     .replace(/ontakt|website|wechat|whatsapp|windows|wishlist|xing|yelp|youtube|zoom/g, ' ')
     // Remove icon patterns
     .replace(/icon-[a-z-]+/g, ' ')
-    // Remove dashes and repeated dashes
+    // Remove long sequences of dashes that often appear in corrupted content
     .replace(/[-]{2,}/g, ' ')
+    // Remove any remaining dash sequences that look like formatting artifacts
+    .replace(/(\s-\s-\s-)+/g, ' ')
+    .replace(/(\s-\s)+/g, ' ')
+    // Clean up repeating hyphens (common in malformed titles)
+    .replace(/(?:- ){2,}/g, '')
     // Clean up extra spaces
     .replace(/\s{2,}/g, ' ')
     .trim();
@@ -94,6 +99,27 @@ export const extractSEOMetadata = async (url: string): Promise<SEOMetadata> => {
     if (error) {
       console.error('Erreur lors de l\'appel à extract-seo:', error);
       throw error;
+    }
+
+    // Clean the data right after receiving it from the extraction function
+    if (seoData) {
+      seoData.title = cleanCSVText(seoData.title);
+      seoData.description = cleanCSVText(seoData.description);
+      seoData.h1 = cleanCSVText(seoData.h1);
+      
+      // Clean arrays if they exist
+      if (seoData.h2s && Array.isArray(seoData.h2s)) {
+        seoData.h2s = seoData.h2s.map(cleanCSVText).filter(Boolean);
+      }
+      if (seoData.h3s && Array.isArray(seoData.h3s)) {
+        seoData.h3s = seoData.h3s.map(cleanCSVText).filter(Boolean);
+      }
+      if (seoData.h4s && Array.isArray(seoData.h4s)) {
+        seoData.h4s = seoData.h4s.map(cleanCSVText).filter(Boolean);
+      }
+      if (seoData.visibleText && Array.isArray(seoData.visibleText)) {
+        seoData.visibleText = seoData.visibleText.map(cleanCSVText).filter(Boolean);
+      }
     }
 
     return seoData;

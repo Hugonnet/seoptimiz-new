@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Copy, CopyCheck } from 'lucide-react';
 import { Button } from "@/components/ui/button";
@@ -27,18 +28,34 @@ export function HeadingComparison({ current, suggested, context }: HeadingCompar
     }
   };
 
+  // Additional cleaning of content with dashes and formatting artifacts
+  const cleanDisplayText = (text: string) => {
+    if (!text) return '';
+    
+    return text
+      .replace(/(?:- ){2,}/g, '') // Remove repeating dash patterns
+      .replace(/[-]{2,}/g, ' ') // Replace long dash sequences with space
+      .replace(/(\s-\s-\s-)+/g, ' ') // Remove formatted dash sequences
+      .replace(/(\s-\s)+/g, ' ') // Remove spaced dash sequences
+      .replace(/\s{2,}/g, ' ') // Clean up extra spaces
+      .trim();
+  };
+
+  const cleanCurrent = cleanDisplayText(current);
+  const cleanSuggested = cleanDisplayText(suggested);
+
   return (
     <div className="space-y-3">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-2 sm:gap-3 w-full">
-        <div className="p-2 sm:p-3 bg-white rounded-lg shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-300">
-          <div className="font-medium text-gray-800 mb-1.5">Version actuelle :</div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-2 sm:gap-4 w-full">
+        <div className="p-3 sm:p-4 bg-white rounded-lg shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-300">
+          <div className="font-medium text-gray-800 mb-2">Version actuelle :</div>
           <div className="text-gray-600 italic break-words text-sm sm:text-base">
-            {current || 'Non défini'}
+            {cleanCurrent || 'Non défini'}
           </div>
         </div>
-        <div className="p-2 sm:p-3 bg-gradient-to-br from-purple-50 to-pink-50 rounded-lg shadow-sm border border-purple-100 hover:shadow-md transition-shadow duration-300">
+        <div className="p-3 sm:p-4 bg-gradient-to-br from-purple-50 to-pink-50 rounded-lg shadow-sm border border-purple-100 hover:shadow-md transition-shadow duration-300">
           <div className="flex justify-between items-center">
-            <div className="font-medium text-purple-800 mb-1.5">Version optimisée :</div>
+            <div className="font-medium text-purple-800 mb-2">Version optimisée :</div>
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -62,12 +79,12 @@ export function HeadingComparison({ current, suggested, context }: HeadingCompar
             </TooltipProvider>
           </div>
           <div className="text-purple-700 break-words text-sm sm:text-base">
-            {suggested || 'Non défini'}
+            {cleanSuggested || 'Non défini'}
           </div>
         </div>
       </div>
       {context && (
-        <div className="text-xs sm:text-sm bg-blue-50 p-2 sm:p-3 rounded-lg border border-blue-100 shadow-sm">
+        <div className="text-xs sm:text-sm bg-blue-50 p-3 sm:p-4 rounded-lg border border-blue-100 shadow-sm">
           <span className="font-medium text-blue-800">Explication : </span>
           <span className="text-blue-700">{context}</span>
         </div>

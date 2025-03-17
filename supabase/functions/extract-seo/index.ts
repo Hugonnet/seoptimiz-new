@@ -1,3 +1,4 @@
+
 import { corsHeaders } from '../_shared/cors.ts';
 import { load } from "https://esm.sh/cheerio@1.0.0-rc.12";
 
@@ -18,10 +19,17 @@ interface SEOData {
   brokenLinks: string[];
 }
 
-// Helper function to clean extracted text
+// Enhanced helper function to clean extracted text
 const cleanExtractedText = (text: string): string => {
   return text
     .replace(/\s+/g, ' ')  // Replace multiple spaces with a single space
+    .replace(/(?:- ){2,}/g, '') // Remove repeating dash patterns (- - - -)
+    .replace(/[-]{2,}/g, ' ') // Replace long dash sequences with space
+    .replace(/(\s-\s-\s-)+/g, ' ') // Remove formatted dash sequences
+    .replace(/(\s-\s)+/g, ' ') // Remove spaced dash sequences
+    .replace(/\b[a-z]+[-][a-z]+[-][a-z]+\b/g, ' ') // Remove CSS class name patterns
+    .replace(/\b[a-z]+[-][a-z]+\b/g, ' ') // Remove shorter CSS class name patterns
+    .replace(/icon-[a-z-]+/g, ' ') // Remove icon class patterns
     .trim();               // Remove leading and trailing whitespace
 };
 
@@ -91,24 +99,30 @@ Deno.serve(async (req) => {
     console.log('Liens internes trouvés:', internalLinks.size);
     console.log('Liens externes trouvés:', externalLinks.size);
 
-    // Extraire les autres métadonnées
-    const title = cleanExtractedText($('title').text());
-    const description = cleanExtractedText($('meta[name="description"]').attr('content') || '');
+    // First, get the meta information from original document
+    const titleRaw = $('title').text();
+    const descriptionRaw = $('meta[name="description"]').attr('content') || '';
     
-    // Remove all classes and attributes from the content before extracting text
+    // More aggressive cleaning to remove all styling and attributes before extracting content
     $('*').each((_, el) => {
+      // Remove all scripts and style elements completely
+      if (el.tagName === 'script' || el.tagName === 'style') {
+        $(el).remove();
+        return;
+      }
+      
       const element = $(el);
+      // Remove all attributes except essential ones
       const attrs = el.attributes;
-      // Keep only essential attributes
       for (let i = attrs.length - 1; i >= 0; i--) {
         const attrName = attrs[i].name;
-        if (attrName !== 'href' && attrName !== 'src') {
+        if (!['href', 'src', 'alt'].includes(attrName)) {
           element.removeAttr(attrName);
         }
       }
     });
     
-    // Extract heading content after removing attributes
+    // Now extract and clean heading content after removing all attributes
     const h1 = cleanExtractedText($('h1').first().text());
     const h2s = $('h2').map((_, el) => cleanExtractedText($(el).text())).get().filter(Boolean);
     const h3s = $('h3').map((_, el) => cleanExtractedText($(el).text())).get().filter(Boolean);
@@ -118,10 +132,14 @@ Deno.serve(async (req) => {
     const visibleText: string[] = [];
     $('body p, body li, body div:not(:has(*))').each((_, el) => {
       const text = cleanExtractedText($(el).text());
-      if (text && text.length > 10) { // Only include meaningful text
+      if (text && text.length > 15) { // Only include meaningful text of sufficient length
         visibleText.push(text);
       }
     });
+    
+    // Now clean the original meta data
+    const title = cleanExtractedText(titleRaw);
+    const description = cleanExtractedText(descriptionRaw);
     
     // Test simple des liens cassés
     const brokenLinks: string[] = [];
@@ -141,6 +159,9 @@ Deno.serve(async (req) => {
     };
 
     console.log('Données SEO extraites avec succès');
+    console.log('Titre extrait:', title);
+    console.log('Description extraite:', description);
+    console.log('H1 extrait:', h1);
 
     return new Response(JSON.stringify(seoData), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
