@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Copy, CopyCheck } from 'lucide-react';
+import { Copy, CopyCheck, AlertTriangle } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import {
   Tooltip,
@@ -8,6 +8,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface HeadingComparisonProps {
   current: string;
@@ -43,9 +44,26 @@ export function HeadingComparison({ current, suggested, context }: HeadingCompar
 
   const cleanCurrent = cleanDisplayText(current);
   const cleanSuggested = cleanDisplayText(suggested);
+  
+  // Check if this appears to be a bot protection page
+  const isBotProtectionPage = 
+    (cleanCurrent && cleanCurrent.toLowerCase().includes('bot verification')) ||
+    (cleanCurrent && cleanCurrent.toLowerCase().includes('captcha')) ||
+    (cleanCurrent && cleanCurrent.toLowerCase().includes('cloudflare')) ||
+    (cleanCurrent && cleanCurrent.toLowerCase().includes('security check'));
 
   return (
     <div className="space-y-3">
+      {isBotProtectionPage && (
+        <Alert variant="destructive" className="mb-4">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertDescription className="ml-2">
+            Le contenu récupéré semble être une page de protection anti-bot, et non le contenu réel du site. 
+            Les suggestions ne reflètent pas le contenu original du site web.
+          </AlertDescription>
+        </Alert>
+      )}
+      
       <div className="grid grid-cols-1 md:grid-cols-2 gap-2 sm:gap-4 w-full">
         <div className="p-3 sm:p-4 bg-white rounded-lg shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-300">
           <div className="font-medium text-gray-800 mb-2">Version actuelle :</div>

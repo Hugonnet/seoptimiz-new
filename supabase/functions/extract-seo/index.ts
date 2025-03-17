@@ -17,6 +17,7 @@ interface SEOData {
   internalLinks: string[];
   externalLinks: string[];
   brokenLinks: string[];
+  isProtectedPage: boolean;
 }
 
 // Enhanced helper function to clean extracted text
@@ -31,6 +32,46 @@ const cleanExtractedText = (text: string): string => {
     .replace(/\b[a-z]+[-][a-z]+\b/g, ' ') // Remove shorter CSS class name patterns
     .replace(/icon-[a-z-]+/g, ' ') // Remove icon class patterns
     .trim();               // Remove leading and trailing whitespace
+};
+
+// Function to detect if we hit a bot protection page
+const isBotProtectionPage = (html: string, title: string): boolean => {
+  const lowerHtml = html.toLowerCase();
+  const lowerTitle = title.toLowerCase();
+  
+  // Common bot protection keywords in title
+  const titleKeywords = [
+    'bot verification',
+    'captcha',
+    'cloudflare',
+    'security check',
+    'ddos protection',
+    'human verification',
+    'verify you are human',
+    'robot check',
+    'browser check'
+  ];
+  
+  // Check title for bot protection keywords
+  if (titleKeywords.some(keyword => lowerTitle.includes(keyword))) {
+    return true;
+  }
+  
+  // Check HTML content for common bot protection services
+  const htmlKeywords = [
+    'cloudflare', 
+    'captcha',
+    'recaptcha',
+    'hcaptcha',
+    'ddos-guard',
+    'verify you are a human',
+    'checking if the site connection is secure',
+    'verifying that you are not a robot',
+    'performing a browser check',
+    'please stand by while we verify'
+  ];
+  
+  return htmlKeywords.some(keyword => lowerHtml.includes(keyword));
 };
 
 Deno.serve(async (req) => {
@@ -63,6 +104,18 @@ Deno.serve(async (req) => {
 
     console.log('HTML récupéré, longueur:', html.length);
 
+    // First, get the meta information from original document
+    const titleRaw = $('title').text();
+    const descriptionRaw = $('meta[name="description"]').attr('content') || '';
+    
+    // Check if this is a bot protection page
+    const botProtectionDetected = isBotProtectionPage(html, titleRaw);
+    console.log('Bot protection detected:', botProtectionDetected);
+    
+    if (botProtectionDetected) {
+      console.log('Bot protection page detected. Alerting user.');
+    }
+    
     // Extraire les liens avec gestion des chemins relatifs
     const internalLinks: Set<string> = new Set();
     const externalLinks: Set<string> = new Set();
@@ -98,10 +151,6 @@ Deno.serve(async (req) => {
 
     console.log('Liens internes trouvés:', internalLinks.size);
     console.log('Liens externes trouvés:', externalLinks.size);
-
-    // First, get the meta information from original document
-    const titleRaw = $('title').text();
-    const descriptionRaw = $('meta[name="description"]').attr('content') || '';
     
     // More aggressive cleaning to remove all styling and attributes before extracting content
     $('*').each((_, el) => {
@@ -155,13 +204,15 @@ Deno.serve(async (req) => {
       visibleText,
       internalLinks: Array.from(internalLinks),
       externalLinks: Array.from(externalLinks),
-      brokenLinks
+      brokenLinks,
+      isProtectedPage: botProtectionDetected
     };
 
     console.log('Données SEO extraites avec succès');
     console.log('Titre extrait:', title);
     console.log('Description extraite:', description);
     console.log('H1 extrait:', h1);
+    console.log('Page protégée détectée:', botProtectionDetected);
 
     return new Response(JSON.stringify(seoData), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

@@ -6,6 +6,8 @@ import { HeadingComparison } from './HeadingComparison';
 import { HeadingArrayComparison } from './HeadingArrayComparison';
 import { Copy } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { AlertTriangle } from "lucide-react";
 
 interface SEOAnalysisContentProps {
   analysis: SEOAnalysis;
@@ -13,8 +15,32 @@ interface SEOAnalysisContentProps {
 }
 
 export function SEOAnalysisContent({ analysis, onCopy }: SEOAnalysisContentProps) {
+  // Check if this is a bot protection page (looking for indicators in the company name or contexts)
+  const isBotProtectionPage = 
+    (analysis.company && analysis.company.includes("Protection anti-bot détectée")) ||
+    (analysis.title_context && analysis.title_context.includes("page de protection anti-bot")) ||
+    (analysis.description_context && analysis.description_context.includes("page de protection anti-bot"));
+
   return (
     <div className="space-y-8">
+      {isBotProtectionPage && (
+        <Alert variant="destructive" className="mb-6">
+          <AlertTriangle className="h-5 w-5" />
+          <AlertTitle className="text-lg font-bold mb-2">Attention : Protection anti-bot détectée</AlertTitle>
+          <AlertDescription className="text-base">
+            Les données récupérées proviennent d'une page de protection anti-bot, et non du contenu réel du site.
+            Les suggestions ci-dessous sont basées sur cette page de protection et ne reflètent pas le contenu original du site.
+            <br /><br />
+            <strong>Solutions possibles :</strong>
+            <ul className="list-disc pl-5 pt-2">
+              <li>Essayer d'analyser à nouveau le site après un certain temps</li>
+              <li>Utiliser un autre navigateur ou une connexion différente</li>
+              <li>Contacter le propriétaire du site pour obtenir l'accès</li>
+            </ul>
+          </AlertDescription>
+        </Alert>
+      )}
+
       <div className="grid grid-cols-2 gap-6 mb-4">
         <h3 className="text-lg font-semibold text-purple-700">Dénominations actuelles</h3>
         <div className="flex items-center justify-between">

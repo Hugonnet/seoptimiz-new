@@ -15,15 +15,36 @@ serve(async (req) => {
   }
 
   try {
-    const { currentTitle, currentDescription, currentH1, currentH2s, currentH3s, currentH4s } = await req.json();
+    const { 
+      currentTitle, 
+      currentDescription, 
+      currentH1, 
+      currentH2s, 
+      currentH3s, 
+      currentH4s,
+      isProtectedPage 
+    } = await req.json();
     
-    console.log('Données reçues:', { currentTitle, currentDescription, currentH1, currentH2s, currentH3s, currentH4s });
+    console.log('Données reçues:', { currentTitle, currentDescription, currentH1, currentH2s, currentH3s, currentH4s, isProtectedPage });
 
     if (!openAIApiKey) {
       throw new Error('La clé API OpenAI n\'est pas configurée');
     }
 
+    // If bot protection was detected, adjust the prompt to inform the AI
+    let botWarningPrompt = "";
+    if (isProtectedPage) {
+      botWarningPrompt = `
+IMPORTANT: Les données analysées proviennent d'une page de protection anti-bot et NON du contenu réel du site. Ton analyse doit mettre l'accent sur ce fait.
+- Commence chaque explication par un avertissement clair indiquant que les recommandations sont basées sur une page de protection anti-bot.
+- Suggère des améliorations génériques mais précise qu'elles ne peuvent pas être optimisées pour le contenu réel du site.
+- Recommande à l'utilisateur d'essayer une autre méthode d'accès au site pour obtenir de vraies données.
+`;
+    }
+
     const systemPrompt = `Tu es un expert SEO spécialiste des stratégies avancées de référencement et de l'optimisation des balises selon les standards de Google. Pour chaque suggestion, tu dois fournir une explication détaillée et pédagogique des améliorations proposées.
+
+${botWarningPrompt}
 
 IMPORTANT: 
 - Si la meta description est absente (vide ou "Non définie"), tu DOIS en générer une nouvelle en te basant sur :
@@ -98,7 +119,7 @@ Retourne un objet JSON avec cette structure exacte:
   "h4s_context": ["array of strings"]
 }`;
 
-    const userPrompt = `Analyse et optimise ces éléments SEO avec une approche experte, en proposant des suggestions même pour les éléments manquants:
+    let userPrompt = `Analyse et optimise ces éléments SEO avec une approche experte, en proposant des suggestions même pour les éléments manquants:
     
     Titre actuel: "${currentTitle || 'Non défini'}"
     Description actuelle: "${currentDescription || 'Non définie - Une nouvelle description sera générée'}"
@@ -106,7 +127,17 @@ Retourne un objet JSON avec cette structure exacte:
     H2s actuels: ${JSON.stringify(currentH2s || [])}
     H3s actuels: ${JSON.stringify(currentH3s || [])}
     H4s actuels: ${JSON.stringify(currentH4s || [])}
+    `;
     
+    // Add bot protection warning to user prompt if needed
+    if (isProtectedPage) {
+      userPrompt += `
+    ATTENTION: Ces données proviennent d'une page de protection anti-bot, et non du contenu réel du site.
+    Chaque suggestion doit commencer par avertir l'utilisateur de cette limitation.
+    `;
+    }
+    
+    userPrompt += `    
     IMPORTANT : 
     - Si la meta description est absente, tu DOIS en générer une nouvelle
     - Respect ABSOLU des longueurs: title (50-60 caractères) et meta description (155-160 caractères)
