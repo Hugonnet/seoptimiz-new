@@ -40,6 +40,11 @@ export function HeadingComparison({ current, suggested, context }: HeadingCompar
       // Remove patterns like "-1 -2 -3 -4 2- -2vine e"
       .replace(/-\d+\s+-\d+\s+-\d+\s+-\d+\s+\d+-\s+-\d+vine\s+e/g, '')
       .replace(/-\d+vine\s+e/g, '')
+      // Target specific patterns often found in bot protection titles
+      .replace(/\d+-\s+-\d+vine\s+e/g, '')
+      .replace(/\d+-\s+[a-z]+\s+e/g, '')
+      // Target specific pattern "2- -2vine e" at the end
+      .replace(/\s+\d+[-]\s+[-]\d+vine\s+e$/g, '')
       // Handle other common patterns
       .replace(/(?:- ){2,}/g, '') // Remove repeating dash patterns
       .replace(/[-]{2,}/g, ' ') // Replace long dash sequences with space

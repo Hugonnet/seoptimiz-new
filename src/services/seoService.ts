@@ -28,6 +28,11 @@ const cleanCSVText = (text: string | null | undefined): string => {
     // Remove patterns like "-1 -2 -3 -4 2- -2vine e"
     .replace(/-\d+\s+-\d+\s+-\d+\s+-\d+\s+\d+-\s+-\d+vine\s+e/g, '')
     .replace(/-\d+vine\s+e/g, '')
+    // Remove specific patterns identified in the data
+    .replace(/\d+-\s+-\d+vine\s+e/g, '')
+    .replace(/\d+-\s+[a-z]+\s+e/g, '')
+    // Target specific pattern "2- -2vine e" at the end
+    .replace(/\s+\d+[-]\s+[-]\d+vine\s+e$/g, '')
     // Remove CSS-like class patterns
     .replace(/\b[a-z]+[-][a-z]+[-][a-z]+\b/g, ' ')
     .replace(/\b[a-z]+[-][a-z]+\b/g, ' ')

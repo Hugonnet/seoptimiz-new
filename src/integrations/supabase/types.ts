@@ -78,60 +78,6 @@ export type Database = {
         }
         Relationships: []
       }
-      realizations: {
-        Row: {
-          content: string | null
-          created_at: string | null
-          description: string
-          gallery: string[] | null
-          id: string
-          image: string
-          image_order: string[] | null
-          location: string | null
-          meta_description: string | null
-          meta_title: string | null
-          slug: string
-          subtitle: string | null
-          tags: string[] | null
-          title: string
-          updated_at: string | null
-        }
-        Insert: {
-          content?: string | null
-          created_at?: string | null
-          description: string
-          gallery?: string[] | null
-          id?: string
-          image: string
-          image_order?: string[] | null
-          location?: string | null
-          meta_description?: string | null
-          meta_title?: string | null
-          slug: string
-          subtitle?: string | null
-          tags?: string[] | null
-          title: string
-          updated_at?: string | null
-        }
-        Update: {
-          content?: string | null
-          created_at?: string | null
-          description?: string
-          gallery?: string[] | null
-          id?: string
-          image?: string
-          image_order?: string[] | null
-          location?: string | null
-          meta_description?: string | null
-          meta_title?: string | null
-          slug?: string
-          subtitle?: string | null
-          tags?: string[] | null
-          title?: string
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
       seo_analyses: {
         Row: {
           archived: boolean | null
@@ -269,13 +215,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      realization_tag:
-        | "Plâtrerie"
-        | "Peinture intérieure"
-        | "Peinture extérieure"
-        | "Isolation intérieure"
-        | "Isolation extérieure"
-        | "Étanchéité à l'air"
+      [_ in never]: never
     }
     CompositeTypes: {
       [_ in never]: never
