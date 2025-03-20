@@ -28,6 +28,10 @@ const cleanExtractedText = (text: string): string => {
     .replace(/[-]{2,}/g, ' ') // Replace long dash sequences with space
     .replace(/(\s-\s-\s-)+/g, ' ') // Remove formatted dash sequences
     .replace(/(\s-\s)+/g, ' ') // Remove spaced dash sequences
+    // Advanced bot protection pattern cleaning
+    .replace(/\d+[-]\s+[-]?\d*vine\s?e\b/g, '')
+    .replace(/\d+-\s*-\d*vine\s*e\b/g, '')
+    .replace(/\d+\s*-\s*(-)?(\d*)?v?i?n?e?\s*e?\b/g, '')
     .replace(/\b[a-z]+[-][a-z]+[-][a-z]+\b/g, ' ') // Remove CSS class name patterns
     .replace(/\b[a-z]+[-][a-z]+\b/g, ' ') // Remove shorter CSS class name patterns
     .replace(/icon-[a-z-]+/g, ' ') // Remove icon class patterns

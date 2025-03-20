@@ -12,6 +12,10 @@ const cleanText = (text: string | null | undefined): string => {
     // Remove all CSS-like class patterns
     .replace(/\b[a-z]+[-][a-z]+[-][a-z]+\b/g, ' ')
     .replace(/\b[a-z]+[-][a-z]+\b/g, ' ')
+    // Remove specific bot protection patterns
+    .replace(/\d+[-]\s+[-]?\d*vine\s?e\b/g, '')
+    .replace(/\d+-\s*-\d*vine\s*e\b/g, '')
+    .replace(/\d+\s*-\s*(-)?(\d*)?v?i?n?e?\s*e?\b/g, '')
     // Remove specific patterns identified in the data
     .replace(/account|android|arrow|cart|menu|categories|chevron|opening/g, ' ')
     .replace(/circle|tinder|trello|tripadvisor|tumblr|twitch|twitter|viber|vimeo|vk/g, ' ')

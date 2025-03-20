@@ -45,6 +45,11 @@ export function HeadingComparison({ current, suggested, context }: HeadingCompar
       .replace(/\d+-\s+[a-z]+\s+e/g, '')
       // Target specific pattern "2- -2vine e" at the end
       .replace(/\s+\d+[-]\s+[-]\d+vine\s+e$/g, '')
+      // Add more specific patterns to catch variations of the "2- -2vine e" pattern
+      .replace(/\d+[-]\s+[-]?\d*vine\s?e\b/g, '')
+      .replace(/\d+-\s*-\d*vine\s*e\b/g, '')
+      // New pattern: Remove anything matching the format digit-space-dash (with variations)
+      .replace(/\d+\s*-\s*(-)?(\d*)?v?i?n?e?\s*e?\b/g, '')
       // Handle other common patterns
       .replace(/(?:- ){2,}/g, '') // Remove repeating dash patterns
       .replace(/[-]{2,}/g, ' ') // Replace long dash sequences with space

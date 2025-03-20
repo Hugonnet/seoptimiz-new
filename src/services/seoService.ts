@@ -33,6 +33,11 @@ const cleanCSVText = (text: string | null | undefined): string => {
     .replace(/\d+-\s+[a-z]+\s+e/g, '')
     // Target specific pattern "2- -2vine e" at the end
     .replace(/\s+\d+[-]\s+[-]\d+vine\s+e$/g, '')
+    // Handle more patterns of bot protection
+    .replace(/\d+[-]\s+[-]?\d*vine\s?e\b/g, '')
+    .replace(/\d+-\s*-\d*vine\s*e\b/g, '')
+    // New pattern: Remove anything matching the format digit-space-dash (with variations)
+    .replace(/\d+\s*-\s*(-)?(\d*)?v?i?n?e?\s*e?\b/g, '')
     // Remove CSS-like class patterns
     .replace(/\b[a-z]+[-][a-z]+[-][a-z]+\b/g, ' ')
     .replace(/\b[a-z]+[-][a-z]+\b/g, ' ')
