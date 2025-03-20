@@ -1,10 +1,11 @@
+
 import {
   NavigationMenu,
   NavigationMenuItem,
   NavigationMenuList,
   navigationMenuTriggerStyle,
 } from "@/components/ui/navigation-menu";
-import { Home, History, FileText, Search, Gauge } from "lucide-react";
+import { Home, History, FileText } from "lucide-react";
 import { Link } from "react-router-dom";
 
 export function Navigation() {
@@ -27,24 +28,6 @@ export function Navigation() {
             title="Historique"
           >
             <History className="h-7 w-7 text-white" strokeWidth={1.5} />
-          </Link>
-        </NavigationMenuItem>
-        <NavigationMenuItem>
-          <Link 
-            to="/keyword-density" 
-            className={navigationMenuTriggerStyle() + " hover:bg-white/20 transition-all duration-300 p-2 bg-transparent"}
-            title="Densité des mots-clés"
-          >
-            <Search className="h-7 w-7 text-white" strokeWidth={1.5} />
-          </Link>
-        </NavigationMenuItem>
-        <NavigationMenuItem>
-          <Link 
-            to="/performance" 
-            className={navigationMenuTriggerStyle() + " hover:bg-white/20 transition-all duration-300 p-2 bg-transparent"}
-            title="Performance"
-          >
-            <Gauge className="h-7 w-7 text-white" strokeWidth={1.5} />
           </Link>
         </NavigationMenuItem>
         <NavigationMenuItem>
