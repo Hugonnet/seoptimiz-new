@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Table, TableBody } from "@/components/ui/table";
 import type { SEOAnalysis } from "@/store/seoStore";
@@ -6,7 +7,7 @@ import { HeadingArrayComparison } from './HeadingArrayComparison';
 import { Copy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangle, Shield } from "lucide-react";
 
 interface SEOAnalysisContentProps {
   analysis: SEOAnalysis;
@@ -23,21 +24,29 @@ export function SEOAnalysisContent({ analysis, onCopy }: SEOAnalysisContentProps
   return (
     <div className="space-y-8">
       {isBotProtectionPage && (
-        <Alert variant="destructive" className="mb-6">
-          <AlertTriangle className="h-5 w-5" />
-          <AlertTitle className="text-lg font-bold mb-2">Attention : Protection anti-bot détectée</AlertTitle>
-          <AlertDescription className="text-base">
-            Les données récupérées proviennent d'une page de protection anti-bot, et non du contenu réel du site.
-            Les suggestions ci-dessous sont basées sur cette page de protection et ne reflètent pas le contenu original du site web.
-            <div className="mt-4">
-              <strong>Solutions possibles :</strong>
-              <ul className="list-disc pl-5 pt-2">
-                <li>Essayer d'analyser à nouveau le site après un certain temps</li>
-                <li>Utiliser un autre navigateur ou une connexion différente</li>
-                <li>Contacter le propriétaire du site pour obtenir l'accès</li>
-              </ul>
+        <Alert variant="destructive" className="mb-6 border-2 border-red-500">
+          <div className="flex items-start">
+            <Shield className="h-6 w-6 mt-1 text-red-500" />
+            <div className="ml-3">
+              <AlertTitle className="text-lg font-bold mb-2">⚠️ Attention : Protection anti-bot détectée</AlertTitle>
+              <AlertDescription className="text-base">
+                <p className="mb-2 font-semibold">
+                  Les données récupérées proviennent d'une page de protection anti-bot, et non du contenu réel du site.
+                </p>
+                <p className="mb-4">
+                  Les suggestions ci-dessous sont basées sur cette page de protection et ne reflètent pas le contenu original du site web.
+                </p>
+                <div className="mt-4 bg-red-50 p-3 rounded-md">
+                  <strong>Solutions possibles :</strong>
+                  <ul className="list-disc pl-5 pt-2">
+                    <li>Essayer d'analyser à nouveau le site après un certain temps</li>
+                    <li>Utiliser un autre navigateur ou une connexion différente</li>
+                    <li>Contacter le propriétaire du site pour obtenir l'accès</li>
+                  </ul>
+                </div>
+              </AlertDescription>
             </div>
-          </AlertDescription>
+          </div>
         </Alert>
       )}
 

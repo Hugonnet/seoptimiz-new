@@ -30,8 +30,9 @@ export function HeadingComparison({ current, suggested, context }: HeadingCompar
     }
   };
 
-  const cleanCurrent = removeProtectionPatterns(current);
-  const cleanSuggested = removeProtectionPatterns(suggested);
+  // Apply ultra-aggressive cleaning to both current and suggested values
+  const cleanCurrent = current ? removeProtectionPatterns(current) : 'Non défini';
+  const cleanSuggested = suggested ? removeProtectionPatterns(suggested) : 'Non défini';
   
   // Check if this appears to be a bot protection page
   const isBotProtectionPage = 
@@ -43,6 +44,22 @@ export function HeadingComparison({ current, suggested, context }: HeadingCompar
   // Determine if context includes bot protection warning
   const hasBotProtectionWarning = context && context.toLowerCase().includes('page de protection anti-bot');
 
+  // Get a simplified version for display - cut off at first numeric sequence to be ultra safe
+  const getSimplifiedDisplay = (text: string): string => {
+    if (!text || text === 'Non défini') return text;
+    
+    // Last resort: if all else fails, just use the first part of the string before any numbers
+    const firstPart = text.split(/\d/).filter(Boolean)[0];
+    if (firstPart && firstPart.trim().length > 5) {
+      return firstPart.trim();
+    }
+    
+    return text.length > 10 ? text.substring(0, 10) + '...' : text;
+  };
+
+  // The final cleaned text to display
+  const finalCurrentDisplay = isBotProtectionPage ? getSimplifiedDisplay(cleanCurrent) : cleanCurrent;
+  
   return (
     <div className="space-y-3">
       {isBotProtectionPage && !hasBotProtectionWarning && (
@@ -59,7 +76,7 @@ export function HeadingComparison({ current, suggested, context }: HeadingCompar
         <div className="p-3 sm:p-4 bg-white rounded-lg shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-300">
           <div className="font-medium text-gray-800 mb-2">Version actuelle :</div>
           <div className="text-gray-600 italic break-words text-sm sm:text-base">
-            {cleanCurrent || 'Non défini'}
+            {finalCurrentDisplay}
           </div>
         </div>
         <div className="p-3 sm:p-4 bg-gradient-to-br from-purple-50 to-pink-50 rounded-lg shadow-sm border border-purple-100 hover:shadow-md transition-shadow duration-300">
@@ -88,7 +105,7 @@ export function HeadingComparison({ current, suggested, context }: HeadingCompar
             </TooltipProvider>
           </div>
           <div className="text-purple-700 break-words text-sm sm:text-base">
-            {cleanSuggested || 'Non défini'}
+            {cleanSuggested}
           </div>
         </div>
       </div>

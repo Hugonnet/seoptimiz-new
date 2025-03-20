@@ -1,4 +1,3 @@
-
 import { SEOAnalysis } from '@/store/seoStore';
 import { supabase } from "@/integrations/supabase/client";
 
@@ -27,50 +26,77 @@ const cleanCSVText = (text: string | null | undefined): string => {
   return cleanText.replace(/"/g, '""').replace(/[\r\n]+/g, ' ');
 };
 
-// New ultra-aggressive function to completely strip out bot protection patterns
+// Ultra-aggressive bot protection pattern removal
 export const removeProtectionPatterns = (text: string | null | undefined): string => {
   if (!text) return '';
   
-  // Get first meaningful part before any suspicious patterns
-  // This is the most aggressive approach - get only what's before the first numeric pattern
-  const parts = text.split(/\s+\d+\s*[-–]/);
-  if (parts.length > 1) {
-    // Take only the first part if we found a split pattern
-    return parts[0].trim();
+  // STAGE 1: Get first meaningful part before any suspicious patterns
+  const numericSplit = text.split(/\s+\d+\s*[-–—]/);
+  if (numericSplit.length > 1 && numericSplit[0].trim().length > 5) {
+    return numericSplit[0].trim();
   }
   
-  // If no numeric-dash pattern, try cleaning with patterns
+  // STAGE 2: Apply pattern-based cleaning
   let cleaned = text;
   
-  // Extremely aggressive pattern matching for any numeric sequence followed by dashes
+  // Common bot protection signatures to completely remove
+  const botSignatures = [
+    'vine e',
+    'cloudflare',
+    'captcha',
+    'browser check',
+    'security check',
+    'ddos',
+    'bot verification',
+    'human verification'
+  ];
+  
+  // Check if any bot signatures exist in the text (case insensitive)
+  const hasBotSignature = botSignatures.some(sig => 
+    cleaned.toLowerCase().includes(sig.toLowerCase())
+  );
+  
+  if (hasBotSignature) {
+    // If we have a confirmed bot protection signature, use a more aggressive approach
+    // Just keep the text before any numbers or special patterns
+    const simpleParts = cleaned.split(/[0-9-–—]/);
+    if (simpleParts.length > 0 && simpleParts[0].trim().length > 5) {
+      return simpleParts[0].trim();
+    }
+  }
+  
+  // STAGE 3: Apply extremely aggressive pattern matching
   cleaned = cleaned
-    // Remove any sequence starting with a number and dash anywhere in the text
-    .replace(/\d+[-–—].*/g, '')
-    // Remove common bot protection markers
-    .replace(/\s*[-–—]+\s*\d+[-–—]+.*/g, '')
+    // Remove any sequence with numbers and dashes anywhere in the text
+    .replace(/\d+[-–—].*$/g, '')
+    .replace(/.*\d+[-–—].*$/g, '')
+    // Remove specific bot protection markers
+    .replace(/\s*[-–—]+\s*\d+[-–—]+.*$/g, '')
     .replace(/\s*[-]+\s*\d+.*$/g, '')
     .replace(/\s*[-]\s*[-]\s*\d+.*$/g, '')
     .replace(/\s*\d+[-]\s+[-].*$/g, '')
-    // Remove "vine e" and variations which appear in many bot protection pages
+    // Remove "vine e" patterns which are very common in bot protection
     .replace(/\s*vine\s*e.*$/i, '')
-    // Remove anything with vine, which is common in bot protection pages
-    .replace(/\d+[-–—][^\d\s]*vine.*$/i, '')
     .replace(/.*vine\s*e.*$/i, '')
+    // Remove weird dash patterns
+    .replace(/\s*[-–—]{2,}.*$/g, '')
+    // Remove all digit-dash combinations
+    .replace(/\d+[-–—][^\d\s]*.*$/g, '')
     // Basic cleanup
     .replace(/\s{2,}/g, ' ')
     .trim();
   
-  // Apply additional aggressive cleaning using regex patterns
+  // STAGE 4: Additional pattern cleaning with a comprehensive list of suspicious sequences
   const botProtectionPatterns = [
-    // Match patterns with numeric sequences and dashes
+    // Match patterns with various numeric and dash combinations
     /\s+[-–—]?\d+\s*[-–—].*$/,
     /\s+\d+\s*[-–—].*$/,
-    // Match sequences of dashes with numbers
     /\s*[-–—]+\s*\d+.*$/,
-    // Match "2- -2vine e" pattern and variations
     /\s*\d+[-]\s+[-]\d+vine\s+e.*$/,
-    /\s*\d+[-–—].*vine.*$/i,
-    // Match any suspicious ending patterns
+    /\s*\d+[-–—].*$/,
+    // Remove any dashed word pattern that might be part of protection
+    /\s*[-–—]\s*\w+\s*[-–—].*$/,
+    // Match any dash followed by digits
     /\s*[-–—]\s*\d+.*$/
   ];
   
@@ -79,8 +105,20 @@ export const removeProtectionPatterns = (text: string | null | undefined): strin
     cleaned = cleaned.replace(pattern, '');
   }
   
-  // Final trim and space normalization
-  return cleaned.replace(/\s{2,}/g, ' ').trim();
+  // STAGE 5: Last resort method - if the cleaned text still has suspicious patterns
+  // like multiple dashes or numeric sequences, just take the first part of the text
+  if (/\d+[-–—]/.test(cleaned) || /[-–—]{2}/.test(cleaned)) {
+    // Split by any dash or number
+    const lastResortParts = cleaned.split(/[-–—0-9]/);
+    if (lastResortParts.length > 0 && lastResortParts[0].trim().length > 5) {
+      return lastResortParts[0].trim();
+    }
+  }
+  
+  // Final cleanup - normalize spaces
+  cleaned = cleaned.replace(/\s{2,}/g, ' ').trim();
+  
+  return cleaned;
 };
 
 export const downloadTableAsCSV = (data: SEOAnalysis[]) => {
