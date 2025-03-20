@@ -4,10 +4,10 @@ import { Table, TableBody } from "@/components/ui/table";
 import type { SEOAnalysis } from "@/store/seoStore";
 import { HeadingComparison } from './HeadingComparison';
 import { HeadingArrayComparison } from './HeadingArrayComparison';
-import { Copy } from "lucide-react";
+import { Copy, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { AlertTriangle, Shield } from "lucide-react";
+import { AlertTriangle } from "lucide-react";
 
 interface SEOAnalysisContentProps {
   analysis: SEOAnalysis;
@@ -41,7 +41,7 @@ export function SEOAnalysisContent({ analysis, onCopy }: SEOAnalysisContentProps
                 <p className="mb-2 font-semibold">
                   Les données récupérées proviennent d'une page de protection anti-bot, et non du contenu réel du site.
                 </p>
-                <p className="mb-4">
+                <p className="mb-2">
                   Les suggestions ci-dessous sont basées sur cette page de protection et ne reflètent pas le contenu original du site web.
                 </p>
                 <div className="mt-4 bg-red-50 p-3 rounded-md">
