@@ -1,5 +1,6 @@
-import { SEOAnalysis } from '@/store/seoStore';
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from '@/integrations/supabase/client';
+import { format, parseISO } from 'date-fns';
+import { fr } from 'date-fns/locale';
 
 export interface SEOMetadata {
   title: string;
@@ -9,198 +10,156 @@ export interface SEOMetadata {
   h3s: string[];
   h4s: string[];
   visibleText: string[];
-  internalLinks: string[];
-  externalLinks: string[];
-  brokenLinks: string[];
-  isProtectedPage?: boolean;
+  keywords?: string;
+  canonical?: string;
+  ogTitle?: string;
+  ogDescription?: string;
+  ogImage?: string;
 }
 
-// Enhanced helper function to clean text for CSV export and display
-const cleanCSVText = (text: string | null | undefined): string => {
-  if (!text) return '';
-  
-  // First, completely remove any bot protection patterns
-  const cleanText = removeProtectionPatterns(text);
-  
-  // Then escape for CSV
-  return cleanText.replace(/"/g, '""').replace(/[\r\n]+/g, ' ');
-};
-
-// Ultra-aggressive bot protection pattern removal
-export const removeProtectionPatterns = (text: string | null | undefined): string => {
-  if (!text) return '';
-  
-  // STAGE 1: Get first meaningful part before any suspicious patterns
-  const numericSplit = text.split(/\s+\d+\s*[-–—]/);
-  if (numericSplit.length > 1 && numericSplit[0].trim().length > 5) {
-    return numericSplit[0].trim();
-  }
-  
-  // STAGE 2: Apply pattern-based cleaning
-  let cleaned = text;
-  
-  // Common bot protection signatures to completely remove
-  const botSignatures = [
-    'vine e',
-    'cloudflare',
-    'captcha',
-    'browser check',
-    'security check',
-    'ddos',
-    'bot verification',
-    'human verification'
-  ];
-  
-  // Check if any bot signatures exist in the text (case insensitive)
-  const hasBotSignature = botSignatures.some(sig => 
-    cleaned.toLowerCase().includes(sig.toLowerCase())
-  );
-  
-  if (hasBotSignature) {
-    // If we have a confirmed bot protection signature, use a more aggressive approach
-    // Just keep the text before any numbers or special patterns
-    const simpleParts = cleaned.split(/[0-9-–—]/);
-    if (simpleParts.length > 0 && simpleParts[0].trim().length > 5) {
-      return simpleParts[0].trim();
-    }
-  }
-  
-  // STAGE 3: Apply extremely aggressive pattern matching
-  cleaned = cleaned
-    // Remove any sequence with numbers and dashes anywhere in the text
-    .replace(/\d+[-–—].*$/g, '')
-    .replace(/.*\d+[-–—].*$/g, '')
-    // Remove specific bot protection markers
-    .replace(/\s*[-–—]+\s*\d+[-–—]+.*$/g, '')
-    .replace(/\s*[-]+\s*\d+.*$/g, '')
-    .replace(/\s*[-]\s*[-]\s*\d+.*$/g, '')
-    .replace(/\s*\d+[-]\s+[-].*$/g, '')
-    // Remove "vine e" patterns which are very common in bot protection
-    .replace(/\s*vine\s*e.*$/i, '')
-    .replace(/.*vine\s*e.*$/i, '')
-    // Remove weird dash patterns
-    .replace(/\s*[-–—]{2,}.*$/g, '')
-    // Remove all digit-dash combinations
-    .replace(/\d+[-–—][^\d\s]*.*$/g, '')
-    // Basic cleanup
-    .replace(/\s{2,}/g, ' ')
-    .trim();
-  
-  // STAGE 4: Additional pattern cleaning with a comprehensive list of suspicious sequences
-  const botProtectionPatterns = [
-    // Match patterns with various numeric and dash combinations
-    /\s+[-–—]?\d+\s*[-–—].*$/,
-    /\s+\d+\s*[-–—].*$/,
-    /\s*[-–—]+\s*\d+.*$/,
-    /\s*\d+[-]\s+[-]\d+vine\s+e.*$/,
-    /\s*\d+[-–—].*$/,
-    // Remove any dashed word pattern that might be part of protection
-    /\s*[-–—]\s*\w+\s*[-–—].*$/,
-    // Match any dash followed by digits
-    /\s*[-–—]\s*\d+.*$/
-  ];
-  
-  // Apply each pattern one by one
-  for (const pattern of botProtectionPatterns) {
-    cleaned = cleaned.replace(pattern, '');
-  }
-  
-  // STAGE 5: Last resort method - if the cleaned text still has suspicious patterns
-  // like multiple dashes or numeric sequences, just take the first part of the text
-  if (/\d+[-–—]/.test(cleaned) || /[-–—]{2}/.test(cleaned)) {
-    // Split by any dash or number
-    const lastResortParts = cleaned.split(/[-–—0-9]/);
-    if (lastResortParts.length > 0 && lastResortParts[0].trim().length > 5) {
-      return lastResortParts[0].trim();
-    }
-  }
-  
-  // Final cleanup - normalize spaces
-  cleaned = cleaned.replace(/\s{2,}/g, ' ').trim();
-  
-  return cleaned;
-};
-
-export const downloadTableAsCSV = (data: SEOAnalysis[]) => {
-  if (!data || data.length === 0) return;
-
-  const headers = [
-    'URL',
-    'Entreprise',
-    'Titre actuel',
-    'Description actuelle',
-    'H1 actuel',
-    'Titre suggéré',
-    'Description suggérée',
-    'H1 suggéré',
-    'Vitesse de chargement'
-  ];
-
-  const csvContent = [
-    headers.join(','),
-    ...data.map(row => [
-      row.url,
-      row.company || '',
-      `"${cleanCSVText(row.current_title)}"`,
-      `"${cleanCSVText(row.current_description)}"`,
-      `"${cleanCSVText(row.current_h1)}"`,
-      `"${cleanCSVText(row.suggested_title)}"`,
-      `"${cleanCSVText(row.suggested_description)}"`,
-      `"${cleanCSVText(row.suggested_h1)}"`,
-      row.page_load_speed || ''
-    ].join(','))
-  ].join('\n');
-
-  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-  const link = document.createElement('a');
-  const url = URL.createObjectURL(blob);
-  
-  link.setAttribute('href', url);
-  link.setAttribute('download', `seo_analysis_${new Date().toISOString()}.csv`);
-  link.style.display = 'none';
-  
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-};
-
 export const extractSEOMetadata = async (url: string): Promise<SEOMetadata> => {
-  console.log('Extraction des métadonnées SEO pour:', url);
+  if (!url) {
+    throw new Error("Veuillez entrer une URL valide");
+  }
+
+  console.log('Démarrage de l\'analyse SEO pour:', url);
+  console.log('Envoi de la requête avec URL:', url);
   
   try {
-    const { data: seoData, error } = await supabase.functions.invoke('extract-seo', {
-      body: { url }
-    });
-
-    if (error) {
-      console.error('Erreur lors de l\'appel à extract-seo:', error);
-      throw error;
-    }
-
-    // Clean the data right after receiving it from the extraction function
-    if (seoData) {
-      seoData.title = removeProtectionPatterns(seoData.title);
-      seoData.description = removeProtectionPatterns(seoData.description);
-      seoData.h1 = removeProtectionPatterns(seoData.h1);
-      
-      // Clean arrays if they exist
-      if (seoData.h2s && Array.isArray(seoData.h2s)) {
-        seoData.h2s = seoData.h2s.map(removeProtectionPatterns).filter(Boolean);
-      }
-      if (seoData.h3s && Array.isArray(seoData.h3s)) {
-        seoData.h3s = seoData.h3s.map(removeProtectionPatterns).filter(Boolean);
-      }
-      if (seoData.h4s && Array.isArray(seoData.h4s)) {
-        seoData.h4s = seoData.h4s.map(removeProtectionPatterns).filter(Boolean);
-      }
-      if (seoData.visibleText && Array.isArray(seoData.visibleText)) {
-        seoData.visibleText = seoData.visibleText.map(removeProtectionPatterns).filter(Boolean);
-      }
-    }
-
-    return seoData;
-  } catch (error) {
-    console.error('Erreur lors de l\'extraction des métadonnées:', error);
-    throw error;
+    new URL(url);
+  } catch (e) {
+    throw new Error("Format d'URL invalide");
   }
+
+  console.log('Appel de la fonction extract-seo avec:', { url });
+
+  const { data, error } = await supabase.functions.invoke('extract-seo', {
+    body: { url },
+  });
+
+  if (error) {
+    console.error('Erreur lors de l\'analyse SEO:', error);
+    throw new Error(error.message || "Impossible d'analyser cette URL pour le moment. Veuillez réessayer plus tard.");
+  }
+
+  if (!data) {
+    throw new Error("Aucune donnée n'a été récupérée");
+  }
+
+  console.log('Données SEO extraites:', data);
+
+  return data as SEOMetadata;
+};
+
+export const downloadTableAsCSV = async (data: any[]) => {
+  if (data.length === 0) return;
+
+  const company = data[0].company;
+  if (!company) {
+    console.error('Nom d\'entreprise manquant');
+    return;
+  }
+
+  const { data: allAnalyses, error } = await supabase
+    .from('seo_analyses')
+    .select('*')
+    .eq('company', company)
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    console.error('Erreur lors de la récupération des analyses:', error);
+    return;
+  }
+
+  const csvRows: string[] = [];
+
+  csvRows.push(`"Analyse SEO pour l'entreprise : ${company}"`);
+  csvRows.push(''); // Ligne vide pour la lisibilité
+
+  allAnalyses.forEach((item) => {
+    let formattedDate;
+    try {
+      const date = item.created_at ? parseISO(item.created_at) : new Date();
+      formattedDate = format(date, 'dd MMMM yyyy à HH:mm', { locale: fr });
+    } catch (error) {
+      formattedDate = format(new Date(), 'dd MMMM yyyy à HH:mm', { locale: fr });
+      console.error('Error formatting date:', error);
+    }
+    
+    csvRows.push(`"URL analysée : ${item.url}"`);
+    csvRows.push(`"Date d'analyse : ${formattedDate}"`);
+    csvRows.push(''); // Ligne vide pour la lisibilité
+
+    // En-têtes des colonnes
+    csvRows.push('"Élément","Contenu actuel","Suggestion d\'amélioration","Contexte"');
+
+    // Titre
+    csvRows.push(`"Titre","${escapeCSV(item.current_title)}","${escapeCSV(item.suggested_title)}","${escapeCSV(item.title_context || '')}"`);
+
+    // Description
+    csvRows.push(`"Description","${escapeCSV(item.current_description)}","${escapeCSV(item.suggested_description)}","${escapeCSV(item.description_context || '')}"`);
+
+    // H1
+    csvRows.push(`"H1","${escapeCSV(item.current_h1)}","${escapeCSV(item.suggested_h1)}","${escapeCSV(item.h1_context || '')}"`);
+
+    // H2s
+    if (item.current_h2s && item.current_h2s.length > 0) {
+      const h2sCount = Math.max(
+        item.current_h2s.length,
+        (item.suggested_h2s || []).length
+      );
+      for (let i = 0; i < h2sCount; i++) {
+        csvRows.push(`"H2 ${i + 1}","${escapeCSV(item.current_h2s[i] || '')}","${escapeCSV(item.suggested_h2s?.[i] || '')}","${escapeCSV(item.h2s_context?.[i] || '')}"`);
+      }
+    }
+
+    // H3s
+    if (item.current_h3s && item.current_h3s.length > 0) {
+      const h3sCount = Math.max(
+        item.current_h3s.length,
+        (item.suggested_h3s || []).length
+      );
+      for (let i = 0; i < h3sCount; i++) {
+        csvRows.push(`"H3 ${i + 1}","${escapeCSV(item.current_h3s[i] || '')}","${escapeCSV(item.suggested_h3s?.[i] || '')}","${escapeCSV(item.h3s_context?.[i] || '')}"`);
+      }
+    }
+
+    // H4s
+    if (item.current_h4s && item.current_h4s.length > 0) {
+      const h4sCount = Math.max(
+        item.current_h4s.length,
+        (item.suggested_h4s || []).length
+      );
+      for (let i = 0; i < h4sCount; i++) {
+        csvRows.push(`"H4 ${i + 1}","${escapeCSV(item.current_h4s[i] || '')}","${escapeCSV(item.suggested_h4s?.[i] || '')}","${escapeCSV(item.h4s_context?.[i] || '')}"`);
+      }
+    }
+
+    // Contenu textuel
+    if (item.visible_text && item.visible_text.length > 0) {
+      csvRows.push('');
+      csvRows.push('"Analyse du contenu textuel"');
+      csvRows.push(`"Suggestions d'amélioration","${escapeCSV(item.content_suggestions || '')}"`);
+      csvRows.push(`"Contexte","${escapeCSV(item.content_context || '')}"`);
+    }
+
+    // Ajouter des lignes vides entre chaque URL
+    csvRows.push('');
+    csvRows.push('');
+  });
+
+  // Créer et télécharger le fichier CSV
+  const csvContent = csvRows.join('\n');
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const link = document.createElement('a');
+  const safeCompanyName = company.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+  link.href = URL.createObjectURL(blob);
+  link.download = `${safeCompanyName}.csv`;
+  link.click();
+};
+
+// Fonction utilitaire pour échapper les caractères spéciaux dans le CSV
+const escapeCSV = (str: string | null | undefined): string => {
+  if (!str) return '';
+  return str.replace(/"/g, '""');
 };

@@ -1,4 +1,3 @@
-
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { Toaster } from "@/components/ui/toaster";
 import { StickyHeader } from "@/components/StickyHeader";
@@ -6,6 +5,7 @@ import { ActionCards } from "@/components/ActionCards";
 import Index from "@/pages/Index";
 import History from "@/pages/History";
 import ExportList from "@/pages/ExportList";
+import Performance from "@/pages/Performance";
 import KeywordDensity from "@/pages/KeywordDensity";
 
 function App() {
@@ -18,6 +18,7 @@ function App() {
             <Route path="/" element={<Index />} />
             <Route path="/history" element={<History />} />
             <Route path="/export" element={<ExportList />} />
+            <Route path="/performance" element={<Performance />} />
             <Route path="/keyword-density" element={<KeywordDensity />} />
           </Routes>
         </div>

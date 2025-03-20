@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { HeadingComparison } from './HeadingComparison';
 import { HeadingArrayComparison } from './HeadingArrayComparison';
@@ -21,14 +20,6 @@ export function SEOAnalysisSection({ title, type, current, suggested, context }:
     return null;
   }
 
-  // Helper function to extract first string from string array context or use string directly
-  const getContextString = (context: string | string[] | undefined): string | undefined => {
-    if (!context) return undefined;
-    if (typeof context === 'string') return context;
-    if (Array.isArray(context) && context.length > 0) return context[0];
-    return undefined;
-  };
-
   return (
     <div className="space-y-6">
       <h3 className="text-lg font-semibold">{title}</h3>
@@ -36,13 +27,13 @@ export function SEOAnalysisSection({ title, type, current, suggested, context }:
         <HeadingComparison 
           current={current as string} 
           suggested={suggested as string} 
-          context={getContextString(context)} 
+          context={context as string} 
         />
       ) : (
         <HeadingArrayComparison 
           current={current as string[]} 
           suggested={suggested as string[]} 
-          context={getContextString(context)} 
+          context={context as string[]} 
         />
       )}
     </div>
