@@ -29,12 +29,19 @@ export function HeadingComparison({ current, suggested, context }: HeadingCompar
     }
   };
 
-  // Enhanced cleaning function to better handle formatting artifacts
+  // Ultra-enhanced cleaning function to completely remove bot protection patterns
   const cleanDisplayText = (text: string) => {
     if (!text) return '';
     
+    // Multi-stage aggressive cleaning
+    // Stage 1: Basic cleaning
     let cleaned = text
-      // Remove common bot protection pattern with numeric sequences and dashes
+      .replace(/\s+/g, ' ')
+      .trim();
+    
+    // Stage 2: Remove bot protection patterns
+    cleaned = cleaned
+      // Remove common bot protection patterns with numeric sequences and dashes
       .replace(/(-\d+\s+)+/g, '')
       .replace(/(\s*-\d+){2,}/g, '')
       // Remove patterns like "-1 -2 -3 -4 2- -2vine e"
@@ -53,8 +60,10 @@ export function HeadingComparison({ current, suggested, context }: HeadingCompar
       // More aggressive pattern to catch variations seen in the problematic data
       .replace(/\d+[-].*?v?i?n?e?\s*e?$/g, '')
       // Very aggressive approach - remove anything after a number-dash pattern at the end
-      .replace(/\s+\d+[-].*$/g, '')
-      // Handle other common patterns
+      .replace(/\s+\d+[-].*$/g, '');
+    
+    // Stage 3: Clean up formatting artifacts
+    cleaned = cleaned
       .replace(/(?:- ){2,}/g, '') // Remove repeating dash patterns
       .replace(/[-]{2,}/g, ' ') // Replace long dash sequences with space
       .replace(/(\s-\s-\s-)+/g, ' ') // Remove formatted dash sequences
@@ -62,9 +71,25 @@ export function HeadingComparison({ current, suggested, context }: HeadingCompar
       .replace(/\s{2,}/g, ' ') // Clean up extra spaces
       .trim();
     
-    // Additional check for any remaining bot protection patterns at the end
-    if (/\d+[-].*$/.test(cleaned)) {
-      cleaned = cleaned.replace(/\s+\d+[-].*$/, '');
+    // Stage 4: Ultra-aggressive final cleaning for stubborn patterns
+    cleaned = cleaned
+      // Handle numeric patterns at the end that might be part of bot protection
+      .replace(/\s+\d+\s*-.*$/g, '') 
+      .replace(/\s+\d+[-–—](?:\s*\d*)?(?:[-–—]\d*)?[-–—]?(?:[a-z]*\s*[a-z])?$/i, '')
+      // Very aggressive - remove any sequence with numbers and dashes near the end
+      .replace(/\s+[-–—]?\d+[-–—](?:.*)?$/g, '')
+      .replace(/\s*\d+[-–—]\s*(?:[-–—]?\d*)?(?:[-–—]?\w*)?$/g, '')
+      // Remove anything that looks like a numeric code at the end
+      .replace(/\s+[-–—]?\d+.*$/g, '')
+      .trim();
+    
+    // Stage 5: Last resort cleaning - if we still have suspicious content
+    if (/\d+[-–—]/.test(cleaned) || /[-–—]\d+/.test(cleaned) || /\s+\d+\s+[-–—]/.test(cleaned)) {
+      // If any suspicious patterns remain, try to extract just the first part before any numeric/dash pattern
+      const parts = cleaned.split(/\s+\d+[-–—]|\s+[-–—]\d+/);
+      if (parts.length > 0) {
+        cleaned = parts[0].trim();
+      }
     }
     
     return cleaned;

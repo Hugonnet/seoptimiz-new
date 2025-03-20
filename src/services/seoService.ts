@@ -20,8 +20,11 @@ export interface SEOMetadata {
 const cleanCSVText = (text: string | null | undefined): string => {
   if (!text) return '';
   
-  // More comprehensive cleaning for titles and descriptions
-  let cleaned = text
+  // Replace patterns associated with bot protection mechanisms
+  let cleaned = text;
+  
+  // First pass - remove specific numeric patterns that appear in bot protection
+  cleaned = cleaned
     // Remove common bot protection patterns with numeric sequences and dashes
     .replace(/(-\d+\s+)+/g, '')
     .replace(/(\s*-\d+){2,}/g, '')
@@ -32,7 +35,10 @@ const cleanCSVText = (text: string | null | undefined): string => {
     .replace(/\d+-\s+-\d+vine\s+e/g, '')
     .replace(/\d+-\s+[a-z]+\s+e/g, '')
     // Target specific pattern "2- -2vine e" at the end
-    .replace(/\s+\d+[-]\s+[-]\d+vine\s+e$/g, '')
+    .replace(/\s+\d+[-]\s+[-]\d+vine\s+e$/g, '');
+
+  // Second pass - remove more generic patterns
+  cleaned = cleaned
     // Handle more patterns of bot protection
     .replace(/\d+[-]\s+[-]?\d*vine\s?e\b/g, '')
     .replace(/\d+-\s*-\d*vine\s*e\b/g, '')
@@ -41,7 +47,10 @@ const cleanCSVText = (text: string | null | undefined): string => {
     // Even more aggressive pattern to remove anything that looks like bot protection
     .replace(/\d+[-].*?v?i?n?e?\s*e?$/g, '')
     // Try a very aggressive approach to remove anything after a number-dash pattern at the end
-    .replace(/\s+\d+[-].*$/g, '')
+    .replace(/\s+\d+[-].*$/g, '');
+    
+  // Third pass - general cleanup of formatting and specific patterns
+  cleaned = cleaned
     // Remove CSS-like class patterns
     .replace(/\b[a-z]+[-][a-z]+[-][a-z]+\b/g, ' ')
     .replace(/\b[a-z]+[-][a-z]+\b/g, ' ')
@@ -62,9 +71,26 @@ const cleanCSVText = (text: string | null | undefined): string => {
     .replace(/\s{2,}/g, ' ')
     .trim();
   
-  // Additional check for any remaining bot protection patterns at the end
-  if (/\d+[-].*$/.test(cleaned)) {
-    cleaned = cleaned.replace(/\s+\d+[-].*$/, '');
+  // Final extreme cleaning pass - find and remove anything that resembles a bot protection pattern
+  // This is a catch-all for anything we missed
+  cleaned = cleaned
+    // Handle numeric patterns at the end that might be part of bot protection
+    .replace(/\s+\d+\s*-.*$/g, '') 
+    .replace(/\s+\d+[-–—](?:\s*\d*)?(?:[-–—]\d*)?[-–—]?(?:[a-z]*\s*[a-z])?$/i, '')
+    // Very aggressive - remove any sequence with numbers and dashes near the end
+    .replace(/\s+[-–—]?\d+[-–—](?:.*)?$/g, '')
+    .replace(/\s*\d+[-–—]\s*(?:[-–—]?\d*)?(?:[-–—]?\w*)?$/g, '')
+    // Remove anything that looks like a numeric code at the end
+    .replace(/\s+[-–—]?\d+.*$/g, '')
+    .trim();
+    
+  // Even more extreme - if we still have suspicious content, use this as a last resort  
+  if (/\d+[-–—]/.test(cleaned) || /[-–—]\d+/.test(cleaned) || /\s+\d+\s+[-–—]/.test(cleaned)) {
+    // If any suspicious patterns remain, try to extract just the first part before any numeric/dash pattern
+    const parts = cleaned.split(/\s+\d+[-–—]|\s+[-–—]\d+/);
+    if (parts.length > 0) {
+      cleaned = parts[0].trim();
+    }
   }
   
   // Then escape for CSV

@@ -20,30 +20,73 @@ interface SEOData {
   isProtectedPage: boolean;
 }
 
-// Enhanced helper function to clean extracted text
+// Ultra-enhanced helper function to clean extracted text
 const cleanExtractedText = (text: string): string => {
+  if (!text) return '';
+  
+  // Multi-stage cleaning process
+  // Stage 1: Basic cleaning and normalization
   let cleaned = text
-    .replace(/\s+/g, ' ')  // Replace multiple spaces with a single space
-    .replace(/(?:- ){2,}/g, '') // Remove repeating dash patterns (- - - -)
-    .replace(/[-]{2,}/g, ' ') // Replace long dash sequences with space
-    .replace(/(\s-\s-\s-)+/g, ' ') // Remove formatted dash sequences
-    .replace(/(\s-\s)+/g, ' ') // Remove spaced dash sequences
-    // Advanced bot protection pattern cleaning
+    .replace(/\s+/g, ' ')      // Replace multiple spaces with a single space
+    .trim();                   // Remove leading and trailing whitespace
+  
+  // Stage 2: Remove bot protection patterns
+  cleaned = cleaned
+    // Remove common bot protection patterns with numeric sequences and dashes
+    .replace(/(-\d+\s+)+/g, '')
+    .replace(/(\s*-\d+){2,}/g, '')
+    // Remove patterns like "-1 -2 -3 -4 2- -2vine e"
+    .replace(/-\d+\s+-\d+\s+-\d+\s+-\d+\s+\d+-\s+-\d+vine\s+e/g, '')
+    .replace(/-\d+vine\s+e/g, '')
+    // Remove specific patterns identified in the data
+    .replace(/\d+-\s+-\d+vine\s+e/g, '')
+    .replace(/\d+-\s+[a-z]+\s+e/g, '')
+    // Target specific pattern "2- -2vine e" at the end
+    .replace(/\s+\d+[-]\s+[-]\d+vine\s+e$/g, '')
+    // Handle more patterns of bot protection
     .replace(/\d+[-]\s+[-]?\d*vine\s?e\b/g, '')
     .replace(/\d+-\s*-\d*vine\s*e\b/g, '')
+    // Broader pattern to catch number-dash-number variations
     .replace(/\d+\s*-\s*(-)?(\d*)?v?i?n?e?\s*e?\b/g, '')
-    // More aggressive approaches
+    // Even more aggressive pattern to remove anything that looks like bot protection
     .replace(/\d+[-].*?v?i?n?e?\s*e?$/g, '')
-    .replace(/\s+\d+[-].*$/g, '')
-    .replace(/\b[a-z]+[-][a-z]+[-][a-z]+\b/g, ' ') // Remove CSS class name patterns
-    .replace(/\b[a-z]+[-][a-z]+\b/g, ' ') // Remove shorter CSS class name patterns
-    .replace(/icon-[a-z-]+/g, ' ') // Remove icon class patterns
-    .trim();               // Remove leading and trailing whitespace
-    
-  // Additional check for any remaining bot protection patterns at the end
-  if (/\d+[-].*$/.test(cleaned)) {
-    cleaned = cleaned.replace(/\s+\d+[-].*$/, '');
+    // Very aggressive approach - remove anything after a number-dash pattern at the end
+    .replace(/\s+\d+[-].*$/g, '');
+  
+  // Stage 3: Remove CSS-like patterns and formatting artifacts
+  cleaned = cleaned
+    .replace(/(?:- ){2,}/g, '')         // Remove repeating dash patterns (- - - -)
+    .replace(/[-]{2,}/g, ' ')           // Replace long dash sequences with space
+    .replace(/(\s-\s-\s-)+/g, ' ')      // Remove formatted dash sequences
+    .replace(/(\s-\s)+/g, ' ')          // Remove spaced dash sequences
+    .replace(/\b[a-z]+[-][a-z]+[-][a-z]+\b/g, ' ')  // Remove CSS class name patterns
+    .replace(/\b[a-z]+[-][a-z]+\b/g, ' ')           // Remove shorter CSS class name patterns
+    .replace(/icon-[a-z-]+/g, ' ')                  // Remove icon class patterns
+    .trim();
+  
+  // Stage 4: Ultra-aggressive final cleaning for stubborn patterns
+  // Handle numeric patterns at the end that might be part of bot protection
+  cleaned = cleaned
+    .replace(/\s+\d+\s*-.*$/g, '') 
+    .replace(/\s+\d+[-–—](?:\s*\d*)?(?:[-–—]\d*)?[-–—]?(?:[a-z]*\s*[a-z])?$/i, '')
+    // Very aggressive - remove any sequence with numbers and dashes near the end
+    .replace(/\s+[-–—]?\d+[-–—](?:.*)?$/g, '')
+    .replace(/\s*\d+[-–—]\s*(?:[-–—]?\d*)?(?:[-–—]?\w*)?$/g, '')
+    // Remove anything that looks like a numeric code at the end
+    .replace(/\s+[-–—]?\d+.*$/g, '')
+    .trim();
+  
+  // Stage 5: Last resort cleaning - if we still have suspicious content
+  if (/\d+[-–—]/.test(cleaned) || /[-–—]\d+/.test(cleaned) || /\s+\d+\s+[-–—]/.test(cleaned)) {
+    // If any suspicious patterns remain, try to extract just the first part before any numeric/dash pattern
+    const parts = cleaned.split(/\s+\d+[-–—]|\s+[-–—]\d+/);
+    if (parts.length > 0) {
+      cleaned = parts[0].trim();
+    }
   }
+  
+  // Final space normalization
+  cleaned = cleaned.replace(/\s{2,}/g, ' ').trim();
   
   return cleaned;
 };
@@ -200,7 +243,7 @@ Deno.serve(async (req) => {
       }
     });
     
-    // Now clean the original meta data
+    // Now clean the original meta data with our ultra-aggressive cleaning
     const title = cleanExtractedText(titleRaw);
     const description = cleanExtractedText(descriptionRaw);
     
