@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { HeadingComparison } from './HeadingComparison';
 import { HeadingArrayComparison } from './HeadingArrayComparison';
@@ -33,7 +34,7 @@ export function SEOAnalysisSection({ title, type, current, suggested, context }:
         <HeadingArrayComparison 
           current={current as string[]} 
           suggested={suggested as string[]} 
-          context={context as string[]} 
+          context={typeof context === 'string' ? context : Array.isArray(context) ? context[0] : undefined} 
         />
       )}
     </div>

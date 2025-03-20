@@ -21,6 +21,14 @@ export function SEOAnalysisContent({ analysis, onCopy }: SEOAnalysisContentProps
     (analysis.title_context && analysis.title_context.includes("page de protection anti-bot")) ||
     (analysis.description_context && analysis.description_context.includes("page de protection anti-bot"));
 
+  // Helper function to extract first string from string array context or use string directly
+  const getContextString = (context: string | string[] | undefined): string | undefined => {
+    if (!context) return undefined;
+    if (typeof context === 'string') return context;
+    if (Array.isArray(context) && context.length > 0) return context[0];
+    return undefined;
+  };
+
   return (
     <div className="space-y-8">
       {isBotProtectionPage && (
@@ -74,7 +82,7 @@ export function SEOAnalysisContent({ analysis, onCopy }: SEOAnalysisContentProps
             <HeadingComparison
               current={analysis.current_title || "Non défini"}
               suggested={analysis.suggested_title}
-              context={analysis.title_context}
+              context={getContextString(analysis.title_context)}
             />
           </div>
         )}
@@ -94,7 +102,7 @@ export function SEOAnalysisContent({ analysis, onCopy }: SEOAnalysisContentProps
           <HeadingComparison
             current={analysis.current_description || "Non définie"}
             suggested={analysis.suggested_description}
-            context={analysis.description_context}
+            context={getContextString(analysis.description_context)}
           />
         </div>
 
@@ -114,7 +122,7 @@ export function SEOAnalysisContent({ analysis, onCopy }: SEOAnalysisContentProps
             <HeadingComparison
               current={analysis.current_h1 || "Non défini"}
               suggested={analysis.suggested_h1}
-              context={analysis.h1_context}
+              context={getContextString(analysis.h1_context)}
             />
           </div>
         )}
@@ -128,7 +136,7 @@ export function SEOAnalysisContent({ analysis, onCopy }: SEOAnalysisContentProps
             <HeadingArrayComparison
               current={analysis.current_h2s}
               suggested={analysis.suggested_h2s}
-              context={analysis.h2s_context}
+              context={getContextString(analysis.h2s_context)}
             />
           </div>
         )}
@@ -142,7 +150,7 @@ export function SEOAnalysisContent({ analysis, onCopy }: SEOAnalysisContentProps
             <HeadingArrayComparison
               current={analysis.current_h3s}
               suggested={analysis.suggested_h3s}
-              context={analysis.h3s_context}
+              context={getContextString(analysis.h3s_context)}
             />
           </div>
         )}
@@ -156,7 +164,7 @@ export function SEOAnalysisContent({ analysis, onCopy }: SEOAnalysisContentProps
             <HeadingArrayComparison
               current={analysis.current_h4s}
               suggested={analysis.suggested_h4s}
-              context={analysis.h4s_context}
+              context={getContextString(analysis.h4s_context)}
             />
           </div>
         )}
