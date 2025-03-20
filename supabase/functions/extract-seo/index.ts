@@ -20,76 +20,65 @@ interface SEOData {
   isProtectedPage: boolean;
 }
 
-// Ultra-enhanced helper function to clean extracted text
-const cleanExtractedText = (text: string): string => {
+// Ultra-aggressive function to completely remove bot protection patterns
+function removeProtectionPatterns(text: string): string {
   if (!text) return '';
   
-  // Multi-stage cleaning process
-  // Stage 1: Basic cleaning and normalization
-  let cleaned = text
-    .replace(/\s+/g, ' ')      // Replace multiple spaces with a single space
-    .trim();                   // Remove leading and trailing whitespace
-  
-  // Stage 2: Remove bot protection patterns
-  cleaned = cleaned
-    // Remove common bot protection patterns with numeric sequences and dashes
-    .replace(/(-\d+\s+)+/g, '')
-    .replace(/(\s*-\d+){2,}/g, '')
-    // Remove patterns like "-1 -2 -3 -4 2- -2vine e"
-    .replace(/-\d+\s+-\d+\s+-\d+\s+-\d+\s+\d+-\s+-\d+vine\s+e/g, '')
-    .replace(/-\d+vine\s+e/g, '')
-    // Remove specific patterns identified in the data
-    .replace(/\d+-\s+-\d+vine\s+e/g, '')
-    .replace(/\d+-\s+[a-z]+\s+e/g, '')
-    // Target specific pattern "2- -2vine e" at the end
-    .replace(/\s+\d+[-]\s+[-]\d+vine\s+e$/g, '')
-    // Handle more patterns of bot protection
-    .replace(/\d+[-]\s+[-]?\d*vine\s?e\b/g, '')
-    .replace(/\d+-\s*-\d*vine\s*e\b/g, '')
-    // Broader pattern to catch number-dash-number variations
-    .replace(/\d+\s*-\s*(-)?(\d*)?v?i?n?e?\s*e?\b/g, '')
-    // Even more aggressive pattern to remove anything that looks like bot protection
-    .replace(/\d+[-].*?v?i?n?e?\s*e?$/g, '')
-    // Very aggressive approach - remove anything after a number-dash pattern at the end
-    .replace(/\s+\d+[-].*$/g, '');
-  
-  // Stage 3: Remove CSS-like patterns and formatting artifacts
-  cleaned = cleaned
-    .replace(/(?:- ){2,}/g, '')         // Remove repeating dash patterns (- - - -)
-    .replace(/[-]{2,}/g, ' ')           // Replace long dash sequences with space
-    .replace(/(\s-\s-\s-)+/g, ' ')      // Remove formatted dash sequences
-    .replace(/(\s-\s)+/g, ' ')          // Remove spaced dash sequences
-    .replace(/\b[a-z]+[-][a-z]+[-][a-z]+\b/g, ' ')  // Remove CSS class name patterns
-    .replace(/\b[a-z]+[-][a-z]+\b/g, ' ')           // Remove shorter CSS class name patterns
-    .replace(/icon-[a-z-]+/g, ' ')                  // Remove icon class patterns
-    .trim();
-  
-  // Stage 4: Ultra-aggressive final cleaning for stubborn patterns
-  // Handle numeric patterns at the end that might be part of bot protection
-  cleaned = cleaned
-    .replace(/\s+\d+\s*-.*$/g, '') 
-    .replace(/\s+\d+[-–—](?:\s*\d*)?(?:[-–—]\d*)?[-–—]?(?:[a-z]*\s*[a-z])?$/i, '')
-    // Very aggressive - remove any sequence with numbers and dashes near the end
-    .replace(/\s+[-–—]?\d+[-–—](?:.*)?$/g, '')
-    .replace(/\s*\d+[-–—]\s*(?:[-–—]?\d*)?(?:[-–—]?\w*)?$/g, '')
-    // Remove anything that looks like a numeric code at the end
-    .replace(/\s+[-–—]?\d+.*$/g, '')
-    .trim();
-  
-  // Stage 5: Last resort cleaning - if we still have suspicious content
-  if (/\d+[-–—]/.test(cleaned) || /[-–—]\d+/.test(cleaned) || /\s+\d+\s+[-–—]/.test(cleaned)) {
-    // If any suspicious patterns remain, try to extract just the first part before any numeric/dash pattern
-    const parts = cleaned.split(/\s+\d+[-–—]|\s+[-–—]\d+/);
-    if (parts.length > 0) {
-      cleaned = parts[0].trim();
-    }
+  // First approach: Get only text before any suspicious patterns
+  const parts = text.split(/\s+\d+\s*[-–]/);
+  if (parts.length > 1) {
+    // If we found a potential protection pattern, take only the first part
+    return parts[0].trim();
   }
   
-  // Final space normalization
-  cleaned = cleaned.replace(/\s{2,}/g, ' ').trim();
+  // Second approach: Try to remove specific patterns
+  let cleaned = text;
   
-  return cleaned;
-};
+  // Apply extremely aggressive pattern matching for any numeric sequence followed by dashes
+  cleaned = cleaned
+    // Remove any sequence starting with a number and dash anywhere in the text
+    .replace(/\d+[-–—].*/g, '')
+    // Remove common bot protection markers
+    .replace(/\s*[-–—]+\s*\d+[-–—]+.*/g, '')
+    .replace(/\s*[-]+\s*\d+.*$/g, '')
+    .replace(/\s*[-]\s*[-]\s*\d+.*$/g, '')
+    .replace(/\s*\d+[-]\s+[-].*$/g, '')
+    // Remove "vine e" and variations which appear in many bot protection pages
+    .replace(/\s*vine\s*e.*$/i, '')
+    // Remove anything with vine, which is common in bot protection pages
+    .replace(/\d+[-–—][^\d\s]*vine.*$/i, '')
+    .replace(/.*vine\s*e.*$/i, '')
+    // Remove any CSS class-like patterns 
+    .replace(/\b[a-z]+[-][a-z]+[-][a-z]+\b/g, ' ')
+    .replace(/\b[a-z]+[-][a-z]+\b/g, ' ')
+    // Remove icon references
+    .replace(/icon-[a-z-]+/g, ' ')
+    // Basic cleanup
+    .replace(/\s{2,}/g, ' ')
+    .trim();
+  
+  // Third approach: Apply additional patterns as a safety net
+  const botProtectionPatterns = [
+    // Match patterns with numeric sequences and dashes
+    /\s+[-–—]?\d+\s*[-–—].*$/,
+    /\s+\d+\s*[-–—].*$/,
+    // Match sequences of dashes with numbers
+    /\s*[-–—]+\s*\d+.*$/,
+    // Match "2- -2vine e" pattern and variations
+    /\s*\d+[-]\s+[-]\d+vine\s+e.*$/,
+    /\s*\d+[-–—].*vine.*$/i,
+    // Match any suspicious ending patterns
+    /\s*[-–—]\s*\d+.*$/
+  ];
+  
+  // Apply each pattern one by one
+  for (const pattern of botProtectionPatterns) {
+    cleaned = cleaned.replace(pattern, '');
+  }
+  
+  // Final cleanup
+  return cleaned.replace(/\s{2,}/g, ' ').trim();
+}
 
 // Function to detect if we hit a bot protection page
 const isBotProtectionPage = (html: string, title: string): boolean => {
@@ -209,7 +198,7 @@ Deno.serve(async (req) => {
     console.log('Liens internes trouvés:', internalLinks.size);
     console.log('Liens externes trouvés:', externalLinks.size);
     
-    // More aggressive cleaning to remove all styling and attributes before extracting content
+    // Remove all styling and attributes before extracting content
     $('*').each((_, el) => {
       // Remove all scripts and style elements completely
       if (el.tagName === 'script' || el.tagName === 'style') {
@@ -228,24 +217,29 @@ Deno.serve(async (req) => {
       }
     });
     
-    // Now extract and clean heading content after removing all attributes
-    const h1 = cleanExtractedText($('h1').first().text());
-    const h2s = $('h2').map((_, el) => cleanExtractedText($(el).text())).get().filter(Boolean);
-    const h3s = $('h3').map((_, el) => cleanExtractedText($(el).text())).get().filter(Boolean);
-    const h4s = $('h4').map((_, el) => cleanExtractedText($(el).text())).get().filter(Boolean);
+    // Extract heading content after removing all attributes
+    const h1Extracted = $('h1').first().text();
+    const h2sExtracted = $('h2').map((_, el) => $(el).text()).get().filter(Boolean);
+    const h3sExtracted = $('h3').map((_, el) => $(el).text()).get().filter(Boolean);
+    const h4sExtracted = $('h4').map((_, el) => $(el).text()).get().filter(Boolean);
 
     // Get visible body text (excluding scripts, styles, etc.)
-    const visibleText: string[] = [];
+    const visibleTextExtracted: string[] = [];
     $('body p, body li, body div:not(:has(*))').each((_, el) => {
-      const text = cleanExtractedText($(el).text());
+      const text = $(el).text().trim();
       if (text && text.length > 15) { // Only include meaningful text of sufficient length
-        visibleText.push(text);
+        visibleTextExtracted.push(text);
       }
     });
     
-    // Now clean the original meta data with our ultra-aggressive cleaning
-    const title = cleanExtractedText(titleRaw);
-    const description = cleanExtractedText(descriptionRaw);
+    // Now clean the meta data with our ultra-aggressive cleaning
+    const title = removeProtectionPatterns(titleRaw);
+    const description = removeProtectionPatterns(descriptionRaw);
+    const h1 = removeProtectionPatterns(h1Extracted);
+    const h2s = h2sExtracted.map(removeProtectionPatterns).filter(Boolean);
+    const h3s = h3sExtracted.map(removeProtectionPatterns).filter(Boolean);
+    const h4s = h4sExtracted.map(removeProtectionPatterns).filter(Boolean);
+    const visibleText = visibleTextExtracted.map(removeProtectionPatterns).filter(Boolean);
     
     // Test simple des liens cassés
     const brokenLinks: string[] = [];

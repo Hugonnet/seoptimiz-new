@@ -1,48 +1,12 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { extractSEOMetadata } from "./seoService";
+import { extractSEOMetadata, removeProtectionPatterns } from "./seoService";
 import { SEOAnalysis } from "@/store/seoStore";
-
-// Enhanced helper function to clean text from CSS classes and other unwanted elements
-const cleanText = (text: string | null | undefined): string => {
-  if (!text) return "";
-  
-  // Significantly improved cleaning pattern
-  let cleaned = text
-    // Remove all CSS-like class patterns
-    .replace(/\b[a-z]+[-][a-z]+[-][a-z]+\b/g, ' ')
-    .replace(/\b[a-z]+[-][a-z]+\b/g, ' ')
-    // Remove specific bot protection patterns
-    .replace(/\d+[-]\s+[-]?\d*vine\s?e\b/g, '')
-    .replace(/\d+-\s*-\d*vine\s*e\b/g, '')
-    .replace(/\d+\s*-\s*(-)?(\d*)?v?i?n?e?\s*e?\b/g, '')
-    // More aggressive bot protection cleaning
-    .replace(/\d+[-].*?v?i?n?e?\s*e?$/g, '')
-    .replace(/\s+\d+[-].*$/g, '')
-    // Remove specific patterns identified in the data
-    .replace(/account|android|arrow|cart|menu|categories|chevron|opening/g, ' ')
-    .replace(/circle|tinder|trello|tripadvisor|tumblr|twitch|twitter|viber|vimeo|vk/g, ' ')
-    .replace(/ontakt|website|wechat|whatsapp|windows|wishlist|xing|yelp|youtube|zoom/g, ' ')
-    // Remove common icon names
-    .replace(/icon-[a-z-]+/g, ' ')
-    // Remove dashes and repeated dashes
-    .replace(/[-]{2,}/g, ' ')
-    // Clean up extra spaces
-    .replace(/\s{2,}/g, ' ')
-    .trim();
-    
-  // Additional check for any remaining bot protection patterns at the end
-  if (/\d+[-].*$/.test(cleaned)) {
-    cleaned = cleaned.replace(/\s+\d+[-].*$/, '');
-  }
-    
-  return cleaned;
-};
 
 // Helper function to clean array items
 const cleanArray = (arr: string[] | null | undefined): string[] => {
   if (!arr || !Array.isArray(arr)) return [];
-  return arr.map(item => cleanText(item)).filter(item => item.length > 0);
+  return arr.map(item => removeProtectionPatterns(item)).filter(item => item.length > 0);
 };
 
 export const analyzeSEO = async (url: string, company: string): Promise<SEOAnalysis> => {
@@ -75,15 +39,15 @@ export const analyzeSEO = async (url: string, company: string): Promise<SEOAnaly
     ? `${company} [ATTENTION: Protection anti-bot détectée]` 
     : company;
 
-  // Clean the extracted SEO data
+  // Clean the extracted SEO data - data is now cleaned at the source in extractSEOMetadata
   const cleanedSeoData = {
-    title: cleanText(seoData.title),
-    description: cleanText(seoData.description),
-    h1: cleanText(seoData.h1),
-    h2s: cleanArray(seoData.h2s),
-    h3s: cleanArray(seoData.h3s),
-    h4s: cleanArray(seoData.h4s),
-    visibleText: cleanArray(seoData.visibleText),
+    title: seoData.title,
+    description: seoData.description,
+    h1: seoData.h1,
+    h2s: seoData.h2s,
+    h3s: seoData.h3s,
+    h4s: seoData.h4s,
+    visibleText: seoData.visibleText,
     internalLinks: seoData.internalLinks,
     externalLinks: seoData.externalLinks,
     brokenLinks: seoData.brokenLinks,

@@ -9,6 +9,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { removeProtectionPatterns } from '@/services/seoService';
 
 interface HeadingComparisonProps {
   current: string;
@@ -29,74 +30,8 @@ export function HeadingComparison({ current, suggested, context }: HeadingCompar
     }
   };
 
-  // Ultra-enhanced cleaning function to completely remove bot protection patterns
-  const cleanDisplayText = (text: string) => {
-    if (!text) return '';
-    
-    // Multi-stage aggressive cleaning
-    // Stage 1: Basic cleaning
-    let cleaned = text
-      .replace(/\s+/g, ' ')
-      .trim();
-    
-    // Stage 2: Remove bot protection patterns
-    cleaned = cleaned
-      // Remove common bot protection patterns with numeric sequences and dashes
-      .replace(/(-\d+\s+)+/g, '')
-      .replace(/(\s*-\d+){2,}/g, '')
-      // Remove patterns like "-1 -2 -3 -4 2- -2vine e"
-      .replace(/-\d+\s+-\d+\s+-\d+\s+-\d+\s+\d+-\s+-\d+vine\s+e/g, '')
-      .replace(/-\d+vine\s+e/g, '')
-      // Target specific patterns often found in bot protection titles
-      .replace(/\d+-\s+-\d+vine\s+e/g, '')
-      .replace(/\d+-\s+[a-z]+\s+e/g, '')
-      // Target specific pattern "2- -2vine e" at the end
-      .replace(/\s+\d+[-]\s+[-]\d+vine\s+e$/g, '')
-      // Add more specific patterns to catch variations of the "2- -2vine e" pattern
-      .replace(/\d+[-]\s+[-]?\d*vine\s?e\b/g, '')
-      .replace(/\d+-\s*-\d*vine\s*e\b/g, '')
-      // New pattern: Remove anything matching the format digit-space-dash (with variations)
-      .replace(/\d+\s*-\s*(-)?(\d*)?v?i?n?e?\s*e?\b/g, '')
-      // More aggressive pattern to catch variations seen in the problematic data
-      .replace(/\d+[-].*?v?i?n?e?\s*e?$/g, '')
-      // Very aggressive approach - remove anything after a number-dash pattern at the end
-      .replace(/\s+\d+[-].*$/g, '');
-    
-    // Stage 3: Clean up formatting artifacts
-    cleaned = cleaned
-      .replace(/(?:- ){2,}/g, '') // Remove repeating dash patterns
-      .replace(/[-]{2,}/g, ' ') // Replace long dash sequences with space
-      .replace(/(\s-\s-\s-)+/g, ' ') // Remove formatted dash sequences
-      .replace(/(\s-\s)+/g, ' ') // Remove spaced dash sequences
-      .replace(/\s{2,}/g, ' ') // Clean up extra spaces
-      .trim();
-    
-    // Stage 4: Ultra-aggressive final cleaning for stubborn patterns
-    cleaned = cleaned
-      // Handle numeric patterns at the end that might be part of bot protection
-      .replace(/\s+\d+\s*-.*$/g, '') 
-      .replace(/\s+\d+[-–—](?:\s*\d*)?(?:[-–—]\d*)?[-–—]?(?:[a-z]*\s*[a-z])?$/i, '')
-      // Very aggressive - remove any sequence with numbers and dashes near the end
-      .replace(/\s+[-–—]?\d+[-–—](?:.*)?$/g, '')
-      .replace(/\s*\d+[-–—]\s*(?:[-–—]?\d*)?(?:[-–—]?\w*)?$/g, '')
-      // Remove anything that looks like a numeric code at the end
-      .replace(/\s+[-–—]?\d+.*$/g, '')
-      .trim();
-    
-    // Stage 5: Last resort cleaning - if we still have suspicious content
-    if (/\d+[-–—]/.test(cleaned) || /[-–—]\d+/.test(cleaned) || /\s+\d+\s+[-–—]/.test(cleaned)) {
-      // If any suspicious patterns remain, try to extract just the first part before any numeric/dash pattern
-      const parts = cleaned.split(/\s+\d+[-–—]|\s+[-–—]\d+/);
-      if (parts.length > 0) {
-        cleaned = parts[0].trim();
-      }
-    }
-    
-    return cleaned;
-  };
-
-  const cleanCurrent = cleanDisplayText(current);
-  const cleanSuggested = cleanDisplayText(suggested);
+  const cleanCurrent = removeProtectionPatterns(current);
+  const cleanSuggested = removeProtectionPatterns(suggested);
   
   // Check if this appears to be a bot protection page
   const isBotProtectionPage = 

@@ -20,81 +20,67 @@ export interface SEOMetadata {
 const cleanCSVText = (text: string | null | undefined): string => {
   if (!text) return '';
   
-  // Replace patterns associated with bot protection mechanisms
+  // First, completely remove any bot protection patterns
+  const cleanText = removeProtectionPatterns(text);
+  
+  // Then escape for CSV
+  return cleanText.replace(/"/g, '""').replace(/[\r\n]+/g, ' ');
+};
+
+// New ultra-aggressive function to completely strip out bot protection patterns
+export const removeProtectionPatterns = (text: string | null | undefined): string => {
+  if (!text) return '';
+  
+  // Get first meaningful part before any suspicious patterns
+  // This is the most aggressive approach - get only what's before the first numeric pattern
+  const parts = text.split(/\s+\d+\s*[-–]/);
+  if (parts.length > 1) {
+    // Take only the first part if we found a split pattern
+    return parts[0].trim();
+  }
+  
+  // If no numeric-dash pattern, try cleaning with patterns
   let cleaned = text;
   
-  // First pass - remove specific numeric patterns that appear in bot protection
+  // Extremely aggressive pattern matching for any numeric sequence followed by dashes
   cleaned = cleaned
-    // Remove common bot protection patterns with numeric sequences and dashes
-    .replace(/(-\d+\s+)+/g, '')
-    .replace(/(\s*-\d+){2,}/g, '')
-    // Remove patterns like "-1 -2 -3 -4 2- -2vine e"
-    .replace(/-\d+\s+-\d+\s+-\d+\s+-\d+\s+\d+-\s+-\d+vine\s+e/g, '')
-    .replace(/-\d+vine\s+e/g, '')
-    // Remove specific patterns identified in the data
-    .replace(/\d+-\s+-\d+vine\s+e/g, '')
-    .replace(/\d+-\s+[a-z]+\s+e/g, '')
-    // Target specific pattern "2- -2vine e" at the end
-    .replace(/\s+\d+[-]\s+[-]\d+vine\s+e$/g, '');
-
-  // Second pass - remove more generic patterns
-  cleaned = cleaned
-    // Handle more patterns of bot protection
-    .replace(/\d+[-]\s+[-]?\d*vine\s?e\b/g, '')
-    .replace(/\d+-\s*-\d*vine\s*e\b/g, '')
-    // Broader pattern to catch number-dash-number variations with optional "vine e" suffix
-    .replace(/\d+\s*-\s*(-)?(\d*)?v?i?n?e?\s*e?\b/g, '')
-    // Even more aggressive pattern to remove anything that looks like bot protection
-    .replace(/\d+[-].*?v?i?n?e?\s*e?$/g, '')
-    // Try a very aggressive approach to remove anything after a number-dash pattern at the end
-    .replace(/\s+\d+[-].*$/g, '');
-    
-  // Third pass - general cleanup of formatting and specific patterns
-  cleaned = cleaned
-    // Remove CSS-like class patterns
-    .replace(/\b[a-z]+[-][a-z]+[-][a-z]+\b/g, ' ')
-    .replace(/\b[a-z]+[-][a-z]+\b/g, ' ')
-    // Remove specific patterns identified in the data
-    .replace(/account|android|arrow|cart|menu|categories|chevron|opening/g, ' ')
-    .replace(/circle|tinder|trello|tripadvisor|tumblr|twitch|twitter|viber|vimeo|vk/g, ' ')
-    .replace(/ontakt|website|wechat|whatsapp|windows|wishlist|xing|yelp|youtube|zoom/g, ' ')
-    // Remove icon patterns
-    .replace(/icon-[a-z-]+/g, ' ')
-    // Remove long sequences of dashes that often appear in corrupted content
-    .replace(/[-]{2,}/g, ' ')
-    // Remove any remaining dash sequences that look like formatting artifacts
-    .replace(/(\s-\s-\s-)+/g, ' ')
-    .replace(/(\s-\s)+/g, ' ')
-    // Clean up repeating hyphens (common in malformed titles)
-    .replace(/(?:- ){2,}/g, '')
-    // Clean up extra spaces
+    // Remove any sequence starting with a number and dash anywhere in the text
+    .replace(/\d+[-–—].*/g, '')
+    // Remove common bot protection markers
+    .replace(/\s*[-–—]+\s*\d+[-–—]+.*/g, '')
+    .replace(/\s*[-]+\s*\d+.*$/g, '')
+    .replace(/\s*[-]\s*[-]\s*\d+.*$/g, '')
+    .replace(/\s*\d+[-]\s+[-].*$/g, '')
+    // Remove "vine e" and variations which appear in many bot protection pages
+    .replace(/\s*vine\s*e.*$/i, '')
+    // Remove anything with vine, which is common in bot protection pages
+    .replace(/\d+[-–—][^\d\s]*vine.*$/i, '')
+    .replace(/.*vine\s*e.*$/i, '')
+    // Basic cleanup
     .replace(/\s{2,}/g, ' ')
     .trim();
   
-  // Final extreme cleaning pass - find and remove anything that resembles a bot protection pattern
-  // This is a catch-all for anything we missed
-  cleaned = cleaned
-    // Handle numeric patterns at the end that might be part of bot protection
-    .replace(/\s+\d+\s*-.*$/g, '') 
-    .replace(/\s+\d+[-–—](?:\s*\d*)?(?:[-–—]\d*)?[-–—]?(?:[a-z]*\s*[a-z])?$/i, '')
-    // Very aggressive - remove any sequence with numbers and dashes near the end
-    .replace(/\s+[-–—]?\d+[-–—](?:.*)?$/g, '')
-    .replace(/\s*\d+[-–—]\s*(?:[-–—]?\d*)?(?:[-–—]?\w*)?$/g, '')
-    // Remove anything that looks like a numeric code at the end
-    .replace(/\s+[-–—]?\d+.*$/g, '')
-    .trim();
-    
-  // Even more extreme - if we still have suspicious content, use this as a last resort  
-  if (/\d+[-–—]/.test(cleaned) || /[-–—]\d+/.test(cleaned) || /\s+\d+\s+[-–—]/.test(cleaned)) {
-    // If any suspicious patterns remain, try to extract just the first part before any numeric/dash pattern
-    const parts = cleaned.split(/\s+\d+[-–—]|\s+[-–—]\d+/);
-    if (parts.length > 0) {
-      cleaned = parts[0].trim();
-    }
+  // Apply additional aggressive cleaning using regex patterns
+  const botProtectionPatterns = [
+    // Match patterns with numeric sequences and dashes
+    /\s+[-–—]?\d+\s*[-–—].*$/,
+    /\s+\d+\s*[-–—].*$/,
+    // Match sequences of dashes with numbers
+    /\s*[-–—]+\s*\d+.*$/,
+    // Match "2- -2vine e" pattern and variations
+    /\s*\d+[-]\s+[-]\d+vine\s+e.*$/,
+    /\s*\d+[-–—].*vine.*$/i,
+    // Match any suspicious ending patterns
+    /\s*[-–—]\s*\d+.*$/
+  ];
+  
+  // Apply each pattern one by one
+  for (const pattern of botProtectionPatterns) {
+    cleaned = cleaned.replace(pattern, '');
   }
   
-  // Then escape for CSV
-  return cleaned.replace(/"/g, '""').replace(/[\r\n]+/g, ' ');
+  // Final trim and space normalization
+  return cleaned.replace(/\s{2,}/g, ' ').trim();
 };
 
 export const downloadTableAsCSV = (data: SEOAnalysis[]) => {
@@ -155,22 +141,22 @@ export const extractSEOMetadata = async (url: string): Promise<SEOMetadata> => {
 
     // Clean the data right after receiving it from the extraction function
     if (seoData) {
-      seoData.title = cleanCSVText(seoData.title);
-      seoData.description = cleanCSVText(seoData.description);
-      seoData.h1 = cleanCSVText(seoData.h1);
+      seoData.title = removeProtectionPatterns(seoData.title);
+      seoData.description = removeProtectionPatterns(seoData.description);
+      seoData.h1 = removeProtectionPatterns(seoData.h1);
       
       // Clean arrays if they exist
       if (seoData.h2s && Array.isArray(seoData.h2s)) {
-        seoData.h2s = seoData.h2s.map(cleanCSVText).filter(Boolean);
+        seoData.h2s = seoData.h2s.map(removeProtectionPatterns).filter(Boolean);
       }
       if (seoData.h3s && Array.isArray(seoData.h3s)) {
-        seoData.h3s = seoData.h3s.map(cleanCSVText).filter(Boolean);
+        seoData.h3s = seoData.h3s.map(removeProtectionPatterns).filter(Boolean);
       }
       if (seoData.h4s && Array.isArray(seoData.h4s)) {
-        seoData.h4s = seoData.h4s.map(cleanCSVText).filter(Boolean);
+        seoData.h4s = seoData.h4s.map(removeProtectionPatterns).filter(Boolean);
       }
       if (seoData.visibleText && Array.isArray(seoData.visibleText)) {
-        seoData.visibleText = seoData.visibleText.map(cleanCSVText).filter(Boolean);
+        seoData.visibleText = seoData.visibleText.map(removeProtectionPatterns).filter(Boolean);
       }
     }
 
