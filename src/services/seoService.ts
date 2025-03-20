@@ -21,8 +21,8 @@ const cleanCSVText = (text: string | null | undefined): string => {
   if (!text) return '';
   
   // More comprehensive cleaning for titles and descriptions
-  const cleaned = text
-    // Remove common bot protection pattern with numeric sequences and dashes
+  let cleaned = text
+    // Remove common bot protection patterns with numeric sequences and dashes
     .replace(/(-\d+\s+)+/g, '')
     .replace(/(\s*-\d+){2,}/g, '')
     // Remove patterns like "-1 -2 -3 -4 2- -2vine e"
@@ -36,8 +36,12 @@ const cleanCSVText = (text: string | null | undefined): string => {
     // Handle more patterns of bot protection
     .replace(/\d+[-]\s+[-]?\d*vine\s?e\b/g, '')
     .replace(/\d+-\s*-\d*vine\s*e\b/g, '')
-    // New pattern: Remove anything matching the format digit-space-dash (with variations)
+    // Broader pattern to catch number-dash-number variations with optional "vine e" suffix
     .replace(/\d+\s*-\s*(-)?(\d*)?v?i?n?e?\s*e?\b/g, '')
+    // Even more aggressive pattern to remove anything that looks like bot protection
+    .replace(/\d+[-].*?v?i?n?e?\s*e?$/g, '')
+    // Try a very aggressive approach to remove anything after a number-dash pattern at the end
+    .replace(/\s+\d+[-].*$/g, '')
     // Remove CSS-like class patterns
     .replace(/\b[a-z]+[-][a-z]+[-][a-z]+\b/g, ' ')
     .replace(/\b[a-z]+[-][a-z]+\b/g, ' ')
@@ -57,6 +61,11 @@ const cleanCSVText = (text: string | null | undefined): string => {
     // Clean up extra spaces
     .replace(/\s{2,}/g, ' ')
     .trim();
+  
+  // Additional check for any remaining bot protection patterns at the end
+  if (/\d+[-].*$/.test(cleaned)) {
+    cleaned = cleaned.replace(/\s+\d+[-].*$/, '');
+  }
   
   // Then escape for CSV
   return cleaned.replace(/"/g, '""').replace(/[\r\n]+/g, ' ');

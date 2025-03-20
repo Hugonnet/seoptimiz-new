@@ -33,7 +33,7 @@ export function HeadingComparison({ current, suggested, context }: HeadingCompar
   const cleanDisplayText = (text: string) => {
     if (!text) return '';
     
-    return text
+    let cleaned = text
       // Remove common bot protection pattern with numeric sequences and dashes
       .replace(/(-\d+\s+)+/g, '')
       .replace(/(\s*-\d+){2,}/g, '')
@@ -50,6 +50,10 @@ export function HeadingComparison({ current, suggested, context }: HeadingCompar
       .replace(/\d+-\s*-\d*vine\s*e\b/g, '')
       // New pattern: Remove anything matching the format digit-space-dash (with variations)
       .replace(/\d+\s*-\s*(-)?(\d*)?v?i?n?e?\s*e?\b/g, '')
+      // More aggressive pattern to catch variations seen in the problematic data
+      .replace(/\d+[-].*?v?i?n?e?\s*e?$/g, '')
+      // Very aggressive approach - remove anything after a number-dash pattern at the end
+      .replace(/\s+\d+[-].*$/g, '')
       // Handle other common patterns
       .replace(/(?:- ){2,}/g, '') // Remove repeating dash patterns
       .replace(/[-]{2,}/g, ' ') // Replace long dash sequences with space
@@ -57,6 +61,13 @@ export function HeadingComparison({ current, suggested, context }: HeadingCompar
       .replace(/(\s-\s)+/g, ' ') // Remove spaced dash sequences
       .replace(/\s{2,}/g, ' ') // Clean up extra spaces
       .trim();
+    
+    // Additional check for any remaining bot protection patterns at the end
+    if (/\d+[-].*$/.test(cleaned)) {
+      cleaned = cleaned.replace(/\s+\d+[-].*$/, '');
+    }
+    
+    return cleaned;
   };
 
   const cleanCurrent = cleanDisplayText(current);

@@ -22,7 +22,7 @@ interface SEOData {
 
 // Enhanced helper function to clean extracted text
 const cleanExtractedText = (text: string): string => {
-  return text
+  let cleaned = text
     .replace(/\s+/g, ' ')  // Replace multiple spaces with a single space
     .replace(/(?:- ){2,}/g, '') // Remove repeating dash patterns (- - - -)
     .replace(/[-]{2,}/g, ' ') // Replace long dash sequences with space
@@ -32,10 +32,20 @@ const cleanExtractedText = (text: string): string => {
     .replace(/\d+[-]\s+[-]?\d*vine\s?e\b/g, '')
     .replace(/\d+-\s*-\d*vine\s*e\b/g, '')
     .replace(/\d+\s*-\s*(-)?(\d*)?v?i?n?e?\s*e?\b/g, '')
+    // More aggressive approaches
+    .replace(/\d+[-].*?v?i?n?e?\s*e?$/g, '')
+    .replace(/\s+\d+[-].*$/g, '')
     .replace(/\b[a-z]+[-][a-z]+[-][a-z]+\b/g, ' ') // Remove CSS class name patterns
     .replace(/\b[a-z]+[-][a-z]+\b/g, ' ') // Remove shorter CSS class name patterns
     .replace(/icon-[a-z-]+/g, ' ') // Remove icon class patterns
     .trim();               // Remove leading and trailing whitespace
+    
+  // Additional check for any remaining bot protection patterns at the end
+  if (/\d+[-].*$/.test(cleaned)) {
+    cleaned = cleaned.replace(/\s+\d+[-].*$/, '');
+  }
+  
+  return cleaned;
 };
 
 // Function to detect if we hit a bot protection page

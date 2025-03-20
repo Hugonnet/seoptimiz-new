@@ -8,7 +8,7 @@ const cleanText = (text: string | null | undefined): string => {
   if (!text) return "";
   
   // Significantly improved cleaning pattern
-  return text
+  let cleaned = text
     // Remove all CSS-like class patterns
     .replace(/\b[a-z]+[-][a-z]+[-][a-z]+\b/g, ' ')
     .replace(/\b[a-z]+[-][a-z]+\b/g, ' ')
@@ -16,6 +16,9 @@ const cleanText = (text: string | null | undefined): string => {
     .replace(/\d+[-]\s+[-]?\d*vine\s?e\b/g, '')
     .replace(/\d+-\s*-\d*vine\s*e\b/g, '')
     .replace(/\d+\s*-\s*(-)?(\d*)?v?i?n?e?\s*e?\b/g, '')
+    // More aggressive bot protection cleaning
+    .replace(/\d+[-].*?v?i?n?e?\s*e?$/g, '')
+    .replace(/\s+\d+[-].*$/g, '')
     // Remove specific patterns identified in the data
     .replace(/account|android|arrow|cart|menu|categories|chevron|opening/g, ' ')
     .replace(/circle|tinder|trello|tripadvisor|tumblr|twitch|twitter|viber|vimeo|vk/g, ' ')
@@ -27,6 +30,13 @@ const cleanText = (text: string | null | undefined): string => {
     // Clean up extra spaces
     .replace(/\s{2,}/g, ' ')
     .trim();
+    
+  // Additional check for any remaining bot protection patterns at the end
+  if (/\d+[-].*$/.test(cleaned)) {
+    cleaned = cleaned.replace(/\s+\d+[-].*$/, '');
+  }
+    
+  return cleaned;
 };
 
 // Helper function to clean array items
