@@ -1,3 +1,4 @@
+
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { Toaster } from "@/components/ui/toaster";
 import { StickyHeader } from "@/components/StickyHeader";
@@ -21,11 +22,6 @@ function App() {
             <Route path="/performance" element={<Performance />} />
             <Route path="/keyword-density" element={<KeywordDensity />} />
           </Routes>
-        </div>
-        <div className="bg-white/80 backdrop-blur-sm border-t border-gray-100">
-          <div className="container mx-auto">
-            <ActionCards />
-          </div>
         </div>
         <Toaster />
       </div>

@@ -1,3 +1,4 @@
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -31,9 +32,9 @@ export function ActionCards() {
   ];
 
   return (
-    <div className="grid gap-4 p-4 md:grid-cols-2 lg:grid-cols-3 max-w-7xl mx-auto">
+    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 max-w-7xl mx-auto">
       {cards.map((card, index) => (
-        <Card key={index} className="bg-white/90">
+        <Card key={index} className="bg-white/90 border border-gray-200 shadow-sm">
           <CardHeader className="space-y-1 p-4">
             <div className="w-10 h-10 bg-gradient-to-br from-[#6366F1] to-[#EC4899] rounded-lg flex items-center justify-center mb-2">
               <card.icon className="w-5 h-5 text-white" />

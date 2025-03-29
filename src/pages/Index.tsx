@@ -1,9 +1,11 @@
+
 import { useEffect, useState } from 'react';
 import { URLForm } from "@/components/URLForm";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useSEOStore } from "@/store/seoStore";
 import { motion } from "framer-motion";
+import { ActionCards } from "@/components/ActionCards";
 
 export default function Index() {
   const { toast } = useToast();
@@ -46,7 +48,7 @@ export default function Index() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="space-y-8 sm:space-y-12"
+          className="space-y-8 sm:space-y-10"
         >
           <div className="space-y-2 text-center">
             <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold bg-gradient-to-r from-[#6366F1] to-[#EC4899] text-transparent bg-clip-text">
@@ -58,6 +60,11 @@ export default function Index() {
           </div>
 
           <URLForm />
+          
+          {/* ActionCards intégrées directement dans la page d'accueil */}
+          <div className="mt-4 sm:mt-6">
+            <ActionCards />
+          </div>
         </motion.div>
       </div>
     </div>
