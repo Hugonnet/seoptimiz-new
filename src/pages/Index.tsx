@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from 'react';
 import { URLForm } from "@/components/URLForm";
 import { supabase } from "@/integrations/supabase/client";
@@ -60,7 +61,7 @@ export default function Index() {
 
           <URLForm />
 
-          <div className="mt-2 sm:mt-3">
+          <div className="mt-1 sm:mt-2">
             <ActionCards />
           </div>
         </motion.div>
